@@ -20,7 +20,7 @@ const app: Express = express();
 app.use(express.json());
 
 app.get("/", (_req: Request, res: Response) => {
-    res.send("Express + TypeScript Server");
+    res.send({"message": "Backend API for FlashCardSystem"});
 });
 
 // const userRouter = require("./routes/users");
