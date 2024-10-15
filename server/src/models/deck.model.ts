@@ -1,6 +1,30 @@
 import mongoose from "mongoose";
+import Card from "./card.model";
 
-const deckSchema = new mongoose.Schema({
+interface IDeck {
+    owner: mongoose.Schema.Types.ObjectId;
+    name: string;
+    description: string;
+    dateCreated: Date;
+    dateUpdated: Date;
+    cards: mongoose.Schema.Types.ObjectId[];
+    isPrivate: boolean;
+    sharedTo: {
+        user: mongoose.Schema.Types.ObjectId;
+        editable: boolean;
+    }[],
+    likes: number;
+    likedBy: mongoose.Schema.Types.ObjectId[];
+}
+
+interface IDeckMethods {
+    isAccessibleBy(user: mongoose.Schema.Types.ObjectId): boolean;
+    isEditableBy(user: mongoose.Schema.Types.ObjectId): boolean;
+}
+
+type DeckModel = mongoose.Model<IDeck, {}, IDeckMethods>;
+
+const deckSchema = new mongoose.Schema<IDeck, DeckModel, IDeckMethods>({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
@@ -11,7 +35,8 @@ const deckSchema = new mongoose.Schema({
         required: true
     },
     description: {
-        type: String
+        type: String,
+        default: ""
     },
     dateCreated: {
         type: Date,
@@ -27,16 +52,21 @@ const deckSchema = new mongoose.Schema({
             ref: "card"
         }
     ],
-    private: {
+    isPrivate: {
         type: Boolean,
         default: false
     },
-    sharedTo: [
-        {
+    sharedTo: [{
+        user: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "user"
+            ref: "user",
+            required: true
+        },
+        editable: {
+            type: Boolean,
+            default: false
         }
-    ],
+    }],
     likes: {
         type: Number,
         default: 0
@@ -48,5 +78,20 @@ const deckSchema = new mongoose.Schema({
         }
     ]
 });
+
+deckSchema.pre("deleteOne", { document: true, query: false }, async function(next) {
+    await Card.deleteMany({ deck: this._id });
+    next();
+});
+
+// TODO: Implement deleteMany Pre Hook (this._conditions is not available in query?)
+
+deckSchema.methods.isAccessibleBy = function(user: mongoose.Schema.Types.ObjectId) {
+    return this.owner == user || this.sharedTo.some((sharedUser) => sharedUser.user == user);
+};
+
+deckSchema.methods.isEditableBy = function(user: mongoose.Schema.Types.ObjectId) {
+    return this.owner == user || this.sharedTo.some((sharedUser) => sharedUser.user == user && sharedUser.editable);
+};
 
 export default mongoose.model("deck", deckSchema);

@@ -27,7 +27,7 @@ async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
 }
 
 /**
- * @route POST v1/auth/register
+ * @route POST auth/register
  * @desc Registers a User
  * @access public
  */
@@ -54,10 +54,7 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
 
         const createdUser = await User.findById(newUser._id).select("-password -refreshToken");
         if (!createdUser)
-            res.status(500).json({
-                status: "error",
-                message: "Internal Server Error",
-            });
+            throw new Error("User could not be created");
 
         res.status(200).json({
             status: "success",
@@ -73,7 +70,7 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
 }
 
 /**
- * @route POST v1/auth/login
+ * @route POST auth/login
  * @desc logs in a User
  * @access public
  */
