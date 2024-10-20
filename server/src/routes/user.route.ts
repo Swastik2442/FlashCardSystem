@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(VerifyJWT);
 
 router.get(
-    "/:username",
+    "/get/:username",
     check("username")
     .notEmpty()
     .withMessage("Username is required")

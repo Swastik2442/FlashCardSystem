@@ -44,8 +44,14 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
 });
 
 userSchema.pre("save", async function (next) {
-    if (this.isNew)
-        await Deck.create({ owner: this._id, name: "#UNCATEGORISED#", isPrivate: true });
+    if (this.isNew) {
+        const userDeck = await Deck.create({
+            owner: this._id,
+            name: "#UNCATEGORISED#",
+            isPrivate: true
+        });
+        userDeck.save();
+    }
     if (this.isModified("password"))
         this.password = await bcrypt.hash(this.password, 10);
 

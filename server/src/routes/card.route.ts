@@ -23,8 +23,6 @@ router.post(
     .trim()
     .escape(),
     check("deck")
-    .notEmpty()
-    .withMessage("Deck is required")
     .trim()
     .escape(),
     Validate,

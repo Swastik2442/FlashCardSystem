@@ -10,22 +10,35 @@ import Card from "../models/card.model";
 export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
     const { question, answer, hint, deck } = req.body;
     try {
-        const deckById = await Deck.findById(deck);
-        if (!deckById)
-            throw new Error("Deck not found");
-        else if (!deck.isEditableBy(req.user._id)) {
-            res.status(401).json({
-                status: "error",
-                message: "Unauthorized Operation",
-            });
-            return;
+        var deckById;
+        if (!deck) {
+            deckById = await Deck.findOne({ owner: req.user._id, name: "#UNCATEGORISED#" });
+            if (!deckById) {
+                deckById = await Deck.create({
+                    owner: req.user._id,
+                    name: "#UNCATEGORISED#",
+                    isPrivate: true
+                });
+                deckById.save();
+            }
+        } else {
+            deckById = await Deck.findById(deck);
+            if (!deckById)
+                throw new Error("Deck not found");
+            else if (!deck.isEditableBy(req.user._id)) {
+                res.status(401).json({
+                    status: "error",
+                    message: "Unauthorized Operation",
+                });
+                return;
+            }
         }
 
         const newCard = await Card.create({
             question: question,
             answer: answer,
             hint: hint,
-            deck: deck,
+            deck: deckById._id,
         });
 
         const cardCheck = await Card.findById(newCard._id);

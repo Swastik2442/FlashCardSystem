@@ -3,14 +3,14 @@ import User from "../models/user.model";
 import Deck from "../models/deck.model";
 
 /**
- * @route GET user/:username
+ * @route GET user/get/:username
  * @desc Gets the User with the given Username
  * @access public
  */
 export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
     const username = req.params.username;
     try {
-        const user = await User.findOne({ username: username }).select("+fullName");
+        const user = await User.findOne({ username: username }).select("-password -refreshToken");
         if (!user) {
             res.status(404).json({
                 status: "error",
@@ -21,7 +21,9 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
 
         res.status(200).json({
             status: "success",
-            data: user,
+            data: {
+                "fullName": user.fullName,
+            },
         });
     } catch (err) {
         res.status(500).json({

@@ -6,6 +6,7 @@ import User from "../models/user.model";
 const cookieOptions = {
     httpOnly: true,
     secure: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 }
 
 async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
@@ -108,12 +109,12 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
         res.status(200)
-        .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshToken", refreshToken, cookieOptions)
+        .cookie("access_token", accessToken, cookieOptions)
+        .cookie("refresh_token", refreshToken, cookieOptions)
         .json({
             status: "success",
             message: "Login Successful",
-        })
+        });
     } catch (err) {
         res.status(500).json({
             status: "error",
@@ -137,8 +138,8 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
         )
 
         res.status(200)
-        .clearCookie("accessToken", cookieOptions)
-        .clearCookie("refreshToken", cookieOptions)
+        .clearCookie("access_token", cookieOptions)
+        .clearCookie("refresh_token", cookieOptions)
         .json({
             status: "success",
             message: "Logout Successful",
@@ -158,7 +159,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
  * @access private
  */
 export async function RefreshAccessToken(req: ExpressRequest, res: ExpressResponse) {
-    const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    const incomingRefreshToken = req.cookies?.refresh_token || req.body?.refresh_token;
     if (!incomingRefreshToken) {
         res.status(400).json({
             status: "failed",
@@ -190,8 +191,8 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         res.status(200)
-        .cookie("accessToken", accessToken, cookieOptions)
-        .cookie("refreshToken", refreshToken, cookieOptions)
+        .cookie("access_token", accessToken, cookieOptions)
+        .cookie("refresh_token", refreshToken, cookieOptions)
         .json({
             status: "success",
             message: "Access Token refreshed",

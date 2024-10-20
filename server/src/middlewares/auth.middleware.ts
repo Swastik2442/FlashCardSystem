@@ -8,7 +8,7 @@ import User from "../models/user.model";
  */
 export async function VerifyJWT(req: ExpressRequest, _res: ExpressResponse, next: NextFunction) {
     try {
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+        const token = req.cookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
         if (!token)
             throw new Error("Unauthorized Request")
     
@@ -20,6 +20,6 @@ export async function VerifyJWT(req: ExpressRequest, _res: ExpressResponse, next
         req.user = user;
         next();
     } catch (err: any) {
-        throw new Error(err?.message || "Internal Server Error");
+        next(err?.message || "Internal Server Error");
     }   
 }

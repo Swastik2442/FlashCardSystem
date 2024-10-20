@@ -112,7 +112,7 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
         decks.forEach(async (deck) => {
             const deckOwner = await User.findById(deck.owner).select("+fullName");
             if (!deckOwner)
-                throw new Error("Owner not found");
+                throw new Error("Deck Owner not found");
 
             decksModif.push({
                 _id: deck._id,
