@@ -49,7 +49,7 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
         const newUser = await User.create({
             fullName: fullName,
             email: email,
-            username: username,
+            username: username.toLowerCase(),
             password: password,
         });
 
@@ -87,7 +87,10 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
 
     try {
         const user = await User.findOne({
-            $or: [{ username: username.toLowerCase() }, { email: email }]
+            $or: [
+                { username: username === undefined ? null : username.toLowerCase() },
+                { email: email == undefined ? null : email }
+            ]
         });
         if (!user) {
             res.status(400).json({
@@ -138,8 +141,8 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
         )
 
         res.status(200)
-        .clearCookie("access_token", cookieOptions)
-        .clearCookie("refresh_token", cookieOptions)
+        .clearCookie("access_token")
+        .clearCookie("refresh_token")
         .json({
             status: "success",
             message: "Logout Successful",

@@ -1,5 +1,5 @@
 import express from "express";
-import { check } from "express-validator";
+import { check, oneOf } from "express-validator";
 import { Register, Login, Logout, RefreshAccessToken } from "../controllers/auth.controller";
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
@@ -32,11 +32,15 @@ router.post(
 
 router.post(
     "/login",
-    check("username")
-    .notEmpty()
-    .withMessage("Username is required")
-    .trim()
-    .escape(),
+    oneOf([
+        check("username")
+        .notEmpty()
+        .trim()
+        .escape(),
+        check("email")
+        .isEmail()
+        .normalizeEmail(),
+    ], "Any one of username or email is required"),
     check("password")
     .notEmpty()
     .withMessage("Password is required"),

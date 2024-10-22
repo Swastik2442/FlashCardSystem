@@ -10,7 +10,7 @@ import Deck from "../models/deck.model";
 export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
     const username = req.params.username;
     try {
-        const user = await User.findOne({ username: username }).select("-password -refreshToken");
+        const user = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshToken");
         if (!user) {
             res.status(404).json({
                 status: "error",
