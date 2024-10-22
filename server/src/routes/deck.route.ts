@@ -24,8 +24,10 @@ router.post(
     CreateDeck
 );
 
+router.get("/all", GetAllDecks);
+
 router.get(
-    "/deck/:did",
+    "/:did",
     check("did")
     .notEmpty()
     .withMessage("Deck ID is required")
@@ -35,7 +37,7 @@ router.get(
     GetDeck
 );
 router.delete(
-    "/deck/:did",
+    "/:did",
     check("did")
     .notEmpty()
     .withMessage("Deck ID is required")
@@ -46,7 +48,7 @@ router.delete(
 );
 
 router.patch(
-    "/deck/:did",
+    "/:did",
     check("did")
     .notEmpty()
     .withMessage("Deck ID is required")
@@ -55,8 +57,6 @@ router.patch(
     Validate,
     UpdateDeck
 );
-
-router.get("/all", GetAllDecks);
 
 router.post(
     "/share/:did",

@@ -17,9 +17,13 @@ interface IDeck {
     likedBy: mongoose.Schema.Types.ObjectId[];
 }
 
+interface IDeckAccessible {
+    readable: boolean;
+    writable: boolean;
+}
+
 interface IDeckMethods {
-    isAccessibleBy(user: mongoose.Schema.Types.ObjectId): boolean;
-    isEditableBy(user: mongoose.Schema.Types.ObjectId): boolean;
+    isAccessibleBy(userID: mongoose.Schema.Types.ObjectId): IDeckAccessible;
 }
 
 type DeckModel = mongoose.Model<IDeck, {}, IDeckMethods>;
@@ -86,12 +90,18 @@ deckSchema.pre("deleteOne", { document: true, query: false }, async function(nex
 
 // TODO: Implement deleteMany Pre Hook (this._conditions is not available in query?)
 
-deckSchema.methods.isAccessibleBy = function(user: mongoose.Schema.Types.ObjectId) {
-    return this.owner == user || this.sharedTo.some((sharedUser) => sharedUser.user == user);
-};
+deckSchema.methods.isAccessibleBy = function(userID: mongoose.Schema.Types.ObjectId) {
+    if (String(this.owner) === String(userID))
+        return { readable: true, writable: true };
 
-deckSchema.methods.isEditableBy = function(user: mongoose.Schema.Types.ObjectId) {
-    return this.owner == user || this.sharedTo.some((sharedUser) => sharedUser.user == user && sharedUser.editable);
+    const sharedUser = this.sharedTo.find((sharedUser) => String(sharedUser.user) === String(userID));
+    if (sharedUser)
+        return { readable: true, writable: sharedUser.editable };
+
+    if (!this.isPrivate)
+        return { readable: true, writable: false };
+
+    return { readable: false, writable: false };
 };
 
 export default mongoose.model("deck", deckSchema);

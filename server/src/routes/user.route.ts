@@ -7,6 +7,10 @@ import { GetUser, GetLikedDecks } from "../controllers/user.controller";
 const router = express.Router();
 router.use(VerifyJWT);
 
+router.get("/get", Validate, (req, res) => {
+    res.redirect("/user/get/" + encodeURIComponent(req.user.username));
+});
+
 router.get(
     "/get/:username",
     check("username")

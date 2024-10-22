@@ -25,10 +25,11 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             deckById = await Deck.findById(deck);
             if (!deckById)
                 throw new Error("Deck not found");
-            else if (!deck.isEditableBy(req.user._id)) {
+            else if (!deckById.isAccessibleBy(req.user._id).writable) {
                 res.status(401).json({
                     status: "error",
                     message: "Unauthorized Operation",
+                    data: null,
                 });
                 return;
             }
@@ -48,11 +49,13 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         res.status(200).json({
             status: "success",
             message: "Card created successfully",
+            data: newCard._id,
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -71,6 +74,7 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
             res.status(404).json({
                 status: "error",
                 message: "Card not found",
+                data: null,
             });
             return;
         }
@@ -82,18 +86,26 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
+                data: null,
             });
             return;
         }
 
         res.status(200).json({
             status: "success",
-            data: card,
+            message: "Card found",
+            data: {
+                question: card.question,
+                answer: card.answer,
+                hint: card.hint,
+                deck: card.deck,
+            },
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -119,7 +131,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
         const deck = await Deck.findById(card.deck);
         if (!deck)
             throw new Error("Deck not found");
-        else if (!deck.isEditableBy(req.user._id)) {
+        else if (!deck.isAccessibleBy(req.user._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -171,7 +183,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
         const deckById = await Deck.findById(card.deck);
         if (!deckById)
             throw new Error("Deck not found");
-        else if (!deckById.isEditableBy(req.user._id)) {
+        else if (!deckById.isAccessibleBy(req.user._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",

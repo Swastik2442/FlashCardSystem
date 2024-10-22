@@ -3,18 +3,6 @@ import mongoose from "mongoose";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 
-interface IDeckResponse {
-    _id: mongoose.Types.ObjectId;
-    name: string;
-    description: string;
-    dateCreated: Date;
-    dateUpdated: Date;
-    isPrivate: boolean;
-    likes: number;
-    owner: string;
-    editable: boolean;
-}
-
 /**
  * @route POST deck/new
  * @desc Creates a new Deck
@@ -27,6 +15,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
             res.status(422).json({
                 status: "error",
                 message: "Invalid Deck Name",
+                data: null,
             });
             return;
         }
@@ -44,12 +33,14 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
 
         res.status(200).json({
             status: "success",
-            data: "Deck created successfully",
+            message: "Deck created successfully",
+            data: newDeck._id,
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -68,24 +59,38 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
             res.status(404).json({
                 status: "error",
                 message: "Deck not found",
+                data: null,
             });
             return;
         } else if (!deck.isAccessibleBy(req.user._id)) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
+                data: null,
             });
             return;
         }
 
         res.status(200).json({
             status: "success",
-            data: deck,
+            message: "Deck found",
+            data: {
+                owner: deck.owner,
+                name: deck.name,
+                description: deck.description,
+                dateCreated: deck.dateCreated,
+                dateUpdated: deck.dateUpdated,
+                cards: deck.cards,
+                isPrivate: deck.isPrivate,
+                isEditable: deck.isAccessibleBy(req.user._id).writable,
+                likes: deck.likes,
+            },
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -99,42 +104,22 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
 export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
     try {
         const decks = await Deck.find({
-            $and: [
-                { name: { $ne: "#UNCATEGORISED#" } },
-                { $or: [
-                    { user: req.user._id },
-                    { sharedTo: { $elemMatch: { user: req.user._id } } },
-                ] }
+            $or: [
+                { owner: req.user._id },
+                { sharedTo: { $elemMatch: { user: req.user._id } } },
             ]
-        }).select("-likedBy");
-
-        var decksModif: IDeckResponse[] = [];
-        decks.forEach(async (deck) => {
-            const deckOwner = await User.findById(deck.owner).select("+fullName");
-            if (!deckOwner)
-                throw new Error("Deck Owner not found");
-
-            decksModif.push({
-                _id: deck._id,
-                name: deck.name,
-                description: deck.description,
-                dateCreated: deck.dateCreated,
-                dateUpdated: deck.dateUpdated,
-                isPrivate: deck.isPrivate,
-                likes: deck.likes,
-                owner: deckOwner.fullName,
-                editable: deck.isEditableBy(req.user._id),
-            });
-        });
+        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
 
         res.status(200).json({
             status: "success",
-            data: decksModif,
+            message: `${decks.length} Decks found`,
+            data: decks,
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -210,7 +195,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (!deck.isEditableBy(req.user._id)) {
+        } else if (!deck.isAccessibleBy(req.user._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",

@@ -15,12 +15,14 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
             res.status(404).json({
                 status: "error",
                 message: "User not found",
+                data: null,
             });
             return;
         }
 
         res.status(200).json({
             status: "success",
+            message: "User found",
             data: {
                 "fullName": user.fullName,
             },
@@ -29,6 +31,7 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -47,16 +50,18 @@ export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
                 { isPrivate: false },
                 { sharedTo: { $elemMatch: { user: req.user._id } } }
             ]
-        });
+        }).select("-owner -description -dateCreated -dateUpdated -cards -isPrivate -sharedTo -likes -likedBy -__v");
 
         res.status(200).json({
             status: "success",
+            message: `${likedDecks.length} Decks found`,
             data: likedDecks,
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
