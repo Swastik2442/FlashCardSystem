@@ -46,6 +46,9 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         if (!cardCheck)
             throw new Error("Card could not be created");
 
+        deckById.cards.push(newCard._id as any);
+        deckById.save();
+
         res.status(200).json({
             status: "success",
             message: "Card created successfully",

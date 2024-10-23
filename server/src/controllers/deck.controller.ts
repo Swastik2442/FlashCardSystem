@@ -140,7 +140,7 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (deck.owner != req.user._id || deck.name == "#UNCATEGORISED#") {
+        } else if (String(deck.owner) != String(req.user._id) || deck.name == "#UNCATEGORISED#") {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -203,9 +203,11 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        deck.name = name || deck.name;
-        deck.description = description || deck.description;
-        deck.isPrivate = isPrivate || deck.isPrivate;
+        deck.name = name != undefined ? name : deck.name;
+        deck.description = description != undefined ? description : deck.description;
+        deck.isPrivate = isPrivate != undefined ? isPrivate : deck.isPrivate;
+        deck.dateUpdated = new Date();
+        deck.save();
 
         res.status(200).json({
             status: "success",
@@ -345,7 +347,7 @@ export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
 
         res.status(200).json({
             status: "success",
-            data: "Liked the Deck",
+            message: "Liked the Deck",
         });
     } catch (err) {
         res.status(500).json({

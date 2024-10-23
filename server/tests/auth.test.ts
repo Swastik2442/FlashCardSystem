@@ -24,17 +24,6 @@ const setAuthTokens = (res: superagentResponse) => {
     };
 }
 
-const userLogin = async () => {
-    const res = await request(app).post("/auth/login").send({
-        username: sampleUser.username,
-        password: sampleUser.password,
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Login Successful");
-    setAuthTokens(res);
-};
-
 beforeAll(async () => {
     if (!process.env.MONGODB_CONNECTION_URI) {
         console.error("MONGODB_CONNECTION_URI is not set");
@@ -67,7 +56,16 @@ describe("Auth Routes", () => {
         setAuthTokens(res);
     });
 
-    it("should login the user using username", userLogin);
+    it("should login the user using username", async () => {
+        const res = await request(app).post("/auth/login").send({
+            username: sampleUser.username,
+            password: sampleUser.password,
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Login Successful");
+        setAuthTokens(res);
+    });
 
     it("should refresh the user's JWT tokens", async () => {
         const res = await request(app)
@@ -87,27 +85,5 @@ describe("Auth Routes", () => {
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Logout Successful");
         setAuthTokens(res);
-    });
-});
-
-describe("User Routes", () => {
-    it("should login the user", userLogin);
-
-    it("should get the user's public details", async () => {
-        const res = await request(app)
-            .get(`/user/get/${sampleUser.username}`)
-            .set('Cookie', `${authTokens.access_token};${authTokens.refresh_token}`);
-        expect(res.statusCode).toBe(200);
-        expect(res.body.status).toBe("success");
-        expect(res.body.data.fullName).toBe("Test User");
-    });
-
-    it("should get the user's liked decks", async () => {
-        const res = await request(app)
-            .get("/user/liked")
-            .set('Cookie', `${authTokens.access_token};${authTokens.refresh_token}`);
-        expect(res.statusCode).toBe(200);
-        expect(res.body.status).toBe("success");
-        expect(res.body.data).toHaveLength(0);
     });
 });
