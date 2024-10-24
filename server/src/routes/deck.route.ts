@@ -65,9 +65,9 @@ router.post(
     .withMessage("Deck ID is required")
     .trim()
     .escape(),
-    check("username")
+    check("user")
     .notEmpty()
-    .withMessage("Username is required")
+    .withMessage("User ID is required")
     .trim()
     .escape(),
     check("isEditable")

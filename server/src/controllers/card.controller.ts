@@ -49,7 +49,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         deckById.cards.push(newCard._id as any);
         deckById.save();
 
-        res.status(200).json({
+        res.status(201).json({
             status: "success",
             message: "Card created successfully",
             data: newCard._id,

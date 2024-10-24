@@ -31,7 +31,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
         if (!deckCheck)
             throw new Error("Deck could not be created");
 
-        res.status(200).json({
+        res.status(201).json({
             status: "success",
             message: "Deck created successfully",
             data: newDeck._id,
@@ -224,31 +224,35 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
 
 /**
  * @route POST deck/share/:did
- * @desc Shares the Deck with the given ID with the given User IDs
+ * @desc Shares the Deck with the given ID with the given User ID
  * @access public
  */
 export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
     try {
-        const { username, isEditable } = req.body;
+        const { user, isEditable } = req.body;
 
-        const userByUsername = await User.findOne({ username: username });
-        if (!userByUsername || userByUsername.username == req.user.username) {
+        const userByID = await User.findById(user);
+        if (!userByID || String(userByID._id) == String(req.user._id)) {
             res.status(422).json({
                 status: "error",
-                message: "Invalid Username",
+                message: "Invalid User ID",
             });
             return;
         }
 
-        const deck = await Deck.findById(id);
+        const deck = await Deck.findOne({
+            _id: id,
+            owner: { $ne: userByID._id },
+            name: { $ne: "#UNCATEGORISED#" },
+        });
         if (!deck) {
             res.status(404).json({
                 status: "error",
                 message: "Deck not found",
             });
             return;
-        } else if (deck.owner != req.user._id) {
+        } else if (String(deck.owner) != String(req.user._id)) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -256,22 +260,20 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        // if (deck.sharedTo.some(({user, editable}) => user == userByUsername._id)) { // ERROR: Cannot compare the two types
-        //     res.status(200).json({
-        //         status: "success",
-        //         message: "Already shared",
-        //     });
-        //     return;
-        // }
-
-        deck.sharedTo.push({ user: username, editable: isEditable });
-        await deck.save();
+        await Deck.updateOne(
+            { _id: deck._id },
+            { $pull: { sharedTo: { user: userByID._id } } }
+        );
+        await Deck.updateOne(
+            { _id: deck._id },
+            { $push: { sharedTo: { user: userByID._id, editable: isEditable } } }
+        );
 
         res.status(200).json({
             status: "success",
             message: "Deck shared successfully",
         });
-    } catch (err) {
+    } catch (err: any) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
