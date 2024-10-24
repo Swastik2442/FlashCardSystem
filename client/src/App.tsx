@@ -1,22 +1,48 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import "./App.css";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ThemeProvider } from "@/components/themeProvider"
+import { Toaster } from "@/components/ui/sonner";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import Home from "@/components/home";
+import Register from "@/components/register";
+import Login from "@/components/login";
+import Dashboard from "@/components/dashboard";
+import Playground from "@/components/playground";
+import UserProfile from "@/components/userProfile";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const Router = createBrowserRouter([
+    {
+      path: "/",
+      element: <><Header /><Home /><Footer /></>,
+    },
+    {
+      path: "/auth/register",
+      element: <><Register /></>,
+    },
+    {
+      path: "/auth/login",
+      element: <><Login /></>,
+    },
+    {
+      path: "/dashboard",
+      element: <><Header /><Dashboard /><Footer /></>,
+    },
+    {
+      path: "/play",
+      element: <><Playground /></>,
+    },
+    {
+      path: "/users",
+      element: <><Header /><UserProfile /><Footer /></>,
+    },
+  ]);
 
   return (
-    <>
-      <div className="text-blue-500">
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1 className="text-blue-500">FlashCardSystem</h1>
-      <button onClick={() => setCount((count) => count + 1)} className="border-2 rounded p-3" >
-        count is {count}
-      </button>
-    </>
+    <ThemeProvider>
+      <RouterProvider router={Router} />
+      <Toaster />
+    </ThemeProvider>
   )
 }
 
