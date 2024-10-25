@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ThemeProvider } from "@/components/themeProvider"
+import { ThemeProvider } from "@/components/contexts/themeProvider";
+import { AuthProvider } from "@/components/contexts/authProvider";
 import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -33,17 +34,19 @@ function App() {
       element: <><Playground /></>,
     },
     {
-      path: "/users",
+      path: "/users/:username",
       element: <><Header /><UserProfile /><Footer /></>,
     },
   ]);
 
   return (
+    <AuthProvider>
     <ThemeProvider>
       <RouterProvider router={Router} />
       <Toaster />
     </ThemeProvider>
-  )
+    </AuthProvider>
+  );
 }
 
 export default App

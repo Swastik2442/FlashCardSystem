@@ -37,7 +37,7 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
     root.classList.add(theme);
   }, [theme]);
 
-  const value = {
+  const value: ThemeProviderState = {
     theme,
     setTheme: (theme: Theme) => {
       localStorage.setItem(storageKey, theme);

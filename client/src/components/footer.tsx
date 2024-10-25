@@ -25,8 +25,8 @@ export default function Footer() {
       <div className="flex items-center h-14">
         <p>&copy; Swastik Kulshreshtha<span className="hidden sm:inline-block">, Sourabh Yadav &amp; Saurabh Saini</span></p>
         <nav className="flex flex-1 items-center gap-2 justify-end">
-          {tech.map((item) => (
-            <a href={item.url} target="_blank">
+          {tech.map((item, idx) => (
+            <a href={item.url} target="_blank" key={idx}>
               <item.icon className="w-6 h-6" />
               <span className="sr-only">{item.name}</span>
             </a>  
