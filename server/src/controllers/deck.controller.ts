@@ -230,7 +230,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
 export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
     try {
-        const { user, isEditable } = req.body;
+        const { user, isEditable, unshare } = req.body;
 
         const userByID = await User.findById(user);
         if (!userByID || String(userByID._id) == String(req.user._id)) {
@@ -264,14 +264,15 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             { _id: deck._id },
             { $pull: { sharedTo: { user: userByID._id } } }
         );
-        await Deck.updateOne(
-            { _id: deck._id },
-            { $push: { sharedTo: { user: userByID._id, editable: isEditable } } }
-        );
+        if (!unshare || unshare == undefined || isEditable != undefined)
+            await Deck.updateOne(
+                { _id: deck._id },
+                { $push: { sharedTo: { user: userByID._id, editable: isEditable } } }
+            );
 
         res.status(200).json({
             status: "success",
-            message: "Deck shared successfully",
+            message: "Deck sharing updated",
         });
     } catch (err: any) {
         res.status(500).json({

@@ -76,6 +76,25 @@ router.post(
     ShareDeck
 );
 
+router.post(
+    "/unshare/:did",
+    check("did")
+    .notEmpty()
+    .withMessage("Deck ID is required")
+    .trim()
+    .escape(),
+    check("user")
+    .notEmpty()
+    .withMessage("User ID is required")
+    .trim()
+    .escape(),
+    check("unshare")
+    .notEmpty()
+    .withMessage("Setting an unshare variable is required"),
+    Validate,
+    ShareDeck
+);
+
 router.get(
     "/likes/:did",
     check("did")

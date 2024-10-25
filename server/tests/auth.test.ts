@@ -10,7 +10,7 @@ const sampleUser = {
     email: "test@test.com",
     username: "testUser123",
     password: "321resUtset",
-}
+};
 
 let authTokens = { access_token: "", refresh_token: "" };
 
@@ -70,7 +70,7 @@ describe("Auth Routes", () => {
     it("should refresh the user's JWT tokens", async () => {
         const res = await request(app)
             .get("/auth/refresh-token")
-            .set('Cookie', `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Access Token refreshed");
@@ -80,7 +80,7 @@ describe("Auth Routes", () => {
     it("should log out the user", async () => {
         const res = await request(app)
             .get("/auth/logout")
-            .set('Cookie', `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Logout Successful");
