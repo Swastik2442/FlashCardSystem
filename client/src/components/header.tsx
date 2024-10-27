@@ -13,7 +13,7 @@ export default function Header() {
             <span className="font-bold hidden sm:inline-block">FlashCardSystem</span>
           </a>
           <nav className="hidden sm:flex items-center gap-4 text-sm lg:gap-6">
-            <a className="transition-colors hover:text-foreground/80 text-foreground" href="/dashboard">Dashboard</a>
+            <a className="transition-colors hover:text-foreground/80 text-foreground/60" href="/dashboard">Dashboard</a>
             <a className="transition-colors hover:text-foreground/80 text-foreground/60" href="/play">Play</a>
           </nav>
         </div>
