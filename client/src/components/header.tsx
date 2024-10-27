@@ -1,6 +1,6 @@
 import { Diamond } from "lucide-react";
 import { GitHubLogo } from "./icons";
-import { ModeToggle } from "./modeToggle";
+import { ThemeToggle } from "./themeToggle";
 import { AuthButton } from "./authButton";
 
 export default function Header() {
@@ -25,7 +25,7 @@ export default function Header() {
                 <span className="sr-only">GitHub</span>
               </div>
             </a>
-            <ModeToggle />
+            <ThemeToggle />
             <AuthButton />
           </nav>
         </div>

@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ThemeProvider } from "@/components/contexts/themeProvider";
-import { AuthProvider } from "@/components/contexts/authProvider";
+import { ThemeProvider } from "@/hooks/themeProvider";
+import { AuthProvider } from "@/hooks/authProvider";
 import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -40,12 +40,14 @@ function App() {
   ]);
 
   return (
-    <AuthProvider>
+    <>
     <ThemeProvider>
+    <AuthProvider>
       <RouterProvider router={Router} />
-      <Toaster />
-    </ThemeProvider>
     </AuthProvider>
+    </ThemeProvider>
+    <Toaster richColors toastOptions={{}} />
+    </>
   );
 }
 
