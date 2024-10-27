@@ -3,6 +3,7 @@ import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import request from "supertest";
 import mongoose from "mongoose";
 import app from "../src/app";
+import User from "../src/models/user.model";
 import Deck from "../src/models/deck.model";
 import Card from "../src/models/card.model";
 
@@ -11,6 +12,12 @@ const sampleUser = {
     email: "test2@test.com",
     username: "testUser321",
     password: "123resUtset",
+};
+const sampleUser2 = {
+    fullName: "Test User 3",
+    email: "test3@test.com",
+    username: "testUser987",
+    password: "789resUtset",
 };
 
 const sampleCard = {
@@ -22,7 +29,7 @@ const sampleCard = {
 const sampleDeck = {
     name: "Sample Deck",
     description: "This is a sample deck",
-    isPrivate: false,
+    isPrivate: true,
 };
 
 let authTokens = { access_token: "", refresh_token: "" };
@@ -35,8 +42,11 @@ beforeAll(async () => {
     }
     await mongoose.connect(process.env.MONGODB_CONNECTION_URI, { dbName: "testing" });
     
-    // Register and login the user
+    // Register Users
     await request(app).post("/auth/register").send(sampleUser);
+    await request(app).post("/auth/register").send(sampleUser2);
+
+    // Login the user
     const res = await request(app).post("/auth/login").send({
         username: sampleUser.username,
         password: sampleUser.password,
@@ -56,7 +66,7 @@ describe("User Routes", () => {
     it("should get the user's public details", async () => {
         const res = await request(app)
             .get(`/user/get/${sampleUser.username}`)
-            .set('Cookie', `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.data.fullName).toBe(sampleUser.fullName);
@@ -65,7 +75,7 @@ describe("User Routes", () => {
     it("should get the user's liked decks", async () => {
         const res = await request(app)
             .get("/user/liked")
-            .set('Cookie', `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.data).toHaveLength(0);
@@ -80,7 +90,7 @@ describe("Card Routes", () => {
             .post("/card/new")
             .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
             .send(sampleCard);
-        expect(res.statusCode).toBe(200);
+        expect(res.statusCode).toBe(201);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Card created successfully");
         expect(res.body.data).toBeDefined();
@@ -124,18 +134,30 @@ describe("Card Routes", () => {
 });
 
 describe("Deck Routes", () => {
-    let deckId: string;
+    let deckId: string, cardId: string;
 
     it("should create a new deck", async () => {
         const res = await request(app)
             .post("/deck/new")
             .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
             .send(sampleDeck);
-        expect(res.statusCode).toBe(200);
+        expect(res.statusCode).toBe(201);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Deck created successfully");
         expect(res.body.data).toBeDefined();
         deckId = res.body.data;
+    });
+
+    it("should add a card to the deck", async () => {
+        const res = await request(app)
+        .post("/card/new")
+        .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+        .send({  ...sampleCard, deck: deckId });
+        expect(res.statusCode).toBe(201);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Card created successfully");
+        expect(res.body.data).toBeDefined();
+        cardId = res.body.data;
     });
 
     it("should get the created deck", async () => {
@@ -150,7 +172,8 @@ describe("Deck Routes", () => {
         expect(res.body.data.owner).toBeDefined();
         expect(res.body.data.dateCreated).toBeDefined();
         expect(res.body.data.dateUpdated).toBeDefined();
-        expect(res.body.data.cards).toHaveLength(0);
+        expect(res.body.data.cards).toHaveLength(1);
+        expect(res.body.data.cards[0]).toBe(cardId);
         expect(res.body.data.isEditable).toBeDefined();
         expect(res.body.data.likes).toBe(0);
     });
@@ -161,6 +184,7 @@ describe("Deck Routes", () => {
             .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("2 Decks found");
         expect(res.body.data).toHaveLength(2);
         expect(res.body.data[0]._id).toBeDefined();
         expect(res.body.data[0].name).toBeDefined();
@@ -210,6 +234,60 @@ describe("Deck Routes", () => {
         expect(deck?.likes).toBe(0);
     });
 
+    it("should share the deck with read access", async () => {
+        const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
+        const res = await request(app)
+            .post(`/deck/share/${deckId}`)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .send({ user: user?._id, isEditable: false });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Deck sharing updated");
+
+        const deck = await Deck.findById(deckId);
+        const accessible = deck?.isAccessibleBy(user?._id as any);
+
+        expect(accessible?.readable).toBe(true);
+        expect(accessible?.writable).toBe(false);
+    });
+
+    it("should share the deck with write access", async () => {
+        const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
+        const res = await request(app)
+            .post(`/deck/share/${deckId}`)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .send({ user: user?._id, isEditable: true });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Deck sharing updated");
+        
+        const deck = await Deck.findById(deckId);
+        const accessible = deck?.isAccessibleBy(user?._id as any);
+
+        expect(accessible?.readable).toBe(true);
+        expect(accessible?.writable).toBe(true);
+    });
+
+    it("should unshare the deck", async () => {
+        const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
+        const res = await request(app)
+            .post(`/deck/unshare/${deckId}`)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .send({ user: user?._id, unshare: true });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Deck sharing updated");
+        
+        const deck = await Deck.findById(deckId);
+        const accessible = deck?.isAccessibleBy(user?._id as any);
+
+        expect(accessible?.readable).toBe(false);
+        expect(accessible?.writable).toBe(false);
+    });
+
     it("should delete the deck", async () => {
         const res = await request(app)
             .delete(`/deck/${deckId}`)
@@ -221,7 +299,4 @@ describe("Deck Routes", () => {
         const deck = await Deck.findById(deckId);
         expect(deck).toBeNull();
     });
-
-    it.todo("should share the deck with read access");
-    it.todo("should share the deck with write access");
 });

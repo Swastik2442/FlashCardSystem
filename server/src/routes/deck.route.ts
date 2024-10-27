@@ -65,13 +65,32 @@ router.post(
     .withMessage("Deck ID is required")
     .trim()
     .escape(),
-    check("username")
+    check("user")
     .notEmpty()
-    .withMessage("Username is required")
+    .withMessage("User ID is required")
     .trim()
     .escape(),
     check("isEditable")
     .isBoolean(),
+    Validate,
+    ShareDeck
+);
+
+router.post(
+    "/unshare/:did",
+    check("did")
+    .notEmpty()
+    .withMessage("Deck ID is required")
+    .trim()
+    .escape(),
+    check("user")
+    .notEmpty()
+    .withMessage("User ID is required")
+    .trim()
+    .escape(),
+    check("unshare")
+    .notEmpty()
+    .withMessage("Setting an unshare variable is required"),
     Validate,
     ShareDeck
 );

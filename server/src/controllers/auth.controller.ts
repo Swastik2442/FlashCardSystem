@@ -6,7 +6,6 @@ import User from "../models/user.model";
 const cookieOptions = {
     httpOnly: true,
     secure: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 }
 
 async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
@@ -112,8 +111,8 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
         res.status(200)
-        .cookie("access_token", accessToken, cookieOptions)
-        .cookie("refresh_token", refreshToken, cookieOptions)
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
         .json({
             status: "success",
             message: "Login Successful",
@@ -194,8 +193,8 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         res.status(200)
-        .cookie("access_token", accessToken, cookieOptions)
-        .cookie("refresh_token", refreshToken, cookieOptions)
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
         .json({
             status: "success",
             message: "Access Token refreshed",
