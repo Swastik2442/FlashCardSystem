@@ -4,10 +4,14 @@ import { Register, Login, Logout, RefreshAccessToken } from "../controllers/auth
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
 
+import multer from "multer";
+const upload = multer();
+
 const router = express.Router();
 
 router.post(
     "/register",
+    upload.none(),
     check("fullName")
     .notEmpty()
     .withMessage("Full Name is required")
@@ -32,6 +36,7 @@ router.post(
 
 router.post(
     "/login",
+    upload.none(),
     oneOf([
         check("username")
         .notEmpty()
