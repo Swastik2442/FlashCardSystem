@@ -1,8 +1,28 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useContext, createContext, useState } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+
+const authHeaders = new Headers();
+authHeaders.append("Access-Control-Allow-Origin", "http://localhost:2442");
+
+export function fetchWithAuth(url: string | URL | globalThis.Request, method: string, body?: BodyInit | null) {
+  return fetch(url, {
+    method: method,
+    headers: authHeaders,
+    credentials: "include",
+    body: body,
+  });
+}
+
+interface AuthResponse {
+  status: string;
+  message: string;
+  data?: string | null;
+}
 
 interface AuthProviderProps {
   children: React.ReactNode;
+  storageKey?: string;
 }
 
 interface AuthProviderState {
@@ -21,54 +41,52 @@ const initialState: AuthProviderState = {
 
 const AuthProviderContext = createContext<AuthProviderState>(initialState);
 
-export function AuthProvider({ children, ...props }: AuthProviderProps) {
-  const [user, setUser] = useState<string | null>(null);
-
-  const authHeaders = new Headers();
-  authHeaders.append("Access-Control-Allow-Origin", "http://localhost:2442");
+export function AuthProvider({ children, storageKey = "fcs-user", ...props }: AuthProviderProps) {
+  const [user, setUser] = useState<string | null>(localStorage.getItem(storageKey));
 
   const registerUser = async (data: FormData) => {
-    await fetch("http://localhost:2442/auth/register", {
-      method: "post",
-      headers: authHeaders,
-      credentials: "include",
-      body: data,
-    }).then(async (res) => {
-      const data: unknown = await res.json();
-      if (!res.ok)
-        throw new Error(data?.message as string || "Failed to Register");
+    await fetchWithAuth(
+      "http://localhost:2442/auth/register",
+      "post",
+      data
+    ).then(async (res) => {
+      const data = await res.json() as AuthResponse;
+      if (!res?.ok)
+        throw new Error(data?.message || "Failed to Register");
     }).catch((err: Error) => {
       throw new Error(err?.message || "Failed to Register");
     });
   };
 
   const loginUser = async (data: FormData) => {
-    await fetch("http://localhost:2442/auth/login", {
-      method: "post",
-      headers: authHeaders,
-      credentials: "include",
-      body: data,
-    }).then(async (res) => {
-      const data: unknown = await res.json();
-      if (!res.ok)
-        throw new Error(data?.message as string || "Failed to Login");
-      setUser("?");
-      console.log(document.cookie);
+    await fetchWithAuth(
+      "http://localhost:2442/auth/login",
+      "post",
+      data
+    ).then(async (res) => {
+      const data = await res.json() as AuthResponse;
+      if (!res?.ok)
+        throw new Error(data?.message || "Failed to Login");
+
+      const username = data.data!;
+      setUser(username);
+      localStorage.setItem(storageKey, username);
     }).catch((err: Error) => {
       throw new Error(err?.message || "Failed to Login");
     });
   };
 
   const logoutUser = async () => {
-    setUser(null);
-    await fetch("http://localhost:2442/auth/logout", {
-      method: "get",
-      headers: authHeaders,
-      credentials: "include",
-    }).then(async (res) => {
-      const data: unknown = await res.json();
-      if (!res.ok)
-        throw new Error(data?.message as string || "Logout Failed");
+    await fetchWithAuth(
+      "http://localhost:2442/auth/logout",
+      "get"
+    ).then(async (res) => {
+      const data = await res.json() as AuthResponse;
+      if (!res?.ok)
+        throw new Error(data?.message || "Logout Failed");
+
+      setUser(null);
+      localStorage.removeItem(storageKey);
     }).catch((err: Error) => {
       throw new Error(err?.message || "Logout Failed");
     });
@@ -86,7 +104,7 @@ export function AuthProvider({ children, ...props }: AuthProviderProps) {
       {children}
     </AuthProviderContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthProviderContext);
@@ -94,3 +112,8 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
+
+export const PrivateRoutes = () => {
+  const { user } = useAuth();
+  return (user != null ? <Outlet /> : <Navigate to="/auth/login" />);
+}

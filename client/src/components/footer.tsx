@@ -27,7 +27,7 @@ export default function Footer() {
         <nav className="flex flex-1 items-center gap-2 justify-end">
           {tech.map((item, idx) => (
             <a href={item.url} target="_blank" key={idx}>
-              <item.icon className="w-6 h-6" />
+              <item.icon className="size-6" />
               <span className="sr-only">{item.name}</span>
             </a>  
           ))}
