@@ -2,12 +2,13 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/themeProvider";
 import { AuthProvider, PrivateRoutes } from "@/hooks/authProvider";
 import { Toaster } from "@/components/ui/sonner";
+import ErrorBoundary from "@/components/errorBoundary";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import Home from "@/components/home";
-import Register from "@/components/register";
-import Login from "@/components/login";
-import { Dashboard, DashboardLoader } from "@/components/dashboard";
+import Register from "@/components/auth/register";
+import Login from "@/components/auth/login";
+import { Dashboard, DashboardLoader } from "@/components/dashboard/dashboard";
 import Playground from "@/components/playground";
 import UserProfile from "@/components/userProfile";
 
@@ -21,14 +22,17 @@ const Router = createBrowserRouter([
         <Footer />
       </>
     ),
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/auth/register",
     element: <Register />,
+    errorElement: <ErrorBoundary />,
   },
   {
     path: "/auth/login",
     element: <Login />,
+    errorElement: <ErrorBoundary />,
   },
   {
     element: <PrivateRoutes />,
@@ -43,14 +47,17 @@ const Router = createBrowserRouter([
           </>
         ),
         loader: DashboardLoader,
+        errorElement: <ErrorBoundary />,
       },
       {
         path: "/play",
         element: <Playground />,
+        errorElement: <ErrorBoundary />,
       },
       {
         path: "/play/:did",
         element: <Playground />,
+        errorElement: <ErrorBoundary />,
       },
       {
         path: "/users/:username",
@@ -61,6 +68,7 @@ const Router = createBrowserRouter([
             <Footer />
           </>
         ),
+        errorElement: <ErrorBoundary />,
       },
     ]
   }

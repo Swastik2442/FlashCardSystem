@@ -1,9 +1,9 @@
-import { Lock, Plus, Trash2 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Lock, Trash2 } from "lucide-react";
 import { useLoaderData } from "react-router-dom";
 import { fetchWithAuth } from "@/hooks/authProvider";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import CreationMenu from "@/components/dashboard/creationMenu";
 
 interface ILessDeck {
   _id: string;
@@ -92,19 +92,7 @@ export function Dashboard() {
       <div className="flex justify-between mx-4 mb-4">
         <h1 className="ml-6">Dashboard</h1>
         <div className="flex gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon"><Plus/></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>
-                <span>Deck</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <span>Card</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CreationMenu />
           <Button variant="outline" size="icon">
             <Trash2/>
           </Button>
