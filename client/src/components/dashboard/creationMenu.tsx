@@ -18,11 +18,7 @@ import { Button } from "@/components/ui/button";
 
 // TODO: Implement a way to add newly created decks/cards to page without full reload
 
-interface CreationResponse {
-  status: string;
-  message: string;
-  data: string | null;
-}
+type CreationResponse = ICustomResponse<string | null>;
 
 const deckFormSchema = z.object({
   name: z.string()
@@ -99,7 +95,6 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
         const data = await res.json() as CreationResponse;
         if (!res?.ok)
           throw new Error(data?.message || "Failed to Create a Deck");
-        console.log(data);
       }).catch((err: Error) => {
         throw new Error(err?.message || "Failed to Create a Deck");
       });

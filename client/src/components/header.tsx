@@ -22,7 +22,7 @@ export default function Header() {
             <a target="_blank" rel="noreferrer" href="https://github.com/Swastik2442/FlashCardSystem">
               <div className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground py-2 h-8 w-8 px-0">
                 <GitHubLogo className="size-5" />
-                <span className="sr-only">GitHub</span>
+                <span className="sr-only select-none">GitHub</span>
               </div>
             </a>
             <ThemeToggle />

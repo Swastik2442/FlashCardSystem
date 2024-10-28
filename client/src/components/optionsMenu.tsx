@@ -32,8 +32,11 @@ export function OptionsMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon"><User /></Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+      <DropdownMenuContent>
+        <DropdownMenuLabel className="flex justify-between">
+          <span className="select-none">My Account</span>
+          <span className="font-extralight">{user}</span>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate(`/users/${user}`)}>
           <User />
@@ -56,6 +59,7 @@ export function OptionsMenu() {
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
+      <span className="sr-only select-none">User Options</span>
+      </DropdownMenu>
   );
 }

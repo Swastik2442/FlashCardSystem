@@ -1,41 +1,9 @@
 import { Lock, Trash2 } from "lucide-react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, Link } from "react-router-dom";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import CreationMenu from "@/components/dashboard/creationMenu";
-
-interface ILessDeck {
-  _id: string;
-  name: string;
-  dateUpdated: string;
-  isPrivate: boolean;
-}
-
-interface IMoreDeck {
-  owner: string;
-  name: string;
-  description: string;
-  dateCreated: string;
-  dateUpdated: string;
-  cards: string[];
-  isPrivate: boolean;
-  isEditable: boolean;
-  likes: number;
-}
-
-interface ICard {
-  question: string;
-  answer: string;
-  hint: string;
-  deck: string;
-}
-
-interface ICustomResponse<T> {
-  status: string;
-  message: string;
-  data: T;
-}
 
 interface IDashboardLoaderData {
   decks: ILessDeck[];
@@ -85,8 +53,27 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
     const cardData = await cardRes.json() as ICustomResponse<ICard>;
     cards.push(cardData.data);
   }
+  decks.sort((a, b) => (a.dateUpdated > b.dateUpdated || a.name < b.name) ? -1 : 1);
+  cards.sort((a, b) => a.question > b.question ? 1 : -1);
 
   return { decks: decks, cards: cards };
+}
+
+function getFormattedDate(date: string): string {
+  try {
+    const jsDate = new Date(date);
+    const now = new Date();
+    const diff = now.getTime() - jsDate.getTime();
+    if (diff <= 86400000)       // 24 hours
+      return jsDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
+    else if (diff <= 604800000) // 7 Days
+      return jsDate.toLocaleTimeString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+    else
+      return jsDate.toLocaleDateString();
+  } catch (err) {
+    console.error(err);
+  }
+  return "";
 }
 
 export function Dashboard() {
@@ -106,11 +93,13 @@ export function Dashboard() {
       <div className="flex flex-wrap gap-4 mx-8">
         {decks.map((deck, idx) => (
           <Card className="min-w-72 flex-1" key={idx}>
-            <CardHeader>
-              <CardTitle>{deck.name}</CardTitle>
-            </CardHeader>
+            <Link to={`/deck/${deck._id}`}>
+              <CardHeader>
+                <CardTitle>{deck.name}</CardTitle>
+              </CardHeader>
+            </Link>
             <CardFooter className="flex justify-between">
-              <span>{deck.dateUpdated}</span>
+              <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
               <span>{deck.isPrivate ? <Lock className="size-4" /> : ""}</span>
             </CardFooter>
           </Card>

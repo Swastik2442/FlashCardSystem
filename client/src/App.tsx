@@ -10,6 +10,7 @@ import Register from "@/components/auth/register";
 import Login from "@/components/auth/login";
 import { Dashboard, DashboardLoader } from "@/components/dashboard/dashboard";
 import Playground from "@/components/playground";
+import { Deck, DeckLoader } from "@/components/deck";
 import UserProfile from "@/components/userProfile";
 
 const Router = createBrowserRouter([
@@ -47,6 +48,18 @@ const Router = createBrowserRouter([
           </>
         ),
         loader: DashboardLoader,
+        errorElement: <ErrorBoundary />,
+      },
+      {
+        path: "/deck/:did",
+        element: (
+          <>
+            <Header />
+            <Deck />
+            <Footer />
+          </>
+        ),
+        loader: DeckLoader,
         errorElement: <ErrorBoundary />,
       },
       {

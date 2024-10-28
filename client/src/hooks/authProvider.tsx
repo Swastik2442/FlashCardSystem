@@ -15,11 +15,7 @@ export function fetchWithAuth(url: string | URL | globalThis.Request, method: st
   });
 }
 
-interface AuthResponse {
-  status: string;
-  message: string;
-  data?: string | null;
-}
+type AuthResponse = ICustomResponse<string | null>;
 
 interface AuthProviderProps {
   children: React.ReactNode;
