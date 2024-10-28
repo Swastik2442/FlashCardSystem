@@ -37,7 +37,12 @@ interface ICustomResponse<T> {
   data: T;
 }
 
-export async function DashboardLoader() {
+interface IDashboardLoaderData {
+  decks: ILessDeck[];
+  cards: ICard[];
+}
+
+export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   // Get all Decks owned by or shared to the User
   const res = await fetchWithAuth(
     "http://localhost:2442/deck/all",
@@ -85,7 +90,7 @@ export async function DashboardLoader() {
 }
 
 export function Dashboard() {
-  const { decks, cards } = useLoaderData() as { decks: ILessDeck[], cards: ICard[] };
+  const { decks, cards } = useLoaderData() as IDashboardLoaderData;
 
   return (
     <div className="my-4">

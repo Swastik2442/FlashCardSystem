@@ -4,6 +4,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 const authHeaders = new Headers();
 authHeaders.append("Access-Control-Allow-Origin", "http://localhost:2442");
+authHeaders.append("Content-Type", "application/json");
 
 export function fetchWithAuth(url: string | URL | globalThis.Request, method: string, body?: BodyInit | null) {
   return fetch(url, {
@@ -25,10 +26,22 @@ interface AuthProviderProps {
   storageKey?: string;
 }
 
+interface LoginSchema {
+  email: string;
+  password: string;
+}
+
+interface RegisterSchema {
+  fullName: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
 interface AuthProviderState {
   user: string | null;
-  registerUser: (data: FormData) => void | Promise<void>;
-  loginUser: (data: FormData) => void | Promise<void>;
+  registerUser: (data: RegisterSchema) => void | Promise<void>;
+  loginUser: (data: LoginSchema) => void | Promise<void>;
   logoutUser: () => void | Promise<void>;
 }
 
@@ -44,11 +57,11 @@ const AuthProviderContext = createContext<AuthProviderState>(initialState);
 export function AuthProvider({ children, storageKey = "fcs-user", ...props }: AuthProviderProps) {
   const [user, setUser] = useState<string | null>(localStorage.getItem(storageKey));
 
-  const registerUser = async (data: FormData) => {
+  const registerUser = async (data: RegisterSchema) => {
     await fetchWithAuth(
       "http://localhost:2442/auth/register",
       "post",
-      data
+      JSON.stringify(data)
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
       if (!res?.ok)
@@ -58,11 +71,11 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
     });
   };
 
-  const loginUser = async (data: FormData) => {
+  const loginUser = async (data: LoginSchema) => {
     await fetchWithAuth(
       "http://localhost:2442/auth/login",
       "post",
-      data
+      JSON.stringify(data)
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
       if (!res?.ok)
