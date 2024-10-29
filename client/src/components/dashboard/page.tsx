@@ -1,4 +1,4 @@
-import { Lock, Trash2 } from "lucide-react";
+import { Lock, Plus, Trash2 } from "lucide-react";
 import { useLoaderData, Link } from "react-router-dom";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,8 +65,8 @@ export function Dashboard() {
 
   return (
     <div className="my-4">
-      <div className="flex justify-between mx-4 mb-4">
-        <h1 className="ml-6">Dashboard</h1>
+      <div className="flex justify-between ml-10 mr-4">
+        <h1 className="text-lg select-none">Dashboard</h1>
         <div className="flex gap-1">
           <CreationMenu />
           <Button variant="outline" size="icon">
@@ -74,7 +74,18 @@ export function Dashboard() {
           </Button>
         </div>
       </div>
+      <hr className="my-4" />
       <div className="flex flex-wrap gap-4 mx-8">
+        {decks.length === 0 && cards.length === 0 && (
+          <div className="text-center w-full h-full">
+          <span className="font-thin">No Decks or Cards found</span>
+          <h2>
+            <span>Start creating them using the</span>
+            <Plus className="inline-block size-4 m-1 mb-2" />
+            <span>Icon in the Top-Right Corner.</span>
+          </h2>
+        </div>
+        )}
         {decks.map((deck, idx) => (
           <Card className="min-w-72 flex-1" key={idx}>
             <Link to={`/deck/${deck._id}`}>

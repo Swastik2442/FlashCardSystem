@@ -1,5 +1,5 @@
-import { useParams, useLoaderData, LoaderFunctionArgs } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { Link, useParams, useLoaderData, LoaderFunctionArgs } from "react-router-dom";
+import { Lock, Plus } from "lucide-react";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./options";
@@ -62,10 +62,12 @@ export function Deck() {
 
   return (
     <div className="my-4">
-      <div className="flex justify-between mx-4 mb-4">
-        <h1 className="ml-6 flex gap-1 items-center">
+      <div className="flex justify-between ml-10 mr-4 mb-4">
+        <h1 className="flex gap-1 items-center">
           {deckInfo.isPrivate && <Lock className="size-4" />}
-          <span>{ownerInfo.username} - {deckInfo.name}</span>
+          <Link to={`/users/${ownerInfo.username}`} className="hidden sm:inline-block font-extralight hover:underline">{ownerInfo.username}</Link>
+          <span className="hidden sm:inline-block font-thin"> | </span>
+          <span>{deckInfo.name}</span>
         </h1>
         <div className="flex gap-1">
           <DeckLikeButton deckID={did!} likes={deckInfo.likes} isLiked={deckInfo.isLiked} />
@@ -76,8 +78,19 @@ export function Deck() {
           </>}
         </div>
       </div>
-      <p className="ml-10 mr-4 mb-4 font-light">{deckInfo.description}</p>
+      <p className="ml-10 mr-4 text-sm font-extralight">{deckInfo.description}</p>
+      <hr className="my-4" />
       <div className="flex flex-wrap gap-4 mx-8">
+        {cards.length === 0 && (
+          <div className="text-center w-full h-full">
+            <span className="font-thin">No Cards found</span>
+            <h2>
+              <span>Start creating them using the</span>
+              <Plus className="inline-block size-4 m-1 mb-2" />
+              <span>Icon in the Top-Right Corner.</span>
+            </h2>
+          </div>
+        )}
         {cards.map((card, idx) => (
           <Card className="min-w-72 flex-1" key={10000 + idx}>
             <CardHeader>

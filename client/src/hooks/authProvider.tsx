@@ -81,7 +81,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
 
   const logoutUser = async () => {
     await fetchWithAuth(
-      `${import.meta.env.VITE_SERVER_HOST}/logout`, "get"
+      `${import.meta.env.VITE_SERVER_HOST}/auth/logout`, "get"
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
       if (!res?.ok)

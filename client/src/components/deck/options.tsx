@@ -1,21 +1,30 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2 } from "lucide-react";
+import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Check, ChevronsUpDown, Link2 } from "lucide-react";
 import { useAuth, fetchWithAuth } from "@/hooks/authProvider";
+import { useMediaQuery } from "@/hooks/mediaQuery";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/utils/css";
 import { deckFormSchema, deckShareFormSchema, cardFormSchema } from "@/types/forms";
 import type { TDeckFormSchema, TDeckShareFormSchema, TCardFormSchema } from "@/types/forms";
+
+interface SearchUser extends IUser {
+  id: string;
+}
 
 interface IDeckOptionsProps {
   deckID: string;
@@ -277,7 +286,6 @@ function DeckEditDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps
         JSON.stringify(values),
       ).then(async (res) => {
         const data = await res.json() as ICustomResponse<string | null>;
-        console.log(data);
         if (!res?.ok)
           throw new Error(data?.message || "Failed to Edit the Deck");
       }).catch((err: Error) => {
@@ -362,11 +370,17 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
     },
   });
 
+  const handleLinkCopy = () => {
+    void navigator.clipboard.writeText(`${import.meta.env.VITE_CLIENT_HOST}/deck/${deckID}`);
+    toast.info("Link Copied");
+  }
+  const handleShareCancel = () => setDialogOpen(false);
+
   async function handleDeckSharing(values: TDeckShareFormSchema) {
     setDialogOpen(false);
     try {
       await fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
+        `${import.meta.env.VITE_SERVER_HOST}/deck/share/${deckID}`,
         "post",
         JSON.stringify(values),
       ).then(async (res) => {
@@ -381,7 +395,7 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
       deckShareForm.reset();
     } catch (err) {
       console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to  Share the Deck");
+      toast.error((err instanceof Error) ? err.message : "Failed to Share the Deck");
     }
   }
 
@@ -396,7 +410,17 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
         </DialogHeader>
         <Form {...deckShareForm}>
           <form className="grid gap-2" onSubmit={deckShareForm.handleSubmit(handleDeckSharing)}>
-            {/* TODO: Combobox for User Selection and Searching */}
+            <FormField
+              control={deckShareForm.control}
+              name="user"
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
+                  <FormLabel className="text-right">User</FormLabel>
+                  <UserSearchField form={deckShareForm} value={field.value} />
+                  <FormMessage className="col-span-4 text-right" />
+                </FormItem>
+              )}
+            />
             <FormField
               control={deckShareForm.control}
               name="isEditable"
@@ -424,12 +448,136 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
               )}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="button" variant="ghost" onClick={handleLinkCopy}><Link2 /></Button>
+              <Button type="button" variant="outline" onClick={handleShareCancel}>Cancel</Button>
               <Button type="submit">Edit</Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function getInitialUsers() {
+  const localUsers = localStorage.getItem("users");
+  if (!localUsers || localUsers.length < 50)
+    return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const storedUsers = JSON.parse(localUsers);
+  if (!Array.isArray(storedUsers))
+    return [];
+  for (const user of storedUsers) {
+    if (user satisfies SearchUser)
+      continue;
+    return [];
+  }
+  return storedUsers as SearchUser[];
+}
+
+function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema>>, value: string }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [usersList, setUsersList] = useState<SearchUser[]>(getInitialUsers());
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchTerm.length < 2) return;
+      try {
+        await fetchWithAuth(
+          `${import.meta.env.VITE_SERVER_HOST}/user/getsub/${searchTerm}`,
+          "get",
+        ).then(async (res) => {
+          const data = await res.json() as ICustomResponse<SearchUser[]>;
+          if (!res?.ok)
+            throw new Error(data?.message || "No such User found");
+          setUsersList(data.data);
+          localStorage.setItem("fcs-users", JSON.stringify(data.data));
+        }).catch((err: Error) => {
+          throw new Error(err?.message || "No such User found");
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error((err instanceof Error) ? err.message : "No such User found");
+      }
+    }, 2000);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  if (isDesktop)
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <FormControl style={{ marginTop: 0 + 'px' }}>
+            <Button variant="outline" role="combobox" className={cn(
+              "col-span-3 justify-between",
+              !value && "text-muted-foreground"
+            )}>
+              {value ? usersList.find((user) => user.id === value)?.username : "Select User"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className="p-0">
+          <Command>
+            <CommandInput placeholder="Search User..." onValueChange={(val) => setSearchTerm(val)} />
+            <CommandList>
+              <CommandEmpty>No User found.</CommandEmpty>
+              <CommandGroup>
+                {usersList.map((user) => (
+                  <CommandItem value={user.username} key={user.id} onSelect={() => {
+                    form.setValue("user", user.id)
+                  }}>
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        user.id === value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {user.username}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
+
+  return (
+    <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <DrawerTrigger asChild>
+        <FormControl style={{ marginTop: 0 + 'px' }}>
+          <Button variant="outline" role="combobox" className={cn(
+            "col-span-3 justify-between",
+            !value && "text-muted-foreground"
+          )}>
+            {value ? usersList.find((user) => user.id === value)?.username : "Select User"}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </FormControl>
+      </DrawerTrigger>
+      <DrawerContent>
+        <Command>
+          <CommandInput placeholder="Search User..." onValueChange={(val) => setSearchTerm(val)} />
+          <CommandList>
+            <CommandEmpty>No User found.</CommandEmpty>
+            <CommandGroup>
+              {usersList.map((user) => (
+                <CommandItem key={user.id} value={user.id} onSelect={() => {
+                  form.setValue("user", user.id);
+                  setDrawerOpen(false);
+                }}>
+                  {user.username}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </DrawerContent>
+    </Drawer>
   );
 }
