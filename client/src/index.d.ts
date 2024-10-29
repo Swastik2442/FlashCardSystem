@@ -1,3 +1,8 @@
+interface IUser {
+  fullName: string;
+  username: string;
+}
+
 interface ILessDeck {
   _id: string;
   name: string;
@@ -15,6 +20,7 @@ interface IMoreDeck {
   isPrivate: boolean;
   isEditable: boolean;
   likes: number;
+  isLiked: boolean;
 }
 
 interface ICard {

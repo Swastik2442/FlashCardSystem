@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useContext, createContext, useState } from "react";
+import { useContext, createContext, useState, useEffect, useCallback } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import type { TLoginFormSchema, TRegisterFormSchema } from "@/types/forms";
 
 const authHeaders = new Headers();
 authHeaders.append("Access-Control-Allow-Origin", "http://localhost:2442");
@@ -22,22 +23,11 @@ interface AuthProviderProps {
   storageKey?: string;
 }
 
-interface LoginSchema {
-  email: string;
-  password: string;
-}
-
-interface RegisterSchema {
-  fullName: string;
-  email: string;
-  username: string;
-  password: string;
-}
-
 interface AuthProviderState {
   user: string | null;
-  registerUser: (data: RegisterSchema) => void | Promise<void>;
-  loginUser: (data: LoginSchema) => void | Promise<void>;
+  registerUser: (data: TRegisterFormSchema) => void | Promise<void>;
+  loginUser: (data: TLoginFormSchema) => void | Promise<void>;
+  refreshTokens: () => void | Promise<void>;
   logoutUser: () => void | Promise<void>;
 }
 
@@ -45,17 +35,20 @@ const initialState: AuthProviderState = {
   user: null,
   registerUser: () => console.error("registerUser not implemented"),
   loginUser: () => console.error("loginUser not implemented"),
+  refreshTokens: () => console.error("refreshTokens not implemented"),
   logoutUser: () => console.error("logoutUser not implemented"),
 };
+
+let didInit = false;
 
 const AuthProviderContext = createContext<AuthProviderState>(initialState);
 
 export function AuthProvider({ children, storageKey = "fcs-user", ...props }: AuthProviderProps) {
   const [user, setUser] = useState<string | null>(localStorage.getItem(storageKey));
 
-  const registerUser = async (data: RegisterSchema) => {
+  const registerUser = async (data: TRegisterFormSchema) => {
     await fetchWithAuth(
-      "http://localhost:2442/auth/register",
+      `${import.meta.env.VITE_SERVER_HOST}/auth/register`,
       "post",
       JSON.stringify(data)
     ).then(async (res) => {
@@ -67,9 +60,9 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
     });
   };
 
-  const loginUser = async (data: LoginSchema) => {
+  const loginUser = async (data: TLoginFormSchema) => {
     await fetchWithAuth(
-      "http://localhost:2442/auth/login",
+      `${import.meta.env.VITE_SERVER_HOST}/auth/login`,
       "post",
       JSON.stringify(data)
     ).then(async (res) => {
@@ -77,6 +70,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
       if (!res?.ok)
         throw new Error(data?.message || "Failed to Login");
 
+      // BUG: if already logged in and new login fails, cookies are still valid but user becomes null
       const username = data.data!;
       setUser(username);
       localStorage.setItem(storageKey, username);
@@ -87,8 +81,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
 
   const logoutUser = async () => {
     await fetchWithAuth(
-      "http://localhost:2442/auth/logout",
-      "get"
+      `${import.meta.env.VITE_SERVER_HOST}/logout`, "get"
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
       if (!res?.ok)
@@ -101,10 +94,35 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
     });
   };
 
+  const refreshTokens = async () => {
+    await fetchWithAuth(
+      `${import.meta.env.VITE_SERVER_HOST}/auth/refresh-token`, "get"
+    ).then(async (res) => {
+      const data = await res.json() as AuthResponse;
+      if (!res?.ok)
+        throw new Error(data?.message || "Failed to Refresh Tokens");
+
+      const username = data.data!;
+      setUser(username);
+      localStorage.setItem(storageKey, username);
+    }).catch((err: Error) => {
+      throw new Error(err?.message || "Failed to Register");
+    });
+  };
+
+  const callbackRefreshTokens = useCallback(refreshTokens, [storageKey]);
+  useEffect(() => {
+    if (!didInit) {
+      didInit = true;
+      void callbackRefreshTokens();
+    }
+  }, [callbackRefreshTokens]);
+
   const value: AuthProviderState = {
     user: user,
     registerUser: registerUser,
     loginUser: loginUser,
+    refreshTokens: refreshTokens,
     logoutUser: logoutUser,
   };
 

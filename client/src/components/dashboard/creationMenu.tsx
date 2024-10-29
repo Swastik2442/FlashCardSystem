@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Plus } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -15,31 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { deckFormSchema, cardFormSchema } from "@/types/forms";
+import type { TDeckFormSchema, TCardFormSchema } from "@/types/forms";
 
 // TODO: Implement a way to add newly created decks/cards to page without full reload
 
 type CreationResponse = ICustomResponse<string | null>;
-
-const deckFormSchema = z.object({
-  name: z.string()
-  .min(3, { message: "Name must be at least 3 characters." })
-  .max(64, { message: "Name must be at most 64 characters." }),
-  description: z.string()
-  .max(256, { message: "Description must be at most 256 characters." }),
-  isPrivate: z.boolean().default(true).optional(),
-});
-
-const cardFormSchema = z.object({
-  question: z.string()
-  .min(3, { message: "Question must be at least 3 characters." })
-  .max(64, { message: "Question must be at most 128 characters." }),
-  answer: z.string()
-  .min(3, { message: "Answer must be at least 3 characters." })
-  .max(64, { message: "Answer must be at most 128 characters." }),
-  hint: z.string()
-  .max(64, { message: "Hint must be at most 64 characters." }),
-  deck: z.string(),
-});
 
 export default function CreationMenu() {
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
@@ -76,7 +56,7 @@ export default function CreationMenu() {
 
 function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
   const navigate = useNavigate();
-  const deckForm = useForm<z.infer<typeof deckFormSchema>>({
+  const deckForm = useForm<TDeckFormSchema>({
     resolver: zodResolver(deckFormSchema),
     defaultValues: {
       description: "",
@@ -84,11 +64,11 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
     },
   });
 
-  async function handleDeckCreation(values: z.infer<typeof deckFormSchema>) {
+  async function handleDeckCreation(values: TDeckFormSchema) {
     setDialogOpen(false);
     try {
       await fetchWithAuth(
-        "http://localhost:2442/deck/new",
+        `${import.meta.env.VITE_SERVER_HOST}/deck/new`,
         "post",
         JSON.stringify(values),
       ).then(async (res) => {
@@ -99,6 +79,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
         throw new Error(err?.message || "Failed to Create a Deck");
       });
       toast.success("Deck Created", { description: values.name });
+      deckForm.reset();
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
@@ -157,6 +138,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
               )}
             />
             <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit">Create</Button>
             </DialogFooter>
           </form>
@@ -168,7 +150,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
 
 function CardCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
   const navigate = useNavigate();
-  const cardForm = useForm<z.infer<typeof cardFormSchema>>({
+  const cardForm = useForm<TCardFormSchema>({
     resolver: zodResolver(cardFormSchema),
     defaultValues: {
       hint: "",
@@ -176,23 +158,23 @@ function CardCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
     },
   })
 
-  async function handleCardCreation(values: z.infer<typeof cardFormSchema>) {
+  async function handleCardCreation(values: TCardFormSchema) {
     setDialogOpen(false);
     try {
       await fetchWithAuth(
-        "http://localhost:2442/card/new",
+        `${import.meta.env.VITE_SERVER_HOST}/card/new`,
         "post",
         JSON.stringify(values),
       ).then(async (res) => {
         const data = await res.json() as CreationResponse;
         if (!res?.ok)
           throw new Error(data?.message || "Failed to Create a Card");
-        console.log(data);
       }).catch((err: Error) => {
         throw new Error(err?.message || "Failed to Create a Card");
       });
-      navigate("/dashboard", { replace: true });
       toast.success("Card Created", { description: values.question });
+      cardForm.reset();
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck");
@@ -272,6 +254,7 @@ function CardCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
               )}
             />
             <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit">Create</Button>
             </DialogFooter>
           </form>

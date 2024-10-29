@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/authProvider";
@@ -9,22 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const loginFormSchema = z.object({
-  email: z.string().email("Invalid email address."),
-  password: z.string()
-  .min(8, { message: "Password must be at least 8 characters." })
-  .max(128, { message: "Password cannot be more than 128 characters." }),
-});
+import { loginFormSchema } from "@/types/forms";
+import type { TLoginFormSchema } from "@/types/forms";
 
 export default function Login() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const loginForm = useForm<z.infer<typeof loginFormSchema>>({
+  const loginForm = useForm<TLoginFormSchema>({
     resolver: zodResolver(loginFormSchema)
   });
 
-  async function handleLogin(values: z.infer<typeof loginFormSchema>) {
+  async function handleLogin(values: TLoginFormSchema) {
     try {
       await auth.loginUser(values);
       toast.success("Logged in Successfully");

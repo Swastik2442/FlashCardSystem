@@ -4,6 +4,7 @@ import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import CreationMenu from "@/components/dashboard/creationMenu";
+import { getFormattedDate } from "@/utils/time";
 
 interface IDashboardLoaderData {
   decks: ILessDeck[];
@@ -13,7 +14,7 @@ interface IDashboardLoaderData {
 export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   // Get all Decks owned by or shared to the User
   const res = await fetchWithAuth(
-    "http://localhost:2442/deck/all",
+    `${import.meta.env.VITE_SERVER_HOST}/deck/all`,
     "get"
   ).catch((err: Error) => {
     throw new Error(err.message || "Failed to fetch decks");
@@ -29,7 +30,7 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
 
   // Get all Cards in the Uncategorized Deck
   const uncatRes = await fetchWithAuth(
-    `http://localhost:2442/deck/${uncat._id}`,
+    `${import.meta.env.VITE_SERVER_HOST}/deck/${uncat._id}`,
     "get"
   ).catch((err: Error) => {
     console.error(err.message || "Failed to fetch uncategorized cards");
@@ -42,7 +43,7 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   const cards: ICard[] = [];
   for  (const cardID of uncatCardsData.data.cards) {
     const cardRes = await fetchWithAuth(
-      `http://localhost:2442/card/${cardID}`,
+      `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
       "get"
     ).catch((err: Error) => {
       console.error(err.message || "Failed to fetch card");
@@ -57,23 +58,6 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   cards.sort((a, b) => a.question > b.question ? 1 : -1);
 
   return { decks: decks, cards: cards };
-}
-
-function getFormattedDate(date: string): string {
-  try {
-    const jsDate = new Date(date);
-    const now = new Date();
-    const diff = now.getTime() - jsDate.getTime();
-    if (diff <= 86400000)       // 24 hours
-      return jsDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
-    else if (diff <= 604800000) // 7 Days
-      return jsDate.toLocaleTimeString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
-    else
-      return jsDate.toLocaleDateString();
-  } catch (err) {
-    console.error(err);
-  }
-  return "";
 }
 
 export function Dashboard() {

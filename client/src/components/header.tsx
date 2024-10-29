@@ -1,20 +1,29 @@
 import { Diamond } from "lucide-react";
+import { useNavigate, NavLink } from "react-router-dom";
 import { GitHubLogo } from "./icons";
 import { ThemeToggle } from "./themeToggle";
 import { OptionsMenu } from "./optionsMenu";
 
+const navLinkClasses = ({ isActive }: { isActive: boolean }) => (
+  [
+    "transition-colors hover:text-foreground/80",
+    isActive ? "text-foreground" : "text-foreground/60",
+  ].join(" ")
+);
+
 export default function Header() {
+  const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="mr-4 flex">
-          <a className="mr-4 flex items-center space-x-2 lg:mr-6 hover:cursor-pointer" onClick={() => window.location.reload()}>
+          <a className="mr-4 flex items-center space-x-2 lg:mr-6 hover:cursor-pointer" onClick={() => navigate(0)}>
             <Diamond className="size-4" />
-            <span className="font-bold hidden sm:inline-block">FlashCardSystem</span>
+            <span className="font-bold hidden sm:inline-block">{import.meta.env.VITE_APP_TITLE || "FlashCardSystem"}</span>
           </a>
           <nav className="hidden sm:flex items-center gap-4 text-sm lg:gap-6">
-            <a className="transition-colors hover:text-foreground/80 text-foreground/60" href="/dashboard">Dashboard</a>
-            <a className="transition-colors hover:text-foreground/80 text-foreground/60" href="/play">Play</a>
+            <NavLink to="/dashboard" className={navLinkClasses}>Dashboard</NavLink>
+            <NavLink to="/play" className={navLinkClasses}>Play</NavLink>
           </nav>
         </div>
         <div className="flex flex-1 items-center space-x-2 justify-end">

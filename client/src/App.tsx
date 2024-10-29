@@ -10,7 +10,7 @@ import Register from "@/components/auth/register";
 import Login from "@/components/auth/login";
 import { Dashboard, DashboardLoader } from "@/components/dashboard/dashboard";
 import Playground from "@/components/playground";
-import { Deck, DeckLoader } from "@/components/deck";
+import { Deck, DeckLoader } from "@/components/deck/deck";
 import UserProfile from "@/components/userProfile";
 
 const Router = createBrowserRouter([
@@ -64,12 +64,22 @@ const Router = createBrowserRouter([
       },
       {
         path: "/play",
-        element: <Playground />,
+        element: (
+          <>
+            <Header />
+            <Playground />
+          </>
+        ),
         errorElement: <ErrorBoundary />,
       },
       {
         path: "/play/:did",
-        element: <Playground />,
+        element: (
+          <>
+            <Header />
+            <Playground />
+          </>
+        ),
         errorElement: <ErrorBoundary />,
       },
       {
