@@ -2,7 +2,7 @@ import { useParams, useLoaderData, LoaderFunctionArgs } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./deckOptions";
+import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./options";
 
 interface IDeckLoaderData {
   ownerInfo: IUser;

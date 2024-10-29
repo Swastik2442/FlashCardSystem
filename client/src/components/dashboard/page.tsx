@@ -3,8 +3,8 @@ import { useLoaderData, Link } from "react-router-dom";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import CreationMenu from "@/components/dashboard/creationMenu";
 import { getFormattedDate } from "@/utils/time";
+import CreationMenu from "./options";
 
 interface IDashboardLoaderData {
   decks: ILessDeck[];
