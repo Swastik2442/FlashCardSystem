@@ -10,7 +10,7 @@ import Register from "@/components/auth/register";
 import Login from "@/components/auth/login";
 import { Dashboard, DashboardLoader } from "@/components/dashboard/page";
 import { Deck, DeckLoader } from "@/components/deck/page";
-import UserProfile from "@/components/userProfile";
+import { UserProfile, UserProfileLoader } from "@/components/userProfile";
 import Playground from "@/components/playground";
 
 const Router = createBrowserRouter([
@@ -91,6 +91,7 @@ const Router = createBrowserRouter([
             <Footer />
           </>
         ),
+        loader: UserProfileLoader,
         errorElement: <ErrorBoundary />,
       },
     ]

@@ -20,7 +20,7 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
     console.error(err.message || "Failed to fetch Deck");
   });
   if (!res?.ok)
-    throw new Error("Failed to fetch decks");
+    throw new Error("Failed to fetch Deck");
   const deckData = await res.json() as ICustomResponse<IMoreDeck>;
 
   // Get Owner Info
@@ -74,7 +74,7 @@ export function Deck() {
           <DeckPlayButton deckID={did!} cardsCount={cards.length} />
           {deckInfo.isEditable && <>
             <CardCreationDialog deckID={did!} />
-            <DeckOptionsDropdown deckID={did!} owner={ownerInfo.username} />
+            <DeckOptionsDropdown deckID={did!} deck={deckInfo} owner={ownerInfo.username} />
           </>}
         </div>
       </div>

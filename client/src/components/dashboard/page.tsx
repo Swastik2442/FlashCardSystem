@@ -1,14 +1,21 @@
-import { Lock, Plus, Trash2 } from "lucide-react";
-import { useLoaderData, Link } from "react-router-dom";
+import { useState } from "react";
+import { useLoaderData, Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { fetchWithAuth } from "@/hooks/authProvider";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getFormattedDate } from "@/utils/time";
 import CreationMenu from "./options";
+import ConfirmationDialog from "../confirmationDialog";
+
+interface ICardWithID extends ICard {
+  _id: string;
+}
 
 interface IDashboardLoaderData {
   decks: ILessDeck[];
-  cards: ICard[];
+  cards: ICardWithID[];
 }
 
 export async function DashboardLoader(): Promise<IDashboardLoaderData> {
@@ -40,7 +47,7 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
 
   // Organize the data
   const uncatCardsData = await uncatRes.json() as ICustomResponse<IMoreDeck>;
-  const cards: ICard[] = [];
+  const cards: ICardWithID[] = [];
   for  (const cardID of uncatCardsData.data.cards) {
     const cardRes = await fetchWithAuth(
       `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
@@ -52,7 +59,7 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
       continue;
 
     const cardData = await cardRes.json() as ICustomResponse<ICard>;
-    cards.push(cardData.data);
+    cards.push({ ...(cardData.data), _id: cardID });
   }
   decks.sort((a, b) => (a.dateUpdated > b.dateUpdated || a.name < b.name) ? -1 : 1);
   cards.sort((a, b) => a.question > b.question ? 1 : -1);
@@ -62,13 +69,41 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
 
 export function Dashboard() {
   const { decks, cards } = useLoaderData() as IDashboardLoaderData;
+  const [cardDeleteDialogOpen, setCardDeleteDialogOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  function handleCardSelection(cardID: string) {
+    setCardToDelete(cardID);
+    setCardDeleteDialogOpen(true);
+  }
+
+  function handleCardDeletion() {
+    setCardDeleteDialogOpen(false);
+    if (!cardToDelete)
+      return;
+
+    fetchWithAuth(
+      `${import.meta.env.VITE_SERVER_HOST}/card/${cardToDelete}`,
+      "delete"
+    ).then((res) => {
+      if (!res.ok)
+        throw new Error("Failed to delete card");
+
+      toast.info("Card Deleted");
+      navigate("/dashboard", { replace: true });
+    }).catch((err: Error) => {
+      console.error(err.message || "Failed to delete card");
+      toast.error("Failed to delete deck");
+    });
+  }
 
   return (
     <div className="my-4">
       <div className="flex justify-between ml-10 mr-4">
         <h1 className="text-lg select-none">Dashboard</h1>
         <div className="flex gap-1">
-          <CreationMenu />
+          <CreationMenu decks={decks} />
           <Button variant="outline" size="icon">
             <Trash2/>
           </Button>
@@ -104,9 +139,18 @@ export function Dashboard() {
             <CardHeader>
               <CardTitle>{card.question}</CardTitle>
             </CardHeader>
+            <CardFooter className="flex justify-end gap-2">
+              <button className="sm:text-foreground/0 hover:text-accent-foreground transition-colors ease-in delay-150" type="button" onClick={() => handleCardSelection(card._id)}>
+                <Trash2 className="size-4" />
+              </button>
+              <button className="sm:text-foreground/0 hover:text-accent-foreground transition-colors ease-in delay-150" type="button">
+                <Pencil className="size-4" />
+              </button>
+            </CardFooter>
           </Card>
         ))}
       </div>
+      <ConfirmationDialog open={cardDeleteDialogOpen} onOpenChange={setCardDeleteDialogOpen} onConfirm={handleCardDeletion} confirmButtonTitle="Delete" dialogMessage="This action cannot be undone. This will permanently delete the card from the servers." />
     </div>
   );
 }

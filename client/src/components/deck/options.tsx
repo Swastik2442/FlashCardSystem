@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Check, ChevronsUpDown, Link2 } from "lucide-react";
 import { useAuth, fetchWithAuth } from "@/hooks/authProvider";
 import { useMediaQuery } from "@/hooks/mediaQuery";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import ConfirmationDialog from "@/components/confirmationDialog";
 import { cn } from "@/utils/css";
 import { deckFormSchema, deckShareFormSchema, cardFormSchema } from "@/types/forms";
 import type { TDeckFormSchema, TDeckShareFormSchema, TCardFormSchema } from "@/types/forms";
@@ -168,6 +168,7 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
               )}
             />
             <DialogFooter>
+              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit">Create</Button>
             </DialogFooter>
           </form>
@@ -177,7 +178,7 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
   );
 }
 
-export function DeckOptionsDropdown({ deckID, owner }: { deckID: string, owner: string }) {
+export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, deck: IMoreDeck, owner: string }) {
   const { user } = useAuth();
   const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -219,7 +220,7 @@ export function DeckOptionsDropdown({ deckID, owner }: { deckID: string, owner: 
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DeckEditDialog deckID={deckID} dialogOpen={editDialogOpen} setDialogOpen={setEditDialogOpen} />
+      <DeckEditDialog deckID={deckID} deck={deck} dialogOpen={editDialogOpen} setDialogOpen={setEditDialogOpen} />
       {user == owner && <>
         <DeckShareDialog deckID={deckID} dialogOpen={shareDialogOpen} setDialogOpen={setShareDialogOpen} />
         <DeckDeleteDialog deckID={deckID} dialogOpen={deleteDialogOpen} setDialogOpen={setDeleteDialogOpen} />
@@ -235,10 +236,11 @@ function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsPro
       `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
       "delete"
     ).then((res) => {
-      if (res.ok) {
-        toast.info("Deck Deleted");
-        navigate("/dashboard", { replace: true });
-      }
+      if (!res.ok)
+        throw new Error("Failed to delete deck");
+
+      toast.info("Deck Deleted");
+      navigate("/dashboard", { replace: true });
     }).catch((err: Error) => {
       console.error(err.message || "Failed to delete deck");
       toast.error("Failed to delete deck");
@@ -246,37 +248,21 @@ function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsPro
   }
 
   return (
-    <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            Are you absolutely sure?
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the deck and remove all the cards present in it.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeckDeletion}>Delete</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmationDialog open={dialogOpen} onOpenChange={setDialogOpen} onConfirm={handleDeckDeletion} dialogMessage="This action cannot be undone. This will permanently delete the deck and remove all the cards present in it." confirmButtonTitle="Delete" />
   );
 }
 
-function DeckEditDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
+function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: string, deck: IMoreDeck, dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
   const navigate = useNavigate();
   const deckForm = useForm<TDeckFormSchema>({
     resolver: zodResolver(deckFormSchema),
     defaultValues: {
-      description: "",
-      isPrivate: true,
+      name: deck.name,
+      description: deck.description,
+      isPrivate: deck.isPrivate,
     },
   });
 
-  // TODO: Add a Reset Button
-  // TODO: Maybe add a check to determine what values changed and only send them
   async function handleDeckEditing(values: TDeckFormSchema) {
     setDialogOpen(false);
     try {
@@ -351,7 +337,8 @@ function DeckEditDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps
               )}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button variant="ghost" type="reset" onClick={() => deckForm.reset()}>Reset</Button>
+              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button type="submit">Edit</Button>
             </DialogFooter>
           </form>
@@ -385,7 +372,6 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
         JSON.stringify(values),
       ).then(async (res) => {
         const data = await res.json() as ICustomResponse<string | null>;
-        console.log(data);
         if (!res?.ok)
           throw new Error(data?.message || "Failed to Share the Deck");
       }).catch((err: Error) => {
@@ -460,26 +446,30 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
 }
 
 function getInitialUsers() {
-  const localUsers = localStorage.getItem("users");
+  const localUsers = localStorage.getItem("fcs-users");
   if (!localUsers || localUsers.length < 50)
     return [];
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const storedUsers = JSON.parse(localUsers);
-  if (!Array.isArray(storedUsers))
+  if (!Array.isArray(storedUsers)) {
+    localStorage.removeItem("fcs-users");
     return [];
+  }
   for (const user of storedUsers) {
     if (user satisfies SearchUser)
       continue;
+    localStorage.removeItem("fcs-users");
     return [];
   }
   return storedUsers as SearchUser[];
 }
 
+  // BUG: Drawer won't show newly added users on search, but when search item is cleared
 function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema>>, value: string }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [usersList, setUsersList] = useState<SearchUser[]>(getInitialUsers());
+  const [searchTerm, setSearchTerm] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   useEffect(() => {

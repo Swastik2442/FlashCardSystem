@@ -80,15 +80,15 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
   };
 
   const logoutUser = async () => {
+    setUser(null);
+    localStorage.removeItem(storageKey);
+
     await fetchWithAuth(
       `${import.meta.env.VITE_SERVER_HOST}/auth/logout`, "get"
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
       if (!res?.ok)
         throw new Error(data?.message || "Logout Failed");
-
-      setUser(null);
-      localStorage.removeItem(storageKey);
     }).catch((err: Error) => {
       throw new Error(err?.message || "Logout Failed");
     });

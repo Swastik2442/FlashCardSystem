@@ -21,7 +21,7 @@ import type { TDeckFormSchema, TCardFormSchema } from "@/types/forms";
 
 type CreationResponse = ICustomResponse<string | null>;
 
-export default function CreationMenu() {
+export default function CreationMenu({ decks }: { decks: ILessDeck[] }) {
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const [isDeckDialogOpen, setIsDeckDialogOpen] = useState(false);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
@@ -49,7 +49,7 @@ export default function CreationMenu() {
       </DropdownMenu>
 
       <DeckCreationDialog dialogOpen={isDeckDialogOpen} setDialogOpen={setIsDeckDialogOpen} />
-      <CardCreationDialog dialogOpen={isCardDialogOpen} setDialogOpen={setIsCardDialogOpen} />
+      <CardCreationDialog dialogOpen={isCardDialogOpen} setDialogOpen={setIsCardDialogOpen} decks={decks} />
     </>
   );
 }
@@ -148,7 +148,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
   );
 }
 
-function CardCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
+function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>>, decks: ILessDeck[] }) {
   const navigate = useNavigate();
   const cardForm = useForm<TCardFormSchema>({
     resolver: zodResolver(cardFormSchema),
@@ -244,9 +244,11 @@ function CardCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="m@example.com">m@example.com</SelectItem>
-                      <SelectItem value="m@google.com">m@google.com</SelectItem>
-                      <SelectItem value="m@support.com">m@support.com</SelectItem>
+                      {decks.map((deck, idx) => (
+                        <SelectItem key={idx} value={deck._id}>
+                          {deck.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage className="col-span-4 text-right" />
