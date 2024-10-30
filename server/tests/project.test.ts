@@ -70,6 +70,7 @@ describe("User Routes", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.data.fullName).toBe(sampleUser.fullName);
+        expect(res.body.data.username).toBe(sampleUser.username.toLowerCase());
     });
 
     it("should get the user's liked decks", async () => {

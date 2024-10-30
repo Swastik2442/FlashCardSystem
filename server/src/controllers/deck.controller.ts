@@ -1,5 +1,4 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import mongoose from "mongoose";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 
@@ -54,7 +53,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
 export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
     try {
-        const deck = await Deck.findById(id).select("-likedBy");
+        const deck = await Deck.findById(id);
         if (!deck) {
             res.status(404).json({
                 status: "error",
@@ -84,6 +83,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 isPrivate: deck.isPrivate,
                 isEditable: deck.isAccessibleBy(req.user._id).writable,
                 likes: deck.likes,
+                isLiked: deck.likedBy.includes(req.user._id),
             },
         });
     } catch (err) {
@@ -203,9 +203,9 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        deck.name = name != undefined ? name : deck.name;
-        deck.description = description != undefined ? description : deck.description;
-        deck.isPrivate = isPrivate != undefined ? isPrivate : deck.isPrivate;
+        deck.name = name ? name : deck.name;
+        deck.description = description ? description : deck.description;
+        deck.isPrivate = typeof(isPrivate) == "boolean" ? isPrivate : deck.isPrivate;
         deck.dateUpdated = new Date();
         deck.save();
 
@@ -222,6 +222,8 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
     res.end();
 }
 
+const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
+
 /**
  * @route POST deck/share/:did
  * @desc Shares the Deck with the given ID with the given User ID
@@ -232,13 +234,18 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
     try {
         const { user, isEditable, unshare } = req.body;
 
-        const userByID = await User.findById(user);
-        if (!userByID || String(userByID._id) == String(req.user._id)) {
-            res.status(422).json({
-                status: "error",
-                message: "Invalid User ID",
-            });
-            return;
+        let userByID;
+        if (user.length === 24 && checkForHexRegExp.test(user))
+            userByID = await User.findById(user).select("-password -refreshToken");
+        if (!userByID) {
+            userByID = await User.findOne({ username: user.toLowerCase() }).select("-password -refreshToken");
+            if (!userByID || String(userByID._id) == String(req.user._id)) {
+                res.status(422).json({
+                    status: "error",
+                    message: "Invalid User ID",
+                });
+                return;
+            }
         }
 
         const deck = await Deck.findOne({

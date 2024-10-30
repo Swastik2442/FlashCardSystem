@@ -12,11 +12,12 @@ const app = express();
 
 app.use(cors({
     origin: "http://localhost:5173",
-    credentials: true
+    credentials: true,
 }));
 app.use(cookieParser());
 app.use(express.json());
 
+app.options('*', cors());
 app.get("/", (_req: ExpressRequest, res: ExpressResponse) => {
     res.send({ status: "success", message: "Backend API for FlashCardSystem" });
     res.end();

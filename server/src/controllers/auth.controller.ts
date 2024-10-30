@@ -80,6 +80,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         res.status(400).json({
             status: "failed",
             message: "Either email or username is required",
+            data: null,
         });
         return;
     }
@@ -95,6 +96,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
             res.status(400).json({
                 status: "failed",
                 message: "Account does not exist",
+                data: null,
             });
             return;
         }
@@ -104,6 +106,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
             res.status(401).json({
                 status: "failed",
                 message: "Incorrect Password",
+                data: null,
             });
             return;
         }
@@ -111,16 +114,18 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
         .json({
             status: "success",
             message: "Login Successful",
+            data: user.username,
         });
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -166,6 +171,7 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
         res.status(400).json({
             status: "failed",
             message: "Refresh Token not Found",
+            data: null,
         });
         return;
     }
@@ -181,28 +187,32 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
             res.status(401).json({
                 status: "failed",
                 message: "Invalid Refresh Token",
+                data: null,
             });
             return;
         } else if (incomingRefreshToken !== user?.refreshToken) {
             res.status(401).json({
                 status: "failed",
                 message: "Refresh Token is expired or used",
+                data: null,
             });
             return;
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
         .json({
             status: "success",
             message: "Access Token refreshed",
+            data: user.username,
         })
     } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();

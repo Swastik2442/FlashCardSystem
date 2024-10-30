@@ -2,22 +2,29 @@ import { Request as ExpressRequest, Response as ExpressResponse } from "express"
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 
+const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
+
 /**
  * @route GET user/get/:username
- * @desc Gets the User with the given Username
+ * @desc Gets the User with the given Username/ID
  * @access public
  */
 export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
     const username = req.params.username;
     try {
-        const user = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshToken");
+        let user;
+        if (username.length === 24 && checkForHexRegExp.test(username))
+            user = await User.findById(username).select("-password -refreshToken");
         if (!user) {
-            res.status(404).json({
-                status: "error",
-                message: "User not found",
-                data: null,
-            });
-            return;
+            user = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshToken");
+            if (!user) {
+                res.status(404).json({
+                    status: "error",
+                    message: "User not found",
+                    data: null,
+                });
+                return;
+            }
         }
 
         res.status(200).json({
@@ -25,9 +32,49 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
             message: "User found",
             data: {
                 "fullName": user.fullName,
+                "username": user.username,
             },
         });
     } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route GET user/getsub/:str
+ * @desc Gets the Users whose username is a substring of the given string
+ * @access public
+ */
+export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
+    const str = req.params.str;
+    try {
+        let users = await User.find({ username: {$regex: str, $options: "i"}}).limit(5).select("-password -refreshToken");
+        if (!users || users.length === 0) {
+            res.status(200).json({
+                status: "error",
+                message: "No Users found",
+                data: [],
+            });
+            return;
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Users found",
+            data: users.map(user => ({
+                "id": user._id,
+                "fullName": user.fullName,
+                "username": user.username,
+            })),
+        });
+    } catch (err) {
+        console.log(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

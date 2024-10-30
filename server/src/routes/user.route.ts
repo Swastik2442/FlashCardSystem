@@ -2,7 +2,7 @@ import express from "express";
 import { check } from "express-validator";
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
-import { GetUser, GetLikedDecks } from "../controllers/user.controller";
+import { GetUser, GetUserSub, GetLikedDecks } from "../controllers/user.controller";
 
 const router = express.Router();
 router.use(VerifyJWT);
@@ -20,6 +20,17 @@ router.get(
     .escape(),
     Validate,
     GetUser
+);
+
+router.get(
+    "/getsub/:str",
+    check("str")
+    .notEmpty()
+    .withMessage("str is required")
+    .trim()
+    .escape(),
+    Validate,
+    GetUserSub
 );
 
 router.get("/liked", GetLikedDecks);
