@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { fetchWithAuth } from "@/hooks/authProvider";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -16,12 +15,11 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { deckFormSchema, cardFormSchema } from "@/types/forms";
 import type { TDeckFormSchema, TCardFormSchema } from "@/types/forms";
+import { createDeck } from "@/api/deck";
+import { createCard } from "@/api/card";
 
 // TODO: Implement a way to add newly created decks/cards to page without full reload
-
-type CreationResponse = ICustomResponse<string | null>;
-
-export default function CreationMenu({ decks }: { decks: ILessDeck[] }) {
+export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const [isDeckDialogOpen, setIsDeckDialogOpen] = useState(false);
   const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
@@ -67,17 +65,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
   async function handleDeckCreation(values: TDeckFormSchema) {
     setDialogOpen(false);
     try {
-      await fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/deck/new`,
-        "post",
-        JSON.stringify(values),
-      ).then(async (res) => {
-        const data = await res.json() as CreationResponse;
-        if (!res?.ok)
-          throw new Error(data?.message || "Failed to Create a Deck");
-      }).catch((err: Error) => {
-        throw new Error(err?.message || "Failed to Create a Deck");
-      });
+      await createDeck(values);
       toast.success("Deck Created", { description: values.name });
       deckForm.reset();
       navigate("/dashboard", { replace: true });
@@ -161,23 +149,13 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
   async function handleCardCreation(values: TCardFormSchema) {
     setDialogOpen(false);
     try {
-      await fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/card/new`,
-        "post",
-        JSON.stringify(values),
-      ).then(async (res) => {
-        const data = await res.json() as CreationResponse;
-        if (!res?.ok)
-          throw new Error(data?.message || "Failed to Create a Card");
-      }).catch((err: Error) => {
-        throw new Error(err?.message || "Failed to Create a Card");
-      });
+      await createCard(values);
       toast.success("Card Created", { description: values.question });
       cardForm.reset();
       navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck");
+      toast.error((err instanceof Error) ? err.message : "Failed to Create a Card");
     }
   }
 

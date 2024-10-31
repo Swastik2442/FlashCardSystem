@@ -1,17 +1,18 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ThemeProvider } from "@/hooks/themeProvider";
-import { AuthProvider, PrivateRoutes } from "@/hooks/authProvider";
+import { ThemeProvider } from "@/contexts/themeProvider";
+import { AuthProvider } from "@/contexts/authProvider";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/errorBoundary";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import Home from "@/components/home";
-import Register from "@/components/auth/register";
-import Login from "@/components/auth/login";
-import { Dashboard, DashboardLoader } from "@/components/dashboard/page";
-import { Deck, DeckLoader } from "@/components/deck/page";
-import { UserProfile, UserProfileLoader } from "@/components/userProfile";
-import Playground from "@/components/playground";
+import PrivateRoutes from "@/components/privateRoutes";
+import Home from "@/routes/home";
+import Register from "@/routes/auth/register";
+import Login from "@/routes/auth/login";
+import { Dashboard, DashboardLoader } from "@/routes/dashboard/page";
+import { Deck, DeckLoader } from "@/routes/deck/page";
+import { UserProfile, UserProfileLoader } from "@/routes/userProfile";
+import Playground from "@/routes/playground";
 
 const Router = createBrowserRouter([
   {

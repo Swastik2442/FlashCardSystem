@@ -1,20 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useContext, createContext, useState, useEffect, useCallback } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import fetchWithCredentials from "@/utils/fetch";
 import type { TLoginFormSchema, TRegisterFormSchema } from "@/types/forms";
-
-const authHeaders = new Headers();
-authHeaders.append("Access-Control-Allow-Origin", "http://localhost:2442");
-authHeaders.append("Content-Type", "application/json");
-
-export function fetchWithAuth(url: string | URL | globalThis.Request, method: string, body?: BodyInit | null) {
-  return fetch(url, {
-    method: method,
-    headers: authHeaders,
-    credentials: "include",
-    body: body,
-  });
-}
 
 type AuthResponse = ICustomResponse<string | null>;
 
@@ -47,7 +34,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
   const [user, setUser] = useState<string | null>(localStorage.getItem(storageKey));
 
   const registerUser = async (data: TRegisterFormSchema) => {
-    await fetchWithAuth(
+    await fetchWithCredentials(
       `${import.meta.env.VITE_SERVER_HOST}/auth/register`,
       "post",
       JSON.stringify(data)
@@ -61,7 +48,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
   };
 
   const loginUser = async (data: TLoginFormSchema) => {
-    await fetchWithAuth(
+    await fetchWithCredentials(
       `${import.meta.env.VITE_SERVER_HOST}/auth/login`,
       "post",
       JSON.stringify(data)
@@ -83,7 +70,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
     setUser(null);
     localStorage.removeItem(storageKey);
 
-    await fetchWithAuth(
+    await fetchWithCredentials(
       `${import.meta.env.VITE_SERVER_HOST}/auth/logout`, "get"
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
@@ -95,7 +82,7 @@ export function AuthProvider({ children, storageKey = "fcs-user", ...props }: Au
   };
 
   const refreshTokens = async () => {
-    await fetchWithAuth(
+    await fetchWithCredentials(
       `${import.meta.env.VITE_SERVER_HOST}/auth/refresh-token`, "get"
     ).then(async (res) => {
       const data = await res.json() as AuthResponse;
@@ -139,8 +126,3 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
-
-export const PrivateRoutes = () => {
-  const { user } = useAuth();
-  return (user != null ? <Outlet /> : <Navigate to="/auth/login" />);
-}

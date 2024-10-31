@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Check, ChevronsUpDown, Link2 } from "lucide-react";
-import { useAuth, fetchWithAuth } from "@/hooks/authProvider";
+import { useAuth } from "@/contexts/authProvider";
 import { useMediaQuery } from "@/hooks/mediaQuery";
 import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -21,10 +21,9 @@ import ConfirmationDialog from "@/components/confirmationDialog";
 import { cn } from "@/utils/css";
 import { deckFormSchema, deckShareFormSchema, cardFormSchema } from "@/types/forms";
 import type { TDeckFormSchema, TDeckShareFormSchema, TCardFormSchema } from "@/types/forms";
-
-interface SearchUser extends IUser {
-  id: string;
-}
+import { likeDeck, removeDeck, shareDeck, unlikeDeck, updateDeck } from "@/api/deck";
+import { createCard } from "@/api/card";
+import { getUserFromSubstring } from "@/api/user";
 
 interface IDeckOptionsProps {
   deckID: string;
@@ -44,29 +43,13 @@ export function DeckPlayButton({ deckID, cardsCount }: { deckID: string, cardsCo
 
 export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, likes: number, isLiked: boolean }) {
   const [userLiked, setUserLiked] = useState(isLiked);
-  const handleDeckLike = () => {
+  const handleDeckLike = async () => {
     if (userLiked) {
-      fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/deck/likes/remove/${deckID}`,
-        "post"
-      ).then((res) => {
-        if (res.ok) {
-          setUserLiked(false);
-        }
-      }).catch((err: Error) => {
-        console.error(err.message || "Failed to unlike deck");
-      });
+      await unlikeDeck(deckID);
+      setUserLiked(false);
     } else {
-      fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/deck/likes/add/${deckID}`,
-        "post"
-      ).then((res) => {
-        if (res.ok) {
-          setUserLiked(true);
-        }
-      }).catch((err: Error) => {
-        console.error(err.message || "Failed to like deck");
-      });
+      await likeDeck(deckID);
+      setUserLiked(true);
     }
   }
 
@@ -89,22 +72,7 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
   async function handleCardCreation(values: TCardFormSchema) {
     setDialogOpen(false);
     try {
-      await fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/card/new`,
-        "post",
-        JSON.stringify({
-          question: values.question,
-          answer: values.answer,
-          hint: values.hint,
-          deck: deckID
-        }),
-      ).then(async (res) => {
-        const data = await res.json() as ICustomResponse<string | null>;
-        if (!res?.ok)
-          throw new Error(data?.message || "Failed to Create a Card");
-      }).catch((err: Error) => {
-        throw new Error(err?.message || "Failed to Create a Card");
-      });
+      await createCard({ ...values, deck: deckID });
       toast.success("Card Created", { description: values.question });
       cardForm.reset();
       navigate(`/deck/${deckID}`, { replace: true });
@@ -231,20 +199,17 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
 
 function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
   const navigate = useNavigate();
-  const handleDeckDeletion = () => {
-    void (async () => await fetchWithAuth(
-      `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
-      "delete"
-    ).then((res) => {
-      if (!res.ok)
-        throw new Error("Failed to delete deck");
-
-      toast.info("Deck Deleted");
-      navigate("/dashboard", { replace: true });
-    }).catch((err: Error) => {
-      console.error(err.message || "Failed to delete deck");
-      toast.error("Failed to delete deck");
-    }))();
+  function handleDeckDeletion() {
+    void (async () => {
+      try {
+        await removeDeck(deckID);
+        toast.info("Deck Deleted");
+        navigate("/dashboard", { replace: true });
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : "Failed to Delete Deck");
+        toast.error("Failed to Delete Deck");
+      }
+    })();
   }
 
   return (
@@ -266,23 +231,13 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
   async function handleDeckEditing(values: TDeckFormSchema) {
     setDialogOpen(false);
     try {
-      await fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
-        "PATCH",
-        JSON.stringify(values),
-      ).then(async (res) => {
-        const data = await res.json() as ICustomResponse<string | null>;
-        if (!res?.ok)
-          throw new Error(data?.message || "Failed to Edit the Deck");
-      }).catch((err: Error) => {
-        throw new Error(err?.message || "Failed to Edit the Deck");
-      });
+      await updateDeck(deckID, values);
       toast.success("Deck Edited");
       deckForm.reset();
       navigate(`/deck/${deckID}`, { replace: true });
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Edit the Deck");
+      console.error(err instanceof Error ? err.message : "Failed to Edit the Deck");
+      toast.error("Failed to Edit the Deck");
     }
   }
 
@@ -366,17 +321,7 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
   async function handleDeckSharing(values: TDeckShareFormSchema) {
     setDialogOpen(false);
     try {
-      await fetchWithAuth(
-        `${import.meta.env.VITE_SERVER_HOST}/deck/share/${deckID}`,
-        "post",
-        JSON.stringify(values),
-      ).then(async (res) => {
-        const data = await res.json() as ICustomResponse<string | null>;
-        if (!res?.ok)
-          throw new Error(data?.message || "Failed to Share the Deck");
-      }).catch((err: Error) => {
-        throw new Error(err?.message || "Failed to Share the Deck");
-      });
+      await shareDeck(deckID, values);
       toast.success("Deck  Shared");
       deckShareForm.reset();
     } catch (err) {
@@ -457,17 +402,17 @@ function getInitialUsers() {
     return [];
   }
   for (const user of storedUsers) {
-    if (user satisfies SearchUser)
+    if (user satisfies IUserWithID)
       continue;
     localStorage.removeItem("fcs-users");
     return [];
   }
-  return storedUsers as SearchUser[];
+  return storedUsers as IUserWithID[];
 }
 
   // BUG: Drawer won't show newly added users on search, but when search item is cleared
 function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema>>, value: string }) {
-  const [usersList, setUsersList] = useState<SearchUser[]>(getInitialUsers());
+  const [usersList, setUsersList] = useState<IUserWithID[]>(getInitialUsers());
   const [searchTerm, setSearchTerm] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -476,18 +421,9 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
     const delayDebounceFn = setTimeout(async () => {
       if (searchTerm.length < 2) return;
       try {
-        await fetchWithAuth(
-          `${import.meta.env.VITE_SERVER_HOST}/user/getsub/${searchTerm}`,
-          "get",
-        ).then(async (res) => {
-          const data = await res.json() as ICustomResponse<SearchUser[]>;
-          if (!res?.ok)
-            throw new Error(data?.message || "No such User found");
-          setUsersList(data.data);
-          localStorage.setItem("fcs-users", JSON.stringify(data.data));
-        }).catch((err: Error) => {
-          throw new Error(err?.message || "No such User found");
-        });
+        const users = await getUserFromSubstring(searchTerm)
+        setUsersList(users);
+        localStorage.setItem("fcs-users", JSON.stringify(users));
       } catch (err) {
         console.error(err);
         toast.error((err instanceof Error) ? err.message : "No such User found");
@@ -506,7 +442,7 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
               "col-span-3 justify-between",
               !value && "text-muted-foreground"
             )}>
-              {value ? usersList.find((user) => user.id === value)?.username : "Select User"}
+              {value ? usersList.find((user) => user._id === value)?.username : "Select User"}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </FormControl>
@@ -518,13 +454,13 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
               <CommandEmpty>No User found.</CommandEmpty>
               <CommandGroup>
                 {usersList.map((user) => (
-                  <CommandItem value={user.username} key={user.id} onSelect={() => {
-                    form.setValue("user", user.id)
+                  <CommandItem value={user.username} key={user._id} onSelect={() => {
+                    form.setValue("user", user._id)
                   }}>
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        user.id === value ? "opacity-100" : "opacity-0"
+                        user._id === value ? "opacity-100" : "opacity-0"
                       )}
                     />
                     {user.username}
@@ -545,7 +481,7 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
             "col-span-3 justify-between",
             !value && "text-muted-foreground"
           )}>
-            {value ? usersList.find((user) => user.id === value)?.username : "Select User"}
+            {value ? usersList.find((user) => user._id === value)?.username : "Select User"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </FormControl>
@@ -557,8 +493,8 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
             <CommandEmpty>No User found.</CommandEmpty>
             <CommandGroup>
               {usersList.map((user) => (
-                <CommandItem key={user.id} value={user.id} onSelect={() => {
-                  form.setValue("user", user.id);
+                <CommandItem key={user._id} value={user._id} onSelect={() => {
+                  form.setValue("user", user._id);
                   setDrawerOpen(false);
                 }}>
                   {user.username}

@@ -3,6 +3,10 @@ interface IUser {
   username: string;
 }
 
+interface IUserWithID extends IUser {
+  _id: string;
+}
+
 interface ILessDeck {
   _id: string;
   name: string;
@@ -16,7 +20,6 @@ interface IMoreDeck {
   description: string;
   dateCreated: string;
   dateUpdated: string;
-  cards: string[];
   isPrivate: boolean;
   isEditable: boolean;
   likes: number;
@@ -24,6 +27,7 @@ interface IMoreDeck {
 }
 
 interface ICard {
+  _id: string;
   question: string;
   answer: string;
   hint: string;
