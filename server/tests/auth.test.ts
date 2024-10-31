@@ -1,9 +1,9 @@
-import "dotenv/config";
 import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import { Response as superagentResponse } from "superagent";
 import request from "supertest";
 import mongoose from "mongoose";
 import app from "../src/app";
+import env from "../src/env";
 
 const sampleUser = {
     fullName: "Test User",
@@ -25,15 +25,11 @@ const setAuthTokens = (res: superagentResponse) => {
 }
 
 beforeAll(async () => {
-    if (!process.env.MONGODB_CONNECTION_URI) {
-        console.error("MONGODB_CONNECTION_URI is not set");
-        process.exit(1);
-    }
-    await mongoose.connect(process.env.MONGODB_CONNECTION_URI, { dbName: "testing" });
+    await mongoose.connect(env.MONGODB_CONNECTION_URI, { dbName: "testing_auth" });
 });
 
 afterAll(async () => {
-    // await mongoose.connection.dropDatabase();
+    await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
 });
 

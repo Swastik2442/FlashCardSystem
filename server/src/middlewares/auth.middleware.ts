@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import jwt from "jsonwebtoken"
 import User from "../models/user.model";
+import env from "../env";
 
 /**
  * @desc Verifies the Access Token and adds User param to Request
@@ -12,7 +13,7 @@ export async function VerifyJWT(req: ExpressRequest, _res: ExpressResponse, next
         if (!token)
             throw new Error("Unauthorized Request")
     
-        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
+        const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
         const user = await User.findById((decodedToken as jwt.JwtPayload)?._id).select("-password -refreshToken");
         if (!user)            
             throw new Error("Invalid Access Token");

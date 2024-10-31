@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
+import Card from "../models/card.model";
 
 /**
  * @route POST deck/new
@@ -61,7 +62,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 data: null,
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id)) {
+        } else if (!deck.isAccessibleBy(req.user._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
@@ -79,12 +80,52 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 description: deck.description,
                 dateCreated: deck.dateCreated,
                 dateUpdated: deck.dateUpdated,
-                cards: deck.cards,
                 isPrivate: deck.isPrivate,
                 isEditable: deck.isAccessibleBy(req.user._id).writable,
                 likes: deck.likes,
                 isLiked: deck.likedBy.includes(req.user._id),
             },
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route GET deck/cards/:did
+ * @desc Gets all the Cards in the Deck with the given ID
+ * @access public
+ */
+export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
+    const id = req.params.did;
+    try {
+        const deck = await Deck.findById(id);
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+                data: null,
+            });
+            return;
+        } else if (!deck.isAccessibleBy(req.user._id).readable) {
+            res.status(401).json({
+                status: "error",
+                message: "Deck is Private",
+                data: null,
+            });
+            return;
+        }
+
+        const cards = await Card.find({ deck: deck._id }).select("-__v");
+        res.status(200).json({
+            status: "success",
+            message: `${cards.length} Cards found`,
+            data: cards,
         });
     } catch (err) {
         res.status(500).json({
@@ -305,7 +346,7 @@ export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id)) {
+        } else if (!deck.isAccessibleBy(req.user._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",

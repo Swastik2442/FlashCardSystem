@@ -2,10 +2,12 @@ import express from "express";
 import { check } from "express-validator";
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
-import { CreateDeck, GetDeck, DeleteDeck, UpdateDeck, GetAllDecks, ShareDeck, GetDeckLikes, LikeDeck, UnlikeDeck } from "../controllers/deck.controller";
+import { CreateDeck, GetDeck, DeleteDeck, UpdateDeck, GetAllDecks, ShareDeck, GetDeckLikes, LikeDeck, UnlikeDeck, GetDeckCards } from "../controllers/deck.controller";
 
 const router = express.Router();
 router.use(VerifyJWT);
+
+router.get("/all", GetAllDecks);
 
 router.post(
     "/new",
@@ -23,8 +25,6 @@ router.post(
     Validate,
     CreateDeck
 );
-
-router.get("/all", GetAllDecks);
 
 router.get(
     "/:did",
@@ -56,6 +56,17 @@ router.patch(
     .escape(),
     Validate,
     UpdateDeck
+);
+
+router.get(
+    "/cards/:did",
+    check("did")
+    .notEmpty()
+    .withMessage("Deck ID is required")
+    .trim()
+    .escape(),
+    Validate,
+    GetDeckCards
 );
 
 router.post(

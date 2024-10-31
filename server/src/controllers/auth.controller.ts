@@ -1,7 +1,9 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import ms from "ms";
 import User from "../models/user.model";
+import env from "../env";
 
 const cookieOptions = {
     httpOnly: true,
@@ -114,8 +116,8 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
         .json({
             status: "success",
             message: "Login Successful",
@@ -179,8 +181,8 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
     try {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
-            process.env.REFRESH_TOKEN_SECRET as string
-        )
+            env.REFRESH_TOKEN_SECRET
+        );
         const user = await User.findById((decodedToken as jwt.JwtPayload)?._id).select("-password");
 
         if (!user) {
@@ -201,8 +203,8 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
         .json({
             status: "success",
             message: "Access Token refreshed",

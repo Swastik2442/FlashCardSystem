@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Deck from "./deck.model";
+import env from "../env";
 
 interface IUser {
     fullName: string;
@@ -74,9 +75,9 @@ userSchema.methods.generateAccessToken = function() {
             email: this.email,
             username: this.username,
         },
-        process.env.ACCESS_TOKEN_SECRET as string,
+        env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: env.ACCESS_TOKEN_EXPIRY
         }
     )
 };
@@ -86,9 +87,9 @@ userSchema.methods.generateRefreshToken = function() {
         {
             _id: this._id,
         },
-        process.env.REFRESH_TOKEN_SECRET as string,
+        env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn: env.REFRESH_TOKEN_EXPIRY
         }
     )
 };

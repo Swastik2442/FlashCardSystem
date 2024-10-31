@@ -47,7 +47,6 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             throw new Error("Card could not be created");
 
         deckById.dateUpdated = new Date();
-        deckById.cards.push(newCard._id as any);
         deckById.save();
 
         res.status(201).json({
@@ -73,7 +72,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
 export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.cid;
     try {
-        const card = await Card.findById(id);
+        const card = await Card.findById(id).select("-__v");
         if (!card) {
             res.status(404).json({
                 status: "error",
@@ -86,7 +85,7 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
         const deck = await Deck.findById(card.deck);
         if (!deck)
             throw new Error("Deck not found");
-        else if (!deck.isAccessibleBy(req.user._id)) {
+        else if (!deck.isAccessibleBy(req.user._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -98,12 +97,7 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
         res.status(200).json({
             status: "success",
             message: "Card found",
-            data: {
-                question: card.question,
-                answer: card.answer,
-                hint: card.hint,
-                deck: card.deck,
-            },
+            data: card,
         });
     } catch (err) {
         res.status(500).json({
@@ -184,15 +178,33 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deckById = await Deck.findById(card.deck);
-        if (!deckById)
+        const currentDeck = await Deck.findById(card.deck);
+        if (!currentDeck)
             throw new Error("Deck not found");
-        else if (!deckById.isAccessibleBy(req.user._id).writable) {
+        else if (!currentDeck.isAccessibleBy(req.user._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
             });
             return;
+        }
+        currentDeck.dateUpdated = new Date();
+        currentDeck.save();
+
+        if (deck && deck.length > 0) {
+            const nextDeck = await Deck.findById(deck);
+            if (!nextDeck)
+                throw new Error("Deck not found");
+            else if (!nextDeck.isAccessibleBy(req.user._id).writable) {
+                res.status(401).json({
+                    status: "error",
+                    message: "Unauthorized Operation",
+                });
+                return;
+            }
+
+            nextDeck.dateUpdated = new Date();
+            nextDeck.save();
         }
 
         card.question = question || card.question;

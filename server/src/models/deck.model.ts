@@ -7,7 +7,6 @@ interface IDeck {
     description: string;
     dateCreated: Date;
     dateUpdated: Date;
-    cards: mongoose.Schema.Types.ObjectId[];
     isPrivate: boolean;
     sharedTo: {
         user: mongoose.Schema.Types.ObjectId;
@@ -50,12 +49,6 @@ const deckSchema = new mongoose.Schema<IDeck, DeckModel, IDeckMethods>({
         type: Date,
         default: Date.now
     },
-    cards: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "card"
-        }
-    ],
     isPrivate: {
         type: Boolean,
         default: false

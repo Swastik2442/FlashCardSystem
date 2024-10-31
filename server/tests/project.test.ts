@@ -1,8 +1,8 @@
-import "dotenv/config";
 import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import request from "supertest";
 import mongoose from "mongoose";
 import app from "../src/app";
+import env from "../src/env";
 import User from "../src/models/user.model";
 import Deck from "../src/models/deck.model";
 import Card from "../src/models/card.model";
@@ -36,11 +36,7 @@ let authTokens = { access_token: "", refresh_token: "" };
 
 beforeAll(async () => {
     // Connect to Database
-    if (!process.env.MONGODB_CONNECTION_URI) {
-        console.error("MONGODB_CONNECTION_URI is not set");
-        process.exit(1);
-    }
-    await mongoose.connect(process.env.MONGODB_CONNECTION_URI, { dbName: "testing" });
+    await mongoose.connect(env.MONGODB_CONNECTION_URI, { dbName: "testing_project" });
     
     // Register Users
     await request(app).post("/auth/register").send(sampleUser);
@@ -58,7 +54,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    // await mongoose.connection.dropDatabase();
+    await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
 });
 
@@ -72,6 +68,9 @@ describe("User Routes", () => {
         expect(res.body.data.fullName).toBe(sampleUser.fullName);
         expect(res.body.data.username).toBe(sampleUser.username.toLowerCase());
     });
+
+    it.todo("should get the user's decks visible to current user");
+    it.todo("should get the users available with the matching substring");
 
     it("should get the user's liked decks", async () => {
         const res = await request(app)
@@ -104,7 +103,11 @@ describe("Card Routes", () => {
             .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
+        expect(res.body.data._id).toBe(cardId);
         expect(res.body.data.question).toBe(sampleCard.question);
+        expect(res.body.data.answer).toBe(sampleCard.answer);
+        expect(res.body.data.hint).toBe(sampleCard.hint);
+        expect(res.body.data.deck).toBeDefined();
     });
 
     it("should update the card by ID", async () => {
@@ -173,10 +176,23 @@ describe("Deck Routes", () => {
         expect(res.body.data.owner).toBeDefined();
         expect(res.body.data.dateCreated).toBeDefined();
         expect(res.body.data.dateUpdated).toBeDefined();
-        expect(res.body.data.cards).toHaveLength(1);
-        expect(res.body.data.cards[0]).toBe(cardId);
         expect(res.body.data.isEditable).toBeDefined();
         expect(res.body.data.likes).toBe(0);
+    });
+
+    it("should get the cards in the deck", async () => {
+        const res = await request(app)
+            .get(`/deck/cards/${deckId}`)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("1 Cards found");
+        expect(res.body.data).toHaveLength(1);
+        expect(res.body.data[0]._id).toBe(cardId);
+        expect(res.body.data[0].question).toBeDefined();
+        expect(res.body.data[0].answer).toBeDefined();
+        expect(res.body.data[0].hint).toBeDefined();
+        expect(res.body.data[0].deck).toBeDefined();
     });
 
     it("should get all decks owned by the user", async () => {

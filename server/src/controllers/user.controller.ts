@@ -36,7 +36,6 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
             },
         });
     } catch (err) {
-        console.log(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -74,7 +73,52 @@ export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
             })),
         });
     } catch (err) {
-        console.log(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route GET user/decks/:str
+ * @desc Gets the User's Decks visible to the current User
+ * @access public
+ */
+export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
+    const username = req.params.username;
+    try {
+        let user;
+        if (username.length === 24 && checkForHexRegExp.test(username))
+            user = await User.findById(username).select("-password -refreshToken");
+        if (!user) {
+            user = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshToken");
+            if (!user) {
+                res.status(404).json({
+                    status: "error",
+                    message: "User not found",
+                    data: null,
+                });
+                return;
+            }
+        }
+
+        const decks = await Deck.find({
+            owner: user._id,
+            $or: [
+                { isPrivate: false },
+                { sharedTo: { $elemMatch: { user: req.user._id } } }
+            ]
+        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
+
+        res.status(200).json({
+            status: "success",
+            message: "Users found",
+            data: decks,
+        });
+    } catch (err) {
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -97,7 +141,7 @@ export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
                 { isPrivate: false },
                 { sharedTo: { $elemMatch: { user: req.user._id } } }
             ]
-        }).select("-owner -description -dateCreated -dateUpdated -cards -isPrivate -sharedTo -likes -likedBy -__v");
+        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
 
         res.status(200).json({
             status: "success",
