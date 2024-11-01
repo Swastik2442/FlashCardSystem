@@ -55,6 +55,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             data: newCard._id,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -100,6 +101,7 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
             data: card,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -143,6 +145,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             message: "Card deleted successfully",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -218,6 +221,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             message: "Card updated successfully",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

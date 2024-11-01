@@ -36,6 +36,7 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
             },
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -53,10 +54,10 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
 export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
     const str = req.params.str;
     try {
-        let users = await User.find({ username: {$regex: str, $options: "i"}}).limit(5).select("-password -refreshToken");
+        let users = await User.find({ username: {$regex: str, $options: "i"}}).limit(5).select("-email -password -refreshToken -__v");
         if (!users || users.length === 0) {
             res.status(200).json({
-                status: "error",
+                status: "success",
                 message: "No Users found",
                 data: [],
             });
@@ -66,13 +67,10 @@ export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
         res.status(200).json({
             status: "success",
             message: "Users found",
-            data: users.map(user => ({
-                "id": user._id,
-                "fullName": user.fullName,
-                "username": user.username,
-            })),
+            data: users,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -83,7 +81,7 @@ export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
 }
 
 /**
- * @route GET user/decks/:str
+ * @route GET user/decks/:username
  * @desc Gets the User's Decks visible to the current User
  * @access public
  */
@@ -119,6 +117,7 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
             data: decks,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -149,6 +148,7 @@ export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
             data: likedDecks,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

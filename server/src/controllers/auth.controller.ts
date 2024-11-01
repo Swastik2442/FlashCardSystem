@@ -63,6 +63,7 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
             message: "Registration Successful",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -124,6 +125,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
             data: user.username,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -154,6 +156,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
             message: "Logout Successful",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -211,6 +214,7 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
             data: user.username,
         })
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

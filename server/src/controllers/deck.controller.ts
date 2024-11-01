@@ -37,6 +37,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
             data: newDeck._id,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -87,6 +88,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
             },
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -128,6 +130,7 @@ export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
             data: cards,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -157,6 +160,7 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
             data: decks,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -195,6 +199,7 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Deleted the Deck",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -255,6 +260,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Deck updated successfully",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -323,6 +329,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Deck sharing updated",
         });
     } catch (err: any) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -359,6 +366,7 @@ export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
             data: deck.likedBy,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -401,6 +409,7 @@ export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Liked the Deck",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -443,6 +452,7 @@ export async function UnlikeDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Unliked the Deck",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

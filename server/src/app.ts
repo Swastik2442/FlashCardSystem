@@ -1,4 +1,5 @@
 import express, { Request as ExpressRequest, Response as ExpressResponse } from "express";
+import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.route";
@@ -10,6 +11,9 @@ const app = express();
 
 // TODO: Also try to implement CSRF protection
 
+app.use(morgan("short", {
+    skip: (_req: ExpressRequest, res: ExpressResponse) => res.statusCode < 400,
+}));
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true,
@@ -27,5 +31,11 @@ app.use("/auth", authRouter);
 app.use("/user", userRouter);
 app.use("/deck", deckRouter);
 app.use("/card", cardRouter);
+
+app.use((_req: ExpressRequest, res: ExpressResponse) => {
+    res.status(404);
+    res.json({ status: "error", message: "Resource not Found" });
+    res.end();
+})
 
 export default app;
