@@ -12,7 +12,9 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
     try {
         var deckById;
         if (!deck) {
-            deckById = await Deck.findOne({ owner: req.user._id, name: "#UNCATEGORISED#" });
+            deckById = await Deck.findOne({
+                owner: req.user._id, name: "#UNCATEGORISED#"
+            }).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
             if (!deckById) {
                 deckById = await Deck.create({
                     owner: req.user._id,
@@ -22,7 +24,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
                 deckById.save();
             }
         } else {
-            deckById = await Deck.findById(deck);
+            deckById = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");;
             if (!deckById)
                 throw new Error("Deck not found");
             else if (!deckById.isAccessibleBy(req.user._id).writable) {
@@ -83,7 +85,7 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deck = await Deck.findById(card.deck);
+        const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!deck)
             throw new Error("Deck not found");
         else if (!deck.isAccessibleBy(req.user._id).readable) {
@@ -128,7 +130,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deck = await Deck.findById(card.deck);
+        const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!deck)
             throw new Error("Deck not found");
         else if (!deck.isAccessibleBy(req.user._id).writable) {
@@ -181,7 +183,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const currentDeck = await Deck.findById(card.deck);
+        const currentDeck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!currentDeck)
             throw new Error("Deck not found");
         else if (!currentDeck.isAccessibleBy(req.user._id).writable) {
@@ -195,7 +197,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
         currentDeck.save();
 
         if (deck && deck.length > 0) {
-            const nextDeck = await Deck.findById(deck);
+            const nextDeck = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
             if (!nextDeck)
                 throw new Error("Deck not found");
             else if (!nextDeck.isAccessibleBy(req.user._id).writable) {

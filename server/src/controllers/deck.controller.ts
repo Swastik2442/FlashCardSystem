@@ -106,7 +106,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
 export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
     try {
-        const deck = await Deck.findById(id);
+        const deck = await Deck.findById(id).select("-description -dateCreated -dateUpdated -likedBy -__v");
         if (!deck) {
             res.status(404).json({
                 status: "error",
@@ -152,7 +152,7 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
                 { owner: req.user._id },
                 { sharedTo: { $elemMatch: { user: req.user._id } } },
             ]
-        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
+        }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
         res.status(200).json({
             status: "success",

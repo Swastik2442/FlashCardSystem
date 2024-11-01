@@ -107,9 +107,9 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
             owner: user._id,
             $or: [
                 { isPrivate: false },
-                { sharedTo: { $elemMatch: { user: req.user._id } } }
+                { sharedTo: { $elemMatch: { user: req.user._id, editable: true } } }
             ]
-        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
+        }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
         res.status(200).json({
             status: "success",
@@ -140,7 +140,7 @@ export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
                 { isPrivate: false },
                 { sharedTo: { $elemMatch: { user: req.user._id } } }
             ]
-        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
+        }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
         res.status(200).json({
             status: "success",

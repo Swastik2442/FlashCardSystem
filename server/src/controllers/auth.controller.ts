@@ -94,7 +94,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
                 { username: username === undefined ? null : username.toLowerCase() },
                 { email: email == undefined ? null : email }
             ]
-        });
+        }).select("-refreshToken");
         if (!user) {
             res.status(400).json({
                 status: "failed",
@@ -146,7 +146,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
             req.user._id,
             { $set: { refreshToken: null } },
             // { new: true }
-        )
+        );
 
         res.status(200)
         .clearCookie("access_token")
