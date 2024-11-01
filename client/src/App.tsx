@@ -12,7 +12,7 @@ import Login from "@/routes/auth/login";
 import { Dashboard, DashboardLoader } from "@/routes/dashboard/page";
 import { Deck, DeckLoader } from "@/routes/deck/page";
 import { UserProfile, UserProfileLoader } from "@/routes/userProfile";
-import Playground from "@/routes/playground";
+import { Playground, PlaygroundLoader } from "@/routes/playground";
 
 const Router = createBrowserRouter([
   {
@@ -71,6 +71,7 @@ const Router = createBrowserRouter([
             <Playground />
           </>
         ),
+        loader: PlaygroundLoader,
         errorElement: <ErrorBoundary />,
       },
       {
@@ -81,6 +82,7 @@ const Router = createBrowserRouter([
             <Playground />
           </>
         ),
+        loader: PlaygroundLoader,
         errorElement: <ErrorBoundary />,
       },
       {
