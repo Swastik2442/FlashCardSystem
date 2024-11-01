@@ -90,7 +90,7 @@ export default function Register() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Register</Button>
+            <Button type="submit" title="Register">Register</Button>
           </form>
         </Form>
         <div className="mt-4 text-center text-sm">

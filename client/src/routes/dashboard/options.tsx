@@ -37,7 +37,7 @@ export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
     <>
       <DropdownMenu open={isDropdownMenuOpen} onOpenChange={setIsDropdownMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon"><Plus /></Button>
+          <Button type="button" title="Creation Menu" variant="outline" size="icon"><Plus /></Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent>
@@ -126,8 +126,8 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
               )}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit">Create</Button>
+              <Button type="button" title="Cancel" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" title="Create">Create</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -234,8 +234,8 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
               )}
             />
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit">Create</Button>
+              <Button type="button" title="Cancel" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" title="Create">Create</Button>
             </DialogFooter>
           </form>
         </Form>

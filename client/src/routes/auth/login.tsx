@@ -64,7 +64,7 @@ export default function Login() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Login</Button>
+            <Button type="submit" title="Login">Login</Button>
           </form>
         </Form>
         <div className="mt-4 text-center text-sm">

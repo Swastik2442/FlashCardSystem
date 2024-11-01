@@ -88,10 +88,10 @@ function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILe
               <CardTitle>{card.question}</CardTitle>
             </CardHeader>
             <CardFooter className="flex justify-end gap-2">
-              <button className="text-accent-foreground" type="button" onClick={() => selectCardToDelete(card._id)}>
+              <button className="text-accent-foreground" type="button" title="Delete Card" onClick={() => selectCardToDelete(card._id)}>
                 <Trash2 className="size-4" />
               </button>
-              <button className="text-accent-foreground" type="button" onClick={() => selectCardToEdit(card)}>
+              <button className="text-accent-foreground" type="button" title="Edit Card" onClick={() => selectCardToEdit(card)}>
                 <Pencil className="size-4" />
               </button>
             </CardFooter>
@@ -181,9 +181,9 @@ function CardEditDialog({ dialogOpen, setDialogOpen, cardForm, handleCardEditing
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="button" variant="secondary" onClick={() => cardForm.reset()}>Reset</Button>
-              <Button type="submit">Edit</Button>
+              <Button type="button" title="Cancel" variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="button" title="Reset" variant="secondary" onClick={() => cardForm.reset()}>Reset</Button>
+              <Button type="submit" title="Edit">Edit</Button>
             </DialogFooter>
           </form>
         </Form>

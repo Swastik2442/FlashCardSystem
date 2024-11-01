@@ -48,8 +48,7 @@ function nextCard(playedCards: number[], totalCards: number) {
 
 export function Playground() {
   const { deckID, deck, cards } = useLoaderData() as IPlaygroundLoaderData;
-  const [currentCard, setCurrentCard] = useState(useMemo(() => nextCard([], cards.length), [cards.length]));
-  const [playedCards, setPlayedCards] = useState([currentCard]);
+  const [playedCards, setPlayedCards] = useState(useMemo(() => [nextCard([], cards.length)], [cards.length]));
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [submitted, setSubmitted] = useState(false);
@@ -70,7 +69,7 @@ export function Playground() {
   function handleCheckAnswer() {
     setSubmitted(true);
     const answer = (document.getElementById("answer") as HTMLInputElement).value;
-    if (answer.trim() === cards[currentCard].answer.trim()) {
+    if (answer.trim() === cards[playedCards[currentIndex]].answer.trim()) {
       toast.success("Correct Answer", { description: `You took ${timer} seconds to answer`, duration: 10000 });
     } else {
       toast.error("Incorrect Answer");
@@ -82,7 +81,13 @@ export function Playground() {
     {
       title: "Show Hint",
       icon: <BadgeInfo />,
-      onClick: () => toast("Hint", { description: cards[currentCard].hint, duration: 15000 }),
+      onClick: () => toast(
+        "Hint",
+        {
+          description: cards[playedCards[currentIndex]].hint,
+          duration: 15000
+        }
+      ),
     },
     {
       title: "Previous",
@@ -93,10 +98,10 @@ export function Playground() {
           return;
         }
 
-        setCurrentIndex((i) => i - 1);
-        setCurrentCard(playedCards[currentIndex]);
+        setCurrentIndex(i => i - 1);
         setTimer(0);
         setSubmitted(false);
+        (document.getElementById("answer") as HTMLInputElement).value = "";
       },
     },
     {
@@ -109,22 +114,20 @@ export function Playground() {
       icon: <ArrowRightCircle />,
       onClick: () => {
         if (currentIndex < playedCards.length - 1) {
-          setCurrentIndex((i) => i + 1);
-          setCurrentCard(playedCards[currentIndex + 1]);
+          setCurrentIndex(i => i + 1);
         } else if (playedCards.length === cards.length) {
           toast.info("Shuffling the Deck");
-          const next = nextCard([], cards.length);
+          const next = nextCard([playedCards[currentIndex]], cards.length);
           setPlayedCards([next]);
           setCurrentIndex(0);
-          setCurrentCard(next);
         } else {
           const next = nextCard(playedCards, cards.length);
-          setPlayedCards([...playedCards, next]);
-          setCurrentIndex((i) => i + 1);
-          setCurrentCard(next);
+          setPlayedCards(c => [...c, next]);
+          setCurrentIndex(i => i + 1);
         }
         setTimer(0);
         setSubmitted(false);
+        (document.getElementById("answer") as HTMLInputElement).value = "";
       },
     },
     {
@@ -132,7 +135,7 @@ export function Playground() {
       icon: <TicketCheck />,
       onClick: () => {
         setFlip(!flip)
-        if (flip) setSubmitted(true);
+        setSubmitted(true);
       },
     }
   ];
@@ -148,16 +151,18 @@ export function Playground() {
         <FlipCard flip={flip}>
           <FlipCardFront>
             <div className="h-full rounded-lg bg-white p-4 flex flex-col justify-between">
-              <p className="mb-4">{cards[currentCard].question}</p>
+              <p className="mb-4">{cards[playedCards[currentIndex]].question}</p>
               <div className="flex">
                 <Input id="answer" placeholder="Answer" className="border-r-transparent rounded-r-none" disabled={submitted} />
-                <Button onClick={handleCheckAnswer} variant="outline" size="icon" className="rounded-l-none" disabled={submitted}><Check /></Button>
+                <Button onClick={handleCheckAnswer} type="submit" title="Submit Answer" variant="outline" size="icon" className="rounded-l-none" disabled={submitted}>
+                  <Check />
+                </Button>
               </div>
             </div>
           </FlipCardFront>
           <FlipCardBack>
             <div className="h-full rounded-lg bg-green-400 p-4">
-              <p>{cards[currentCard].answer}</p>
+              <p>{cards[playedCards[currentIndex]].answer}</p>
             </div>
           </FlipCardBack>
         </FlipCard>

@@ -34,7 +34,7 @@ interface IDeckOptionsProps {
 export function DeckPlayButton({ deckID, cardsCount }: { deckID: string, cardsCount: number }) {
   const navigate = useNavigate();
   return (
-    <Button onClick={() => navigate(`/play/${deckID}`, { replace: true })} disabled={cardsCount == 0}>
+    <Button onClick={() => navigate(`/play/${deckID}`, { replace: true })} type="button" title="Play" disabled={cardsCount == 0}>
       <Play />
       <span className="select-none">Play</span>
     </Button>
@@ -54,7 +54,7 @@ export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, lik
   }
 
   return (
-    <Button onClick={handleDeckLike} variant="ghost">
+    <Button onClick={handleDeckLike} type="submit" title="Like Deck" variant="ghost">
       <Heart fill={userLiked ? "currentColor" : "none"} />
       <span className="select-none">{likes + (userLiked ? 1 : 0)}</span>
     </Button>
@@ -85,7 +85,7 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon"><Plus /></Button>
+        <Button type="button" title="Create Card" variant="outline" size="icon"><Plus /></Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -136,8 +136,8 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
               )}
             />
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit">Create</Button>
+              <Button type="button" title="Cancel" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" title="Create">Create</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -170,7 +170,7 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
     <>
       <DropdownMenu open={dropdownMenuOpen} onOpenChange={setDropdownMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon"><EllipsisVertical /></Button>
+          <Button type="button" title="Options" variant="outline" size="icon"><EllipsisVertical /></Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem onClick={openEditDialog}>
@@ -292,9 +292,9 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
               )}
             />
             <DialogFooter>
-              <Button variant="ghost" type="reset" onClick={() => deckForm.reset()}>Reset</Button>
-              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit">Edit</Button>
+              <Button type="reset" title="Reset" variant="ghost" onClick={() => deckForm.reset()}>Reset</Button>
+              <Button type="button" title="Cancel" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" title="Edit">Edit</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -379,9 +379,9 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={handleLinkCopy}><Link2 /></Button>
-              <Button type="button" variant="outline" onClick={handleShareCancel}>Cancel</Button>
-              <Button type="submit">Edit</Button>
+              <Button type="button" title="Link" variant="ghost" onClick={handleLinkCopy}><Link2 /></Button>
+              <Button type="button" title="Cancel" variant="outline" onClick={handleShareCancel}>Cancel</Button>
+              <Button type="submit" title="Edit">Edit</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -438,7 +438,7 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
       <Popover>
         <PopoverTrigger asChild>
           <FormControl style={{ marginTop: 0 + 'px' }}>
-            <Button variant="outline" role="combobox" className={cn(
+            <Button type="button" title="Select User" variant="outline" role="combobox" className={cn(
               "col-span-3 justify-between",
               !value && "text-muted-foreground"
             )}>
@@ -477,7 +477,7 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
     <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
       <DrawerTrigger asChild>
         <FormControl style={{ marginTop: 0 + 'px' }}>
-          <Button variant="outline" role="combobox" className={cn(
+          <Button type="button" title="Select User" variant="outline" role="combobox" className={cn(
             "col-span-3 justify-between",
             !value && "text-muted-foreground"
           )}>

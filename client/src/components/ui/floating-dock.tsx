@@ -36,6 +36,8 @@ const FloatingDockMobile = ({ items, className }: { items: IFloatingDockItem[], 
                 <button
                   onClick={item.onClick}
                   key={item.title}
+                  title={item.title}
+                  type="button"
                   className="size-10 rounded-full bg-gray-50 dark:bg-neutral-900 flex items-center justify-center"
                 >
                   <div className="size-5 flex items-center justify-center">{item.icon}</div>
@@ -47,6 +49,8 @@ const FloatingDockMobile = ({ items, className }: { items: IFloatingDockItem[], 
       </AnimatePresence>
       <button
         onClick={() => setOpen(!open)}
+        title="Options"
+        type="button"
         className="size-10 rounded-full bg-gray-50 dark:bg-neutral-800 flex items-center justify-center"
       >
         <PanelTopClose className="size-5 text-neutral-500 dark:text-neutral-400" />
@@ -111,7 +115,7 @@ function IconContainer({ mouseX, title, icon, onClick }: { mouseX: MotionValue, 
   });
 
   return (
-    <button onClick={onClick}>
+    <button onClick={onClick} type="button" title={title}>
       <motion.div
         ref={ref}
         style={{ width, height }}

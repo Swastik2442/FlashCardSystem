@@ -38,7 +38,7 @@ export function Dashboard() {
         <h1 className="text-lg select-none">Dashboard</h1>
         <div className="flex gap-1">
           <CreationMenu decks={decks} />
-          <Button variant="outline" size="icon">
+          <Button type="button" title="Deletion Menu" variant="outline" size="icon">
             <Trash2/>
           </Button>
         </div>

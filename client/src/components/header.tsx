@@ -17,10 +17,10 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="mr-4 flex">
-          <a className="mr-4 flex items-center space-x-2 lg:mr-6 hover:cursor-pointer" onClick={() => navigate(0)}>
+          <button className="mr-4 flex items-center space-x-2 lg:mr-6" onClick={() => navigate(0)} title="Refresh Page" type="button">
             <Diamond className="size-4" />
             <span className="font-bold hidden sm:inline-block">{import.meta.env.VITE_APP_TITLE || "FlashCardSystem"}</span>
-          </a>
+          </button>
           <nav className="hidden sm:flex items-center gap-4 text-sm lg:gap-6">
             <NavLink to="/dashboard" className={navLinkClasses}>Dashboard</NavLink>
             <NavLink to="/play" className={navLinkClasses}>Play</NavLink>

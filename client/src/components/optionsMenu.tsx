@@ -24,13 +24,13 @@ export function OptionsMenu() {
 
   if (user == null)
     return (
-      <Button onClick={() => navigate("/auth/login")} variant="outline" size="icon"><User /></Button>
+      <Button onClick={() => navigate("/auth/login")} type="submit" title="Options" variant="outline" size="icon"><User /></Button>
     );
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon"><User /></Button>
+        <Button type="submit" title="Options" variant="outline" size="icon"><User /></Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel className="flex justify-between">
