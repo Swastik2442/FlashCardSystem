@@ -9,6 +9,15 @@ interface ConfirmationDialogProps {
   dialogMessage?: string;
 }
 
+/**
+ * An Alert Dialog that asks for confirmation before proceeding with an action.
+ * @param open Whether the dialog is Open or not
+ * @param onOpenChange Function to set the Dialog Open or Closed
+ * @param onConfirm Function to be called when the user confirms the action
+ * @param confirmButtonTitle Title of the confirmation button (default: "Confirm")
+ * @param dialogTitle Title of the dialog (default: "Are you absolutely sure?")
+ * @param dialogMessage Message in the dialog (default: "This action cannot be undone. Proceed with Caution.")
+ */
 export default function ConfirmationDialog({ open, onOpenChange, onConfirm, confirmButtonTitle, dialogTitle, dialogMessage }: ConfirmationDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

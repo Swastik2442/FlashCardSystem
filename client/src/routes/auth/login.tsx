@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { loginFormSchema } from "@/types/forms";
 import type { TLoginFormSchema } from "@/types/forms";
 
+/**
+ * Component for the Login page
+ */
 export default function Login() {
   const auth = useAuth();
   const navigate = useNavigate();

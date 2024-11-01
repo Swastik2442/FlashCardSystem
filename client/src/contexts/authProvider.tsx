@@ -24,6 +24,11 @@ let didInit = false;
 
 const AuthProviderContext = createContext<AuthProviderState>(initialState);
 
+/**
+ * A Context Provider to handle the Authentication of the User
+ * @param children Children components to the AuthProvider
+ * @param props Additional props to the AuthProvider
+ */
 export function AuthProvider({ children, ...props }: { children: React.ReactNode }) {
   const [user, setUser] = useState<string | null>(localStorage.getItem(USER_STORAGE_KEY));
 
@@ -79,6 +84,9 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
   );
 }
 
+/**
+ * A Hook to access the AuthProvider properties
+ */
 export const useAuth = () => {
   const context = useContext(AuthProviderContext);
   if (context === undefined)

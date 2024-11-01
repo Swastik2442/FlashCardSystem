@@ -14,6 +14,11 @@ interface IDeckLoaderData {
   uncategorizedDeck: ILessDeck;
 }
 
+/**
+ * Loader function for the `/deck/:did` Route
+ * @param params Parameters passed to the Route
+ * @returns information about the Deck, Owner, Cards and other Decks
+ */
 export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckLoaderData> {
   const deckID = params.did;
   if (!deckID)
@@ -44,6 +49,9 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
   return { ownerInfo: ownerInfo, deckInfo: deckInfo, cards: cards, allDecks: decks, uncategorizedDeck: uncat ?? { _id: "", name: "#UNCATEGORISED#", isPrivate: true, dateUpdated: "" } };
 }
 
+/**
+ * Component for the Deck page
+ */
 export function Deck() {
   const { did } = useParams();
   const { ownerInfo, deckInfo, cards, allDecks, uncategorizedDeck } = useLoaderData() as IDeckLoaderData;

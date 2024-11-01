@@ -11,6 +11,9 @@ const navLinkClasses = ({ isActive }: { isActive: boolean }) => (
   ].join(" ")
 );
 
+/**
+ * A Header Component with Navigation Links, GitHub Repo Link, Theme Toggle Menu and Options Menu.
+ */
 export default function Header() {
   const navigate = useNavigate();
   return (

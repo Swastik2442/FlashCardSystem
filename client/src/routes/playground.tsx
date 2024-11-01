@@ -16,6 +16,11 @@ interface IPlaygroundLoaderData {
   cards: ICard[];
 }
 
+/**
+ * Loader function for the `/play` and `/play/:did` Routes
+ * @param params Parameters passed to the Route
+ * @returns information about the Deck and its Cards
+ */
 export async function PlaygroundLoader({ params }: LoaderFunctionArgs): Promise<IPlaygroundLoaderData> {
   let deckID = params.did;
   if (!deckID) {
@@ -34,6 +39,12 @@ export async function PlaygroundLoader({ params }: LoaderFunctionArgs): Promise<
   return { deckID, deck, cards };
 }
 
+/**
+ * Function to get a random card to be displayed
+ * @param playedCards Indices of the Cards already played
+ * @param totalCards Total Number of Cards in the Deck
+ * @returns Index of the next Card
+ */
 function nextCard(playedCards: number[], totalCards: number) {
   let random = Math.floor(Math.random() * totalCards);
   if (playedCards.length === totalCards) {
@@ -46,6 +57,9 @@ function nextCard(playedCards: number[], totalCards: number) {
   return random;
 }
 
+/**
+ * A Component that renders the Playground
+ */
 export function Playground() {
   const { deckID, deck, cards } = useLoaderData() as IPlaygroundLoaderData;
   const [playedCards, setPlayedCards] = useState(useMemo(() => [nextCard([], cards.length)], [cards.length]));

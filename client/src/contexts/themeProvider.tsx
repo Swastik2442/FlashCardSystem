@@ -21,6 +21,12 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+/**
+ * A Context Provider to handle the Theme of the Application
+ * @param children Children components to the ThemeProvider
+ * @param defaultTheme Default Theme to use
+ * @param props Additional props to the ThemeProvider
+ */
 export function ThemeProvider({ children, defaultTheme = "system", ...props}: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || defaultTheme);
 
@@ -52,6 +58,9 @@ export function ThemeProvider({ children, defaultTheme = "system", ...props}: Th
   )
 }
 
+/**
+ * A Hook to access the ThemeProvider properties
+ */
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
   if (context === undefined)

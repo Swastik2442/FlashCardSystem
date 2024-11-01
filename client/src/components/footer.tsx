@@ -18,6 +18,9 @@ const tech = [
   },
 ];
 
+/**
+ * A Footer Component with Ownership and Tech Stack Information.
+ */
 export default function Footer() {
   return (
     <footer className="w-full px-4">

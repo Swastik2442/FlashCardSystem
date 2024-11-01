@@ -23,6 +23,13 @@ const defaultCard: ICard = {
   deck: "",
 };
 
+/**
+ * A Component to render Cards in an Grid Format, along with Editing and Deletion options.
+ * @param decks - Decks owned or editable by the User
+ * @param cards - Cards to be displayed
+ * @param uncategorizedDeck - Deck to be used when a Card is not assigned to any Deck
+ * @param uponChange - Function to be called when a Card is Edited or Deleted
+ */
 function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILessDeck[], cards: ICard[], uncategorizedDeck: ILessDeck, uponChange: () => void }) {
   const [cardToEdit, setCardToEdit] = useState<ICard | null>(null);
   const [cardToDelete, setCardToDelete] = useState<string | null>(null);
@@ -104,6 +111,15 @@ function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILe
   )
 }
 
+/**
+ * A Dialog to Edit a Card, with Fields for Question, Answer, Hint and Deck.
+ * @param dialogOpen - Whether the Dialog is Open or not
+ * @param setDialogOpen - Function to set the Dialog Open or Closed
+ * @param cardForm - `react-hook-form` Form to be used for Editing the Card
+ * @param handleCardEditing - Function to be called when the Card is Edited
+ * @param decks - Decks owned or editable by the User
+ * @param uncategorizedDeck - Deck to be used when a Card is not assigned to any Deck
+ */
 function CardEditDialog({ dialogOpen, setDialogOpen, cardForm, handleCardEditing, decks, uncategorizedDeck }: { dialogOpen: boolean, setDialogOpen: (open: boolean) => void, cardForm: UseFormReturn<ICard, unknown, undefined>, handleCardEditing: (values: ICard) => Promise<void>, decks: ILessDeck[], uncategorizedDeck: ILessDeck }) {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

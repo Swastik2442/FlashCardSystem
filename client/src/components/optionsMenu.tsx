@@ -5,6 +5,9 @@ import { useAuth } from "@/contexts/authProvider";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
+/**
+ * A Dropdown Menu that contains Options for a Logged In User. Otherwise, a Button for redirecting to the Login Page.
+ */
 export function OptionsMenu() {
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();

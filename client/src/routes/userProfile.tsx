@@ -11,6 +11,11 @@ interface IUserProfileLoaderData {
   likedDecks: ILessDeck[] | null;
 }
 
+/**
+ * Loader function for the `/user/:username` Route
+ * @param params Parameters passed to the Route
+ * @returns information about the User
+ */
 export async function UserProfileLoader({ params }: LoaderFunctionArgs): Promise<IUserProfileLoaderData> {
   const username = params.username;
   if (!username)
@@ -27,6 +32,9 @@ export async function UserProfileLoader({ params }: LoaderFunctionArgs): Promise
   return { userInfo: userInfo, userDecks: userDecks, likedDecks: likedDecks };
 }
 
+/**
+ * A Component that renders the User Profile
+ */
 export function UserProfile() {
   const { userInfo, userDecks, likedDecks } = useLoaderData() as IUserProfileLoaderData;
 

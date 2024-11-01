@@ -1,9 +1,16 @@
+/**
+ * Creates a Date String based on the time passed since the given date
+ * @param date Date String to be formatted
+ * @returns `HH:MM` if date within 24 hours, `Weekday HH:MM` if date within 7 days, else `MM/DD/YYYY`
+ */
 export function getFormattedDate(date: string): string {
   try {
     const jsDate = new Date(date);
     const now = new Date();
     const diff = now.getTime() - jsDate.getTime();
-    if (diff <= 86400000)       // 24 hours
+    if (diff < 0)
+      return jsDate.toLocaleDateString();
+    else if (diff <= 86400000)       // 24 hours
       return jsDate.toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",
@@ -16,13 +23,19 @@ export function getFormattedDate(date: string): string {
         minute: "2-digit",
         hour12: false,
       });
-    else return jsDate.toLocaleDateString();
+    else
+      return jsDate.toLocaleDateString();
   } catch (err) {
     console.error(err);
   }
   return "";
 }
 
+/**
+ * Creates a Timer String based on the seconds passed
+ * @param sec Number of seconds to be converted
+ * @returns `HH:MM:SS` string
+ */
 export function secondsToString(sec: number): string {
   let isNegative = false;
   if (sec < 0) {

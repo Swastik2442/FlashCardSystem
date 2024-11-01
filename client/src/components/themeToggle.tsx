@@ -3,6 +3,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/themeProvider";
 
+/**
+ * A Dropdown Menu to toggle between light, dark, and system themes across the Application.
+ */
 export function ThemeToggle() {
   const { setTheme } = useTheme();
 

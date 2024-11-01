@@ -32,6 +32,11 @@ interface IDeckOptionsProps {
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
 }
 
+/**
+ * A Button to Play the Deck (navigate to its corresponding Play Page)
+ * @param deckID ID of the Deck
+ * @param cardsCount Number of Cards in the Deck
+ */
 export function DeckPlayButton({ deckID, cardsCount }: { deckID: string, cardsCount: number }) {
   const navigate = useNavigate();
   return (
@@ -42,6 +47,12 @@ export function DeckPlayButton({ deckID, cardsCount }: { deckID: string, cardsCo
   );
 }
 
+/**
+ * A Button to Like the Deck
+ * @param deckID ID of the Deck
+ * @param likes Number of Likes the Deck already has
+ * @param isLiked Whether the Deck is liked by the User
+ */
 export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, likes: number, isLiked: boolean }) {
   const [userLiked, setUserLiked] = useState(isLiked);
   const handleDeckLike = async () => {
@@ -62,6 +73,10 @@ export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, lik
   );
 }
 
+/**
+ * A Dialog for creating a new Card in the Deck
+ * @param deckID ID of the Deck
+ */
 export function CardCreationDialog({ deckID }: { deckID: string }) {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -147,6 +162,12 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
   );
 }
 
+/**
+ * A Dropdown Menu for the Deck Options (Edit, Share, Delete)
+ * @param deckID ID of the Deck
+ * @param deck information about the Deck
+ * @param owner Username of the Deck Owner
+ */
 export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, deck: IMoreDeck, owner: string }) {
   const { user } = useAuth();
   const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
@@ -198,6 +219,12 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
   );
 }
 
+/**
+ * A Confirmation Dialog for Deleting the Deck
+ * @param deckID ID of the Deck
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ */
 function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
   const navigate = useNavigate();
   function handleDeckDeletion() {
@@ -218,6 +245,14 @@ function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsPro
   );
 }
 
+/**
+ * A Dialog for Editing the Deck
+ * @param deckID ID of the Deck
+ * @param deck information about the Deck
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ * @returns 
+ */
 function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: string, deck: IMoreDeck, dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
   const navigate = useNavigate();
   const deckForm = useForm<TDeckFormSchema>({
@@ -304,6 +339,13 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
   );
 }
 
+/**
+ * A Dialog for Sharing/Unsharing the Deck
+ * @param deckID ID of the Deck
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ * @returns 
+ */
 function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
   const deckShareForm = useForm<TDeckShareFormSchema>({
     resolver: zodResolver(deckShareFormSchema),
@@ -391,6 +433,9 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
   );
 }
 
+/**
+ * @returns Users stored in the Local Storage if any
+ */
 function getInitialUsers() {
   const localUsers = localStorage.getItem(SEARCH_USERS_STORAGE_KEY);
   if (!localUsers || localUsers.length < 50)
@@ -411,7 +456,12 @@ function getInitialUsers() {
   return storedUsers as IUserWithID[];
 }
 
-  // BUG: Drawer won't show newly added users on search, but when search item is cleared
+// BUG: Drawer won't show newly added users on search, but when search item is cleared
+/**
+ * A Search Field for searching Users
+ * @param form `react-hook-form` Form to be used for setting value to
+ * @param value User ID selected in the Form
+ */
 function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema>>, value: string }) {
   const [usersList, setUsersList] = useState<IUserWithID[]>(getInitialUsers());
   const [searchTerm, setSearchTerm] = useState("");

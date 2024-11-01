@@ -1,10 +1,19 @@
 import fetchWithCredentials from "@/utils/fetch";
 import type { TDeckFormSchema, TDeckShareFormSchema } from "@/types/forms";
 
+/**
+ * @param deck Deck to be checked
+ * @returns Whether the Deck contains Uncategorized Cards
+ */
 export function isDeckUncategorized(deck: ILessDeck | IMoreDeck) {
   return deck.name === "#UNCATEGORISED#";
 }
 
+/**
+ * Makes a GET request to fetch the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @returns Information about the Deck
+ */
 export async function getDeck(deckID: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
@@ -20,6 +29,10 @@ export async function getDeck(deckID: string) {
   return deckData.data;
 }
 
+/**
+ * Makes a GET request to fetch all Decks owned by or shared to the User
+ * @returns Decks owned by or shared to the User
+ */
 export async function getAllDecks() {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/all`,
@@ -35,6 +48,11 @@ export async function getAllDecks() {
   return allDecksData.data;
 }
 
+/**
+ * Makes a GET request to fetch all Cards in the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @returns Cards in the Deck
+ */
 export async function getDeckCards(deckID: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/cards/${deckID}`,
@@ -50,6 +68,11 @@ export async function getDeckCards(deckID: string) {
   return deckCardsData.data;
 }
 
+/**
+ * Makes a POST request to create a new Deck
+ * @param data information of the deck
+ * @returns ID of the created deck
+ */
 export async function createDeck(data: TDeckFormSchema) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/new`,
@@ -66,6 +89,11 @@ export async function createDeck(data: TDeckFormSchema) {
   return creationData.data;
 }
 
+/**
+ * Makes a DELETE request to delete the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @returns 
+ */
 export async function removeDeck(deckID: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
@@ -81,6 +109,12 @@ export async function removeDeck(deckID: string) {
   return deletionData.message;
 }
 
+/**
+ * Makes a PATCH request to update the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @param data information to be updated
+ * @returns Message from the Server
+ */
 export async function updateDeck(deckID: string, data: TDeckFormSchema) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
@@ -97,6 +131,11 @@ export async function updateDeck(deckID: string, data: TDeckFormSchema) {
   return updateDeckData.message;
 }
 
+/**
+ * Makes a POST request to like the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @returns Message from the Server
+ */
 export async function likeDeck(deckID: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/likes/add/${deckID}`,
@@ -112,6 +151,11 @@ export async function likeDeck(deckID: string) {
   return likeData.message;
 }
 
+/**
+ * Makes a POST request to unlike the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @returns Message from the Server
+ */
 export async function unlikeDeck(deckID: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/likes/remove/${deckID}`,
@@ -127,6 +171,12 @@ export async function unlikeDeck(deckID: string) {
   return unlikeData.message;
 }
 
+/**
+ * Makes a POST request to share/unshare the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @param data information regarding the share/unshare
+ * @returns Message from the Server
+ */
 export async function shareDeck(deckID: string, data: TDeckShareFormSchema) {
   const shareORunshare = data?.unshare ? "unshare" : "share";
   const res = await fetchWithCredentials(

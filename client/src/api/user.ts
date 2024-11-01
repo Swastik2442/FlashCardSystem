@@ -1,5 +1,10 @@
 import fetchWithCredentials from "@/utils/fetch";
 
+/**
+ * Makes a GET request to get Information about a User
+ * @param user Username or User ID of the User
+ * @returns information about the User
+ */
 export async function getUser(user: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/user/get/${user}`,
@@ -15,6 +20,11 @@ export async function getUser(user: string) {
   return userData.data;
 }
 
+/**
+ * Makes a GET request to get Users with the given substring in their Username
+ * @param substring Substring to search for in the Usernames
+ * @returns Users with the given substring in their Username
+ */
 export async function getUserFromSubstring(substring: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/user/getsub/${substring}`,
@@ -30,9 +40,14 @@ export async function getUserFromSubstring(substring: string) {
   return data.data;
 }
 
-export async function getUserDecks(username: string) {
+/**
+ * Makes a GET request to get the publically visible Decks of a User (Public Decks owned or editable by the User)
+ * @param user Username or User ID of the User
+ * @returns Publically visible Decks of the User
+ */
+export async function getUserDecks(user: string) {
   const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/user/decks/${username}`,
+    `${import.meta.env.VITE_SERVER_HOST}/user/decks/${user}`,
     "get"
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to fetch User Decks");
@@ -45,6 +60,10 @@ export async function getUserDecks(username: string) {
   return decksData.data;
 }
 
+/**
+ * Makes a GET request to get the Liked Decks of the User (Logged in User only)
+ * @returns Decks liked by the User
+ */
 export async function getUserLikedDecks() {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/user/liked`,

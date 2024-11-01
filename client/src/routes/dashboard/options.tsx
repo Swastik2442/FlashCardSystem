@@ -19,6 +19,10 @@ import { createDeck } from "@/api/deck";
 import { createCard } from "@/api/card";
 
 // TODO: Implement a way to add newly created decks/cards to page without full reload
+/**
+ * A Dropdown Menu that allows the User to create a new Deck or Card
+ * @param decks Decks owned or editable by the User
+ */
 export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
   const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const [isDeckDialogOpen, setIsDeckDialogOpen] = useState(false);
@@ -52,6 +56,11 @@ export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
   );
 }
 
+/**
+ * A Dialog for creating a new Deck
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ */
 function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
   const navigate = useNavigate();
   const deckForm = useForm<TDeckFormSchema>({
@@ -136,6 +145,11 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
   );
 }
 
+/**
+ * A Dialog for creating a new Card
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ */
 function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>>, decks: ILessDeck[] }) {
   const navigate = useNavigate();
   const cardForm = useForm<TCardFormSchema>({

@@ -1,6 +1,11 @@
 import fetchWithCredentials from "@/utils/fetch";
 import type { TCardFormSchema } from "@/types/forms";
 
+/**
+ * Makes a POST request to create a new card
+ * @param data information of the card
+ * @returns ID of the created card
+ */
 export async function createCard(data: TCardFormSchema) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/card/new`,
@@ -17,6 +22,12 @@ export async function createCard(data: TCardFormSchema) {
   return cardData.data;
 }
 
+/**
+ * Makes a PATCH request to update the card with the given ID
+ * @param cardID ID of the card
+ * @param data information to be updated
+ * @returns Message from the Server
+ */
 export async function updateCard(cardID: string, data: TCardFormSchema) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
@@ -33,6 +44,11 @@ export async function updateCard(cardID: string, data: TCardFormSchema) {
   return cardUpdateData.message;
 }
 
+/**
+ * Makes a DELETE request to delete the card with the given ID
+ * @param cardID ID of the card
+ * @returns Message from the Server
+ */
 export async function removeCard(cardID: string) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,

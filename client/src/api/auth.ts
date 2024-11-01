@@ -1,6 +1,11 @@
 import fetchWithCredentials from "@/utils/fetch";
 import type { TLoginFormSchema, TRegisterFormSchema } from "@/types/forms";
 
+/**
+ * Makes a POST request to register a new user
+ * @param data information about the user
+ * @returns Message from the Server
+ */
 export async function registerUser(data: TRegisterFormSchema) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/auth/register`,
@@ -17,6 +22,11 @@ export async function registerUser(data: TRegisterFormSchema) {
   return registerData.message;
 }
 
+/**
+ * Makes a POST request to login a user
+ * @param data information about the user
+ * @returns Username of the logged in user
+ */
 export async function loginUser(data: TLoginFormSchema) {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/auth/login`,
@@ -33,6 +43,10 @@ export async function loginUser(data: TLoginFormSchema) {
   return loginData.data;
 }
 
+/**
+ * Makes a GET request to logout the user
+ * @returns Message from the Server
+ */
 export async function logoutUser() {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/auth/logout`, "get"
@@ -47,6 +61,10 @@ export async function logoutUser() {
   return data.message;
 }
 
+/**
+ * Makes a GET request to refresh the user tokens
+ * @returns Username of the logged in user
+ */
 export async function refreshTokens() {
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/auth/refresh-token`, "get"

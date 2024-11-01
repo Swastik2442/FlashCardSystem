@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { registerFormSchema } from "@/types/forms";
 import type { TRegisterFormSchema } from "@/types/forms";
 
+/**
+ * Component for the Registration page
+ */
 export default function Register() {
   const auth = useAuth();
   const navigate = useNavigate();

@@ -14,6 +14,10 @@ interface IDashboardLoaderData {
   uncategorizedDeck: ILessDeck;
 }
 
+/**
+ * Loader function for the `/dashboard` Route
+ * @returns Decks and Cards owned by or shared to the User
+ */
 export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   const allDecks = await getAllDecks();
   const decks = allDecks.filter((deck) => !isDeckUncategorized(deck));
@@ -29,6 +33,9 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   return { decks: decks, cards: cards, uncategorizedDeck: uncat ?? { _id: "", name: "#UNCATEGORISED#", isPrivate: true, dateUpdated: "" } };
 }
 
+/**
+ * Component for the Dashboard page
+ */
 export function Dashboard() {
   const { decks, cards, uncategorizedDeck } = useLoaderData() as IDashboardLoaderData;
   const navigate = useNavigate();
