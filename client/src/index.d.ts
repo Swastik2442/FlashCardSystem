@@ -4,11 +4,11 @@ interface IUser {
 }
 
 interface IUserWithID extends IUser {
-  _id: string;
+  readonly _id: string;
 }
 
 interface ILessDeck {
-  _id: string;
+  readonly _id: string;
   name: string;
   dateUpdated: string;
   isPrivate: boolean;
@@ -27,7 +27,7 @@ interface IMoreDeck {
 }
 
 interface ICard {
-  _id: string;
+  readonly _id: string;
   question: string;
   answer: string;
   hint: string;
@@ -35,7 +35,7 @@ interface ICard {
 }
 
 interface ICustomResponse<T> {
-  status: string;
-  message: string;
+  readonly status: string;
+  readonly message: string;
   data: T;
 }

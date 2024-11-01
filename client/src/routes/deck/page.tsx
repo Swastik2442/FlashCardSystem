@@ -4,6 +4,7 @@ import ShowCards from "@/components/showCards";
 import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./options";
 import { isDeckUncategorized, getDeck, getDeckCards, getAllDecks } from "@/api/deck";
 import { getUser } from "@/api/user";
+import { DECKS_STORAGE_KEY } from "@/constants";
 
 interface IDeckLoaderData {
   ownerInfo: IUser;
@@ -29,12 +30,12 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
     deckInfo.likes -= 1;
 
   // Get all Decks owned by or shared to the User
-  const allDecksString = localStorage.getItem("fcs-decks");
+  const allDecksString = localStorage.getItem(DECKS_STORAGE_KEY);
   const allDecks = allDecksString ? JSON.parse(allDecksString) as ILessDeck[] : [];
   if (allDecks.length === 0) {
     const allDecks = await getAllDecks();
     allDecks.sort((a, b) => (a.dateUpdated > b.dateUpdated || a.name < b.name) ? -1 : 1);
-    localStorage.setItem("fcs-decks", JSON.stringify(allDecks));
+    localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(allDecks));
   }
 
   const decks = allDecks.filter((deck) => !isDeckUncategorized(deck));

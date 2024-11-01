@@ -1,0 +1,28 @@
+{
+    "short_name": "FlashCardSystem",
+    "name": "FlashCardSystem",
+    "icons": [
+        {
+            "src": "/icon-192.jpeg",
+            "type": "image/jpeg",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/icon-250.png",
+            "type": "image/png",
+            "sizes": "250x250"
+        },
+        {
+            "src": "/icon-512.jpeg",
+            "type": "image/jpeg",
+            "sizes": "512x512"
+        }
+    ],
+    "id": "/dashboard?source=pwa",
+    "start_url": "/dashboard",
+    "background_color": "#ffffff",
+    "display": "minimal-ui",
+    "scope": "/",
+    "theme_color": "#ffffff",
+    "description": "A Learning System using Flash Cards"
+}

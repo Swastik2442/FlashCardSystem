@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getFormattedDate } from "@/utils/time";
 import { getUser, getUserDecks, getUserLikedDecks } from "@/api/user";
+import { USER_STORAGE_KEY } from "@/constants";
 
 interface IUserProfileLoaderData {
   userInfo: IUser;
@@ -19,7 +20,7 @@ export async function UserProfileLoader({ params }: LoaderFunctionArgs): Promise
   const userDecks = await getUserDecks(username);
 
   let likedDecks = null;
-  if (username == localStorage.getItem("fcs-user")) {
+  if (username == localStorage.getItem(USER_STORAGE_KEY)) {
     likedDecks = await getUserLikedDecks();
   }
 

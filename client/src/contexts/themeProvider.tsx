@@ -1,12 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
+import { THEME_STORAGE_KEY } from "@/constants";
 
 type Theme = "dark" | "light" | "system";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
-  storageKey?: string;
 }
 
 interface ThemeProviderState {
@@ -21,8 +21,8 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
-export function ThemeProvider({ children, defaultTheme = "system", storageKey = "fcs-ui-theme", ...props}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme);
+export function ThemeProvider({ children, defaultTheme = "system", ...props}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || defaultTheme);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -40,7 +40,7 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
   const value: ThemeProviderState = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
       setTheme(theme);
     },
   };

@@ -6,6 +6,7 @@ import ShowCards from "@/components/showCards";
 import { getFormattedDate } from "@/utils/time";
 import { CreationMenu } from "./options";
 import { isDeckUncategorized, getAllDecks, getDeckCards } from "@/api/deck";
+import { DECKS_STORAGE_KEY, UNCATEGORIZED_CARDS_STORAGE_KEY } from "@/constants";
 
 interface IDashboardLoaderData {
   decks: ILessDeck[];
@@ -22,8 +23,8 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   const cards = uncat ? await getDeckCards(uncat._id) : [];
   cards.sort((a, b) => a.question > b.question ? 1 : -1);
 
-  localStorage.setItem("fcs-decks", JSON.stringify(allDecks));
-  localStorage.setItem("fcs-uncatcards", JSON.stringify(cards));
+  localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(allDecks));
+  localStorage.setItem(UNCATEGORIZED_CARDS_STORAGE_KEY, JSON.stringify(cards));
 
   return { decks: decks, cards: cards, uncategorizedDeck: uncat ?? { _id: "", name: "#UNCATEGORISED#", isPrivate: true, dateUpdated: "" } };
 }

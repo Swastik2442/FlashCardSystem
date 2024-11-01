@@ -10,12 +10,13 @@ export async function getDeck(deckID: string) {
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
     "get"
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to fetch Deck");
+    throw new Error(err?.message || "Failed to fetch Deck");
   });
-  if (!res?.ok)
-    throw new Error("Failed to fetch Deck");
 
   const deckData = await res.json() as ICustomResponse<IMoreDeck>;
+  if (!res?.ok)
+    throw new Error(deckData.message || "Failed to fetch Deck");
+
   return deckData.data;
 }
 
@@ -24,12 +25,13 @@ export async function getAllDecks() {
     `${import.meta.env.VITE_SERVER_HOST}/deck/all`,
     "get"
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to fetch Decks");
+    throw new Error(err?.message || "Failed to fetch Decks");
   });
-  if (!res?.ok)
-    throw new Error("Failed to fetch Decks");
 
   const allDecksData = await res.json() as ICustomResponse<ILessDeck[]>;
+  if (!res?.ok)
+    throw new Error(allDecksData.message || "Failed to fetch Decks");
+
   return allDecksData.data;
 }
 
@@ -38,12 +40,13 @@ export async function getDeckCards(deckID: string) {
     `${import.meta.env.VITE_SERVER_HOST}/deck/cards/${deckID}`,
     "get"
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to fetch Deck's cards");
+    throw new Error(err?.message || "Failed to fetch Deck's cards");
   });
-  if (!res?.ok)
-    throw new Error("Failed to fetch Deck's cards");
 
   const deckCardsData = await res.json() as ICustomResponse<ICard[]>;
+  if (!res?.ok)
+    throw new Error(deckCardsData.message || "Failed to fetch Deck's cards");
+
   return deckCardsData.data;
 }
 
@@ -53,12 +56,13 @@ export async function createDeck(data: TDeckFormSchema) {
     "post",
     JSON.stringify(data),
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to Create a Deck");
+    throw new Error(err?.message || "Failed to Create a Deck");
   });
-  if (!res?.ok)
-    throw new Error("Failed to Create a Deck");
 
   const creationData = await res.json() as ICustomResponse<string | null>;
+  if (!res?.ok)
+    throw new Error(creationData.message || "Failed to Create a Deck");
+
   return creationData.data;
 }
 
@@ -67,12 +71,13 @@ export async function removeDeck(deckID: string) {
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
     "delete"
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to Delete Deck");
+    throw new Error(err?.message || "Failed to Delete Deck");
   });
-  if (!res?.ok)
-    throw new Error("Failed to Delete Deck");
 
   const deletionData = await res.json() as ICustomResponse<undefined>;
+  if (!res?.ok)
+    throw new Error(deletionData.message || "Failed to Delete Deck");
+
   return deletionData.message;
 }
 
@@ -82,12 +87,13 @@ export async function updateDeck(deckID: string, data: TDeckFormSchema) {
     "PATCH",
     JSON.stringify(data),
   ).catch((err: Error) => {
-    console.error(err?.message || "Failed to Edit the Deck");
+    throw new Error(err?.message || "Failed to Edit the Deck");
   });
-  if (!res?.ok)
-    throw new Error("Failed to Edit the Deck");
 
   const updateDeckData = await res.json() as ICustomResponse<undefined>;
+  if (!res?.ok)
+    throw new Error(updateDeckData.message || "Failed to Edit the Deck");
+
   return updateDeckData.message;
 }
 
@@ -96,12 +102,13 @@ export async function likeDeck(deckID: string) {
     `${import.meta.env.VITE_SERVER_HOST}/deck/likes/add/${deckID}`,
     "post"
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to like deck");
+    throw new Error(err?.message || "Failed to like deck");
   });
-  if (!res?.ok)
-    throw new Error("Failed to like deck");
 
   const likeData = await res.json() as ICustomResponse<undefined>;
+  if (!res?.ok)
+    throw new Error(likeData.message || "Failed to like deck");
+
   return likeData.message;
 }
 
@@ -110,28 +117,29 @@ export async function unlikeDeck(deckID: string) {
     `${import.meta.env.VITE_SERVER_HOST}/deck/likes/remove/${deckID}`,
     "post"
   ).catch((err: Error) => {
-    console.error(err.message || "Failed to unlike deck");
+    throw new Error(err?.message || "Failed to unlike deck");
   });
-  if (!res?.ok)
-    throw new Error("Failed to unlike deck");
 
   const unlikeData = await res.json() as ICustomResponse<undefined>;
+  if (!res?.ok)
+    throw new Error(unlikeData.message || "Failed to unlike deck");
+
   return unlikeData.message;
 }
 
 export async function shareDeck(deckID: string, data: TDeckShareFormSchema) {
+  const shareORunshare = data?.unshare ? "unshare" : "share";
   const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/deck/share/${deckID}`,
+    `${import.meta.env.VITE_SERVER_HOST}/deck/${shareORunshare}/${deckID}`,
     "post",
     JSON.stringify(data),
   ).catch((err: Error) => {
-    console.error(err?.message || "Failed to Share the Deck");
+    throw new Error(err?.message || `Failed to ${shareORunshare} the Deck`);
   });
-  if (!res?.ok)
-    throw new Error("Failed to Share the Deck");
-
-  // TODO: Switch to unshare url when unshare is defined
 
   const shareDeckData = await res.json() as ICustomResponse<undefined>;
+  if (!res?.ok)
+    throw new Error(shareDeckData.message || `Failed to ${shareORunshare} the Deck`);
+
   return shareDeckData.message;
 }

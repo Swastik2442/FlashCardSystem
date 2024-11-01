@@ -24,6 +24,7 @@ import type { TDeckFormSchema, TDeckShareFormSchema, TCardFormSchema } from "@/t
 import { likeDeck, removeDeck, shareDeck, unlikeDeck, updateDeck } from "@/api/deck";
 import { createCard } from "@/api/card";
 import { getUserFromSubstring } from "@/api/user";
+import { SEARCH_USERS_STORAGE_KEY } from "@/constants";
 
 interface IDeckOptionsProps {
   deckID: string;
@@ -391,20 +392,20 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
 }
 
 function getInitialUsers() {
-  const localUsers = localStorage.getItem("fcs-users");
+  const localUsers = localStorage.getItem(SEARCH_USERS_STORAGE_KEY);
   if (!localUsers || localUsers.length < 50)
     return [];
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const storedUsers = JSON.parse(localUsers);
   if (!Array.isArray(storedUsers)) {
-    localStorage.removeItem("fcs-users");
+    localStorage.removeItem(SEARCH_USERS_STORAGE_KEY);
     return [];
   }
   for (const user of storedUsers) {
     if (user satisfies IUserWithID)
       continue;
-    localStorage.removeItem("fcs-users");
+    localStorage.removeItem(SEARCH_USERS_STORAGE_KEY);
     return [];
   }
   return storedUsers as IUserWithID[];
@@ -423,7 +424,7 @@ function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDec
       try {
         const users = await getUserFromSubstring(searchTerm)
         setUsersList(users);
-        localStorage.setItem("fcs-users", JSON.stringify(users));
+        localStorage.setItem(SEARCH_USERS_STORAGE_KEY, JSON.stringify(users));
       } catch (err) {
         console.error(err);
         toast.error((err instanceof Error) ? err.message : "No such User found");
