@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.route";
 import userRouter from "./routes/user.route";
 import deckRouter from "./routes/deck.route";
 import cardRouter from "./routes/card.route";
+import env from "./env";
 
 const app = express();
 
@@ -15,10 +16,10 @@ app.use(morgan("short", {
     skip: (_req: ExpressRequest, res: ExpressResponse) => res.statusCode < 400,
 }));
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: env.CLIENT_HOST,
     credentials: true,
 }));
-app.use(cookieParser());
+app.use(cookieParser(env.COOKIE_SIGN_SECRET));
 app.use(express.json());
 
 app.options('*', cors());

@@ -8,6 +8,7 @@ import env from "../env";
 const cookieOptions = {
     httpOnly: true,
     secure: true,
+    signed: true,
 }
 
 async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
@@ -171,7 +172,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
  * @access private
  */
 export async function RefreshAccessToken(req: ExpressRequest, res: ExpressResponse) {
-    const incomingRefreshToken = req.cookies?.refresh_token || req.body?.refresh_token;
+    const incomingRefreshToken = req.signedCookies?.refresh_token;
     if (!incomingRefreshToken) {
         res.status(400).json({
             status: "failed",
