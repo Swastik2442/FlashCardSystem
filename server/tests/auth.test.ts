@@ -14,13 +14,17 @@ const sampleUser = {
 
 let authTokens = { access_token: "", refresh_token: "" };
 
+const getCookie = (res: request.Response, idx: number = 0) => {
+    return res.headers["set-cookie"][idx].split(";")[0];
+}
+
 const setAuthTokens = (res: superagentResponse) => {
     expect(res.header).toHaveProperty("set-cookie");
     expect(res.headers["set-cookie"][0]).toContain("access_token");
     expect(res.headers["set-cookie"][1]).toContain("refresh_token");
     authTokens = {
-        access_token: res.headers["set-cookie"][0].split(";")[0],
-        refresh_token: res.headers["set-cookie"][1].split(";")[0],
+        access_token: getCookie(res, 0),
+        refresh_token: getCookie(res, 1),
     };
 }
 
@@ -33,19 +37,48 @@ afterAll(async () => {
     await mongoose.connection.close();
 });
 
+describe("Root Routes", () => {
+    it("should return the basic response", async () => {
+        const res = await request(app).get("/");
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Backend API for FlashCardSystem");
+    });
+
+    it("should return a CSRF Token", async () => {
+        const res = await request(app).get("/csrf-token");
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("CSRF Token generated");
+        expect(res.body.data).toBeDefined();
+        expect(res.header).toHaveProperty("set-cookie");
+        expect(res.headers["set-cookie"][0]).toContain("fcs.x-csrf-token");
+    });
+});
+
 describe("Auth Routes", () => {
     it("should register a new user", async () => {
-        const res = await request(app).post("/auth/register").send(sampleUser);
+        const tokenRes = await request(app).get("/csrf-token");
+        const res = await request(app)
+            .post("/auth/register")
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", getCookie(tokenRes))
+            .send(sampleUser);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Registration Successful");
     });
 
     it("should login the user using email", async () => {
-        const res = await request(app).post("/auth/login").send({
-            email: sampleUser.email,
-            password: sampleUser.password,
-        });
+        const tokenRes = await request(app).get("/csrf-token");
+        const res = await request(app)
+            .post("/auth/login")
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", getCookie(tokenRes))
+            .send({
+                email: sampleUser.email,
+                password: sampleUser.password,
+            });
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Login Successful");
@@ -53,10 +86,15 @@ describe("Auth Routes", () => {
     });
 
     it("should login the user using username", async () => {
-        const res = await request(app).post("/auth/login").send({
-            username: sampleUser.username,
-            password: sampleUser.password,
-        });
+        const tokenRes = await request(app).get("/csrf-token");
+        const res = await request(app)
+            .post("/auth/login")
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", getCookie(tokenRes))
+            .send({
+                username: sampleUser.username,
+                password: sampleUser.password,
+            });
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Login Successful");

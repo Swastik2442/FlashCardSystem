@@ -10,6 +10,7 @@ const envSchema = z.object({
     REFRESH_TOKEN_EXPIRY: z.string().min(1).optional().default("15d"),
     CLIENT_HOST: z.string().url(),
     COOKIE_SIGN_SECRET: z.string().min(1),
+    CSRF_TOKEN_SECRET: z.string().min(1),
     ENV: z
         .union([
         z.literal("development"),

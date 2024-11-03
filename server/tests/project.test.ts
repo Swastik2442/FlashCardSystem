@@ -34,22 +34,42 @@ const sampleDeck = {
 
 let authTokens = { access_token: "", refresh_token: "" };
 
+const getCookie = (res: request.Response, idx: number = 0) => {
+    return res.headers["set-cookie"][idx].split(";")[0];
+}
+
 beforeAll(async () => {
     // Connect to Database
     await mongoose.connect(env.MONGODB_CONNECTION_URI, { dbName: "testing_project" });
-    
+
+    // Get CSRF Token
+    const tokenRes = await request(app).get("/csrf-token");
+
     // Register Users
-    await request(app).post("/auth/register").send(sampleUser);
-    await request(app).post("/auth/register").send(sampleUser2);
+    await request(app)
+        .post("/auth/register")
+        .set("x-csrf-token", tokenRes.body.data)
+        .set("Cookie", getCookie(tokenRes))
+        .send(sampleUser);
+
+    await request(app)
+        .post("/auth/register")
+        .set("x-csrf-token", tokenRes.body.data)
+        .set("Cookie", getCookie(tokenRes))
+        .send(sampleUser2);
 
     // Login the user
-    const res = await request(app).post("/auth/login").send({
-        username: sampleUser.username,
-        password: sampleUser.password,
-    });
+    const res = await request(app)
+        .post("/auth/login")
+        .set("x-csrf-token", tokenRes.body.data)
+        .set("Cookie", getCookie(tokenRes))
+        .send({
+            username: sampleUser.username,
+            password: sampleUser.password,
+        });
     authTokens = {
-        access_token: res.headers["set-cookie"][0].split(";")[0],
-        refresh_token: res.headers["set-cookie"][1].split(";")[0],
+        access_token: getCookie(res, 0),
+        refresh_token: getCookie(res, 1),
     };
 });
 
@@ -86,9 +106,11 @@ describe("Card Routes", () => {
     let cardId: string;
 
     it("should create a new card", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post("/card/new")
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send(sampleCard);
         expect(res.statusCode).toBe(201);
         expect(res.body.status).toBe("success");
@@ -111,10 +133,12 @@ describe("Card Routes", () => {
     });
 
     it("should update the card by ID", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const updatedCard = { question: "Updated Question" };
         const res = await request(app)
             .patch(`/card/${cardId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send(updatedCard);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -125,9 +149,11 @@ describe("Card Routes", () => {
     });
 
     it("should delete the card by ID", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .delete(`/card/${cardId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Card deleted successfully");
@@ -141,9 +167,11 @@ describe("Deck Routes", () => {
     let deckId: string, cardId: string;
 
     it("should create a new deck", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post("/deck/new")
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send(sampleDeck);
         expect(res.statusCode).toBe(201);
         expect(res.body.status).toBe("success");
@@ -153,9 +181,11 @@ describe("Deck Routes", () => {
     });
 
     it("should add a card to the deck", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
-        .post("/card/new")
-        .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .post("/card/new")
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
         .send({  ...sampleCard, deck: deckId });
         expect(res.statusCode).toBe(201);
         expect(res.body.status).toBe("success");
@@ -215,9 +245,11 @@ describe("Deck Routes", () => {
 
     it("should update the deck", async () => {
         const updatedDeck = { name: "Updated Deck Name" };
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .patch(`/deck/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send(updatedDeck);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -228,9 +260,11 @@ describe("Deck Routes", () => {
     });
 
     it("should like the deck", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post(`/deck/likes/add/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Liked the Deck");
@@ -240,9 +274,11 @@ describe("Deck Routes", () => {
     });
 
     it("should unlike the deck", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post(`/deck/likes/remove/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Unliked the Deck");
@@ -253,9 +289,11 @@ describe("Deck Routes", () => {
 
     it("should share the deck with read access", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post(`/deck/share/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send({ user: user?._id, isEditable: false });
 
         expect(res.statusCode).toBe(200);
@@ -271,9 +309,11 @@ describe("Deck Routes", () => {
 
     it("should share the deck with write access", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post(`/deck/share/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send({ user: user?._id, isEditable: true });
 
         expect(res.statusCode).toBe(200);
@@ -289,9 +329,11 @@ describe("Deck Routes", () => {
 
     it("should unshare the deck", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post(`/deck/unshare/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`)
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`)
             .send({ user: user?._id, unshare: true });
 
         expect(res.statusCode).toBe(200);
@@ -306,9 +348,11 @@ describe("Deck Routes", () => {
     });
 
     it("should delete the deck", async () => {
+        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .delete(`/deck/${deckId}`)
-            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+            .set("x-csrf-token", tokenRes.body.data)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token};${getCookie(tokenRes)}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Deleted the Deck");
