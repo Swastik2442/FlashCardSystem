@@ -89,8 +89,25 @@ describe("User Routes", () => {
         expect(res.body.data.username).toBe(sampleUser.username.toLowerCase());
     });
 
-    it.todo("should get the user's decks visible to current user");
-    it.todo("should get the users available with the matching substring");
+    it("should get the user's decks visible to current user", async () => {
+        const res = await request(app)
+            .get(`/user/decks/${sampleUser.username}`)
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("0 Decks found");
+        expect(res.body.data).toHaveLength(0);
+    });
+
+    it("should get the users available with the matching substring", async () => {
+        const res = await request(app)
+            .get("/user/getsub/stus")
+            .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Users found");
+        expect(res.body.data).toHaveLength(2);
+    });
 
     it("should get the user's liked decks", async () => {
         const res = await request(app)

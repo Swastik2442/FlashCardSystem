@@ -140,6 +140,8 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             });
             return;
         }
+        deck.dateUpdated = new Date();
+        deck.save();
 
         await card.deleteOne();
         res.status(200).json({
@@ -207,15 +209,14 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
                 });
                 return;
             }
-
             nextDeck.dateUpdated = new Date();
             nextDeck.save();
         }
 
-        card.question = question || card.question;
-        card.answer = answer || card.answer;
-        card.hint = hint || card.hint;
-        card.deck = deck || card.deck;
+        card.question = question ?? card.question;
+        card.answer = answer ?? card.answer;
+        card.hint = hint ?? card.hint;
+        card.deck = deck ?? card.deck;
         card.save();
 
         res.status(200).json({

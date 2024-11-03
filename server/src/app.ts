@@ -32,7 +32,7 @@ app.get("/", (_req: ExpressRequest, res: ExpressResponse) => {
 const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsrf({
     getSecret: () => env.CSRF_TOKEN_SECRET,
     cookieName: "fcs.x-csrf-token",
-    cookieOptions: { sameSite: "none", secure: false },
+    cookieOptions: { signed: true, secure: env.ENV === "production" },
     // TODO: Add getSessionIdentifier to return random uuid from jwt to identify session
 });
 

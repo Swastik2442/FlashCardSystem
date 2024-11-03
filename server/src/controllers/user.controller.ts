@@ -54,7 +54,9 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
 export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
     const str = req.params.str;
     try {
-        let users = await User.find({ username: {$regex: str, $options: "i"}}).limit(5).select("-email -password -refreshToken -__v");
+        let users = await User.find({
+            username: { $regex: str, $options: "i" }
+        }).limit(5).select("-email -password -refreshToken -__v");
         if (!users || users.length === 0) {
             res.status(200).json({
                 status: "success",
@@ -113,7 +115,7 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
 
         res.status(200).json({
             status: "success",
-            message: "Users found",
+            message: `${decks.length} Decks found`,
             data: decks,
         });
     } catch (err) {

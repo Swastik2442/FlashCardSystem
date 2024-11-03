@@ -252,7 +252,6 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
         deck.name = name ? name : deck.name;
         deck.description = description ? description : deck.description;
         deck.isPrivate = typeof(isPrivate) == "boolean" ? isPrivate : deck.isPrivate;
-        deck.dateUpdated = new Date();
         deck.save();
 
         res.status(200).json({

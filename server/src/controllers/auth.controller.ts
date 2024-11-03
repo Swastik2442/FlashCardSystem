@@ -7,7 +7,7 @@ import env from "../env";
 
 const cookieOptions = {
     httpOnly: true,
-    secure: true,
+    secure: env.ENV === "production",
     signed: true,
 }
 
