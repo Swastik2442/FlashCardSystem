@@ -1,5 +1,6 @@
 import { useNavigate, useLoaderData, Link } from "react-router-dom";
 import { Lock, Plus, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ShowCards from "@/components/showCards";
@@ -52,7 +53,12 @@ export function Dashboard() {
         </div>
       </div>
       <hr className="my-4" />
-      <div className="flex flex-wrap gap-4 mx-8 mb-4">
+      <motion.div
+        initial={{ opacity: 0.0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
+        className="flex flex-wrap gap-4 mx-8 mb-4"
+      >
         {decks.length === 0 && cards.length === 0 && (
         <div className="text-center w-full h-full">
           <span className="font-thin">No Decks or Cards found</span>
@@ -76,7 +82,7 @@ export function Dashboard() {
             </CardFooter>
           </Card>
         ))}
-        </div>
+        </motion.div>
         <ShowCards cards={cards} decks={decks} uncategorizedDeck={uncategorizedDeck} uponChange={() => navigate("/dashboard", { replace: true })} />
     </div>
   );

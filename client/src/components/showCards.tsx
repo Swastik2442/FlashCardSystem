@@ -4,6 +4,7 @@ import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -88,7 +89,12 @@ function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILe
 
   return (
     <>
-      <div className="flex flex-wrap gap-4 mx-8">
+      <motion.div
+        initial={{ opacity: 0.0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
+        className="flex flex-wrap gap-4 mx-8"
+      >
         {cards.map((card, idx) => (
           <Card className="min-w-72 flex-1" key={10000 + idx}>
             <CardHeader>
@@ -104,7 +110,7 @@ function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILe
             </CardFooter>
           </Card>
         ))}
-      </div>
+      </motion.div>
       <ConfirmationDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onConfirm={handleCardDeletion} confirmButtonTitle="Delete" dialogMessage="This action cannot be undone. This will permanently delete the card from the servers." />
       <CardEditDialog dialogOpen={editDialogOpen} setDialogOpen={setEditDialogOpen} cardForm={cardForm} handleCardEditing={handleCardEditing} decks={decks} uncategorizedDeck={uncategorizedDeck} />
     </>

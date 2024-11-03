@@ -1,3 +1,7 @@
+const {
+	default: flattenColorPalette,
+  } = require("tailwindcss/lib/util/flattenColorPalette");
+
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: ["class"],
@@ -7,6 +11,9 @@ export default {
   ],
   theme: {
   	extend: {
+		animation: {
+			aurora: "aurora 60s linear infinite",
+		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
@@ -53,11 +60,32 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
-  		}
+  		},
+		keyframes: {
+			aurora: {
+				from: {
+					backgroundPosition: "50% 50%, 50% 50%",
+				},
+				to: {
+					backgroundPosition: "350% 50%, 350% 50%",
+				},
+			},
+		},
   	}
   },
   plugins: [
 	require("tailwindcss-animate"),
 	require('tailwindcss-3d'),
+	addVariablesForColors,
   ],
+}
+
+function addVariablesForColors({ addBase, theme }) {
+	const allColors = flattenColorPalette(theme("colors"));
+	const newVars = Object.fromEntries(
+	  Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+	);
+	addBase({
+	  ":root": newVars,
+	});
 }

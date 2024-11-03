@@ -17,13 +17,7 @@ import { Playground, PlaygroundLoader } from "@/routes/playground";
 const Router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <>
-        <Header />
-        <Home />
-        <Footer />
-      </>
-    ),
+    element: <Home />,
     errorElement: <ErrorBoundary />,
   },
   {
