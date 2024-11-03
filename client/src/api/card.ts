@@ -1,3 +1,4 @@
+import { getCSRFToken } from "@/api/auth";
 import fetchWithCredentials from "@/utils/fetch";
 import type { TCardFormSchema } from "@/types/forms";
 
@@ -7,10 +8,12 @@ import type { TCardFormSchema } from "@/types/forms";
  * @returns ID of the created card
  */
 export async function createCard(data: TCardFormSchema) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/card/new`,
     "post",
     JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Create a Card");
   });
@@ -29,10 +32,12 @@ export async function createCard(data: TCardFormSchema) {
  * @returns Message from the Server
  */
 export async function updateCard(cardID: string, data: TCardFormSchema) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
     "PATCH",
     JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Edut the Card");
   });
@@ -50,9 +55,12 @@ export async function updateCard(cardID: string, data: TCardFormSchema) {
  * @returns Message from the Server
  */
 export async function removeCard(cardID: string) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
-    "delete"
+    "delete",
+    null,
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Delete the Card");
   });

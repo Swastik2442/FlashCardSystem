@@ -2,15 +2,36 @@ import fetchWithCredentials from "@/utils/fetch";
 import type { TLoginFormSchema, TRegisterFormSchema } from "@/types/forms";
 
 /**
+ * Makes a GET request to get the CSRF Token
+ * @returns CSRF Token
+ */
+export async function getCSRFToken() {
+  const res = await fetchWithCredentials(
+    `${import.meta.env.VITE_SERVER_HOST}/csrf-token`,
+    "get"
+  ).catch((err: Error) => {
+    throw new Error(err?.message || "Failed to get CSRF Token");
+  });
+
+  const data = await res.json() as ICustomResponse<string>;
+  if (!res?.ok)
+    throw new Error(data.message || "Failed to get CSRF Token");
+
+  return data.data;
+}
+
+/**
  * Makes a POST request to register a new user
  * @param data information about the user
  * @returns Message from the Server
  */
 export async function registerUser(data: TRegisterFormSchema) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/auth/register`,
     "post",
-    JSON.stringify(data)
+    JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Register");
   });
@@ -28,10 +49,12 @@ export async function registerUser(data: TRegisterFormSchema) {
  * @returns Username of the logged in user
  */
 export async function loginUser(data: TLoginFormSchema) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/auth/login`,
     "post",
-    JSON.stringify(data)
+    JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Login");
   });

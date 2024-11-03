@@ -1,3 +1,4 @@
+import { getCSRFToken } from "@/api/auth";
 import fetchWithCredentials from "@/utils/fetch";
 import type { TDeckFormSchema, TDeckShareFormSchema } from "@/types/forms";
 
@@ -74,10 +75,12 @@ export async function getDeckCards(deckID: string) {
  * @returns ID of the created deck
  */
 export async function createDeck(data: TDeckFormSchema) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/new`,
     "post",
     JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Create a Deck");
   });
@@ -95,9 +98,12 @@ export async function createDeck(data: TDeckFormSchema) {
  * @returns 
  */
 export async function removeDeck(deckID: string) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
-    "delete"
+    "delete",
+    null,
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Delete Deck");
   });
@@ -116,10 +122,12 @@ export async function removeDeck(deckID: string) {
  * @returns Message from the Server
  */
 export async function updateDeck(deckID: string, data: TDeckFormSchema) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/${deckID}`,
     "PATCH",
     JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to Edit the Deck");
   });
@@ -137,9 +145,12 @@ export async function updateDeck(deckID: string, data: TDeckFormSchema) {
  * @returns Message from the Server
  */
 export async function likeDeck(deckID: string) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/likes/add/${deckID}`,
-    "post"
+    "post",
+    null,
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to like deck");
   });
@@ -157,9 +168,12 @@ export async function likeDeck(deckID: string) {
  * @returns Message from the Server
  */
 export async function unlikeDeck(deckID: string) {
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/likes/remove/${deckID}`,
-    "post"
+    "post",
+    null,
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to unlike deck");
   });
@@ -179,10 +193,12 @@ export async function unlikeDeck(deckID: string) {
  */
 export async function shareDeck(deckID: string, data: TDeckShareFormSchema) {
   const shareORunshare = data?.unshare ? "unshare" : "share";
+  const csrfToken = await getCSRFToken();
   const res = await fetchWithCredentials(
     `${import.meta.env.VITE_SERVER_HOST}/deck/${shareORunshare}/${deckID}`,
     "post",
     JSON.stringify(data),
+    csrfToken
   ).catch((err: Error) => {
     throw new Error(err?.message || `Failed to ${shareORunshare} the Deck`);
   });
