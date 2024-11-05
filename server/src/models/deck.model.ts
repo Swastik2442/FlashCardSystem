@@ -7,7 +7,6 @@ interface IDeck {
     description: string;
     dateCreated: Date;
     dateUpdated: Date;
-    cards: mongoose.Schema.Types.ObjectId[];
     isPrivate: boolean;
     sharedTo: {
         user: mongoose.Schema.Types.ObjectId;
@@ -50,12 +49,6 @@ const deckSchema = new mongoose.Schema<IDeck, DeckModel, IDeckMethods>({
         type: Date,
         default: Date.now
     },
-    cards: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "card"
-        }
-    ],
     isPrivate: {
         type: Boolean,
         default: false
@@ -83,12 +76,23 @@ const deckSchema = new mongoose.Schema<IDeck, DeckModel, IDeckMethods>({
     ]
 });
 
+deckSchema.pre("save", async function(next) {
+    this.dateUpdated = new Date();
+    next();
+});
+
 deckSchema.pre("deleteOne", { document: true, query: false }, async function(next) {
     await Card.deleteMany({ deck: this._id });
     next();
 });
 
-// TODO: Implement deleteMany Pre Hook (this._conditions is not available in query?)
+deckSchema.pre("deleteMany", async function(next) {
+    const decks = await this.model.find(this.getFilter());
+    for (const deck of decks) {
+        await Card.deleteMany({ deck: deck._id });
+    }
+    next();
+});
 
 deckSchema.methods.isAccessibleBy = function(userID: mongoose.Schema.Types.ObjectId) {
     if (String(this.owner) === String(userID))

@@ -1,7 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import mongoose from "mongoose";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
+import Card from "../models/card.model";
 
 /**
  * @route POST deck/new
@@ -37,6 +37,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
             data: newDeck._id,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -54,7 +55,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
 export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
     try {
-        const deck = await Deck.findById(id).select("-likedBy");
+        const deck = await Deck.findById(id);
         if (!deck) {
             res.status(404).json({
                 status: "error",
@@ -62,7 +63,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 data: null,
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id)) {
+        } else if (!deck.isAccessibleBy(req.user._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
@@ -80,13 +81,56 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 description: deck.description,
                 dateCreated: deck.dateCreated,
                 dateUpdated: deck.dateUpdated,
-                cards: deck.cards,
                 isPrivate: deck.isPrivate,
                 isEditable: deck.isAccessibleBy(req.user._id).writable,
                 likes: deck.likes,
+                isLiked: deck.likedBy.includes(req.user._id),
             },
         });
     } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route GET deck/cards/:did
+ * @desc Gets all the Cards in the Deck with the given ID
+ * @access public
+ */
+export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
+    const id = req.params.did;
+    try {
+        const deck = await Deck.findById(id).select("-description -dateCreated -dateUpdated -likedBy -__v");
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+                data: null,
+            });
+            return;
+        } else if (!deck.isAccessibleBy(req.user._id).readable) {
+            res.status(401).json({
+                status: "error",
+                message: "Deck is Private",
+                data: null,
+            });
+            return;
+        }
+
+        const cards = await Card.find({ deck: deck._id }).select("-__v");
+        res.status(200).json({
+            status: "success",
+            message: `${cards.length} Cards found`,
+            data: cards,
+        });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -108,7 +152,7 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
                 { owner: req.user._id },
                 { sharedTo: { $elemMatch: { user: req.user._id } } },
             ]
-        }).select("-owner -description -dateCreated -cards -sharedTo -likedBy -__v");
+        }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
         res.status(200).json({
             status: "success",
@@ -116,6 +160,7 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
             data: decks,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -154,6 +199,7 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Deleted the Deck",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -203,10 +249,9 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        deck.name = name != undefined ? name : deck.name;
-        deck.description = description != undefined ? description : deck.description;
-        deck.isPrivate = isPrivate != undefined ? isPrivate : deck.isPrivate;
-        deck.dateUpdated = new Date();
+        deck.name = name ? name : deck.name;
+        deck.description = description ? description : deck.description;
+        deck.isPrivate = typeof(isPrivate) == "boolean" ? isPrivate : deck.isPrivate;
         deck.save();
 
         res.status(200).json({
@@ -214,6 +259,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Deck updated successfully",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -221,6 +267,8 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
     }
     res.end();
 }
+
+const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
 /**
  * @route POST deck/share/:did
@@ -232,13 +280,18 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
     try {
         const { user, isEditable, unshare } = req.body;
 
-        const userByID = await User.findById(user);
-        if (!userByID || String(userByID._id) == String(req.user._id)) {
-            res.status(422).json({
-                status: "error",
-                message: "Invalid User ID",
-            });
-            return;
+        let userByID;
+        if (user.length === 24 && checkForHexRegExp.test(user))
+            userByID = await User.findById(user).select("-password -refreshToken");
+        if (!userByID) {
+            userByID = await User.findOne({ username: user.toLowerCase() }).select("-password -refreshToken");
+            if (!userByID || String(userByID._id) == String(req.user._id)) {
+                res.status(422).json({
+                    status: "error",
+                    message: "Invalid User ID",
+                });
+                return;
+            }
         }
 
         const deck = await Deck.findOne({
@@ -275,6 +328,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Deck sharing updated",
         });
     } catch (err: any) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -298,7 +352,7 @@ export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id)) {
+        } else if (!deck.isAccessibleBy(req.user._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
@@ -311,6 +365,7 @@ export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
             data: deck.likedBy,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -353,6 +408,7 @@ export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Liked the Deck",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -395,6 +451,7 @@ export async function UnlikeDeck(req: ExpressRequest, res: ExpressResponse) {
             message: "Unliked the Deck",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

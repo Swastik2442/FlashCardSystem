@@ -12,7 +12,9 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
     try {
         var deckById;
         if (!deck) {
-            deckById = await Deck.findOne({ owner: req.user._id, name: "#UNCATEGORISED#" });
+            deckById = await Deck.findOne({
+                owner: req.user._id, name: "#UNCATEGORISED#"
+            }).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
             if (!deckById) {
                 deckById = await Deck.create({
                     owner: req.user._id,
@@ -22,7 +24,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
                 deckById.save();
             }
         } else {
-            deckById = await Deck.findById(deck);
+            deckById = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");;
             if (!deckById)
                 throw new Error("Deck not found");
             else if (!deckById.isAccessibleBy(req.user._id).writable) {
@@ -46,7 +48,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         if (!cardCheck)
             throw new Error("Card could not be created");
 
-        deckById.cards.push(newCard._id as any);
+        deckById.dateUpdated = new Date();
         deckById.save();
 
         res.status(201).json({
@@ -55,6 +57,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             data: newCard._id,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -72,7 +75,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
 export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.cid;
     try {
-        const card = await Card.findById(id);
+        const card = await Card.findById(id).select("-__v");
         if (!card) {
             res.status(404).json({
                 status: "error",
@@ -82,10 +85,10 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deck = await Deck.findById(card.deck);
+        const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!deck)
             throw new Error("Deck not found");
-        else if (!deck.isAccessibleBy(req.user._id)) {
+        else if (!deck.isAccessibleBy(req.user._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -97,14 +100,10 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
         res.status(200).json({
             status: "success",
             message: "Card found",
-            data: {
-                question: card.question,
-                answer: card.answer,
-                hint: card.hint,
-                deck: card.deck,
-            },
+            data: card,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -131,7 +130,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deck = await Deck.findById(card.deck);
+        const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!deck)
             throw new Error("Deck not found");
         else if (!deck.isAccessibleBy(req.user._id).writable) {
@@ -141,6 +140,8 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             });
             return;
         }
+        deck.dateUpdated = new Date();
+        deck.save();
 
         await card.deleteOne();
         res.status(200).json({
@@ -148,6 +149,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             message: "Card deleted successfully",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -183,21 +185,38 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deckById = await Deck.findById(card.deck);
-        if (!deckById)
+        const currentDeck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
+        if (!currentDeck)
             throw new Error("Deck not found");
-        else if (!deckById.isAccessibleBy(req.user._id).writable) {
+        else if (!currentDeck.isAccessibleBy(req.user._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
             });
             return;
         }
+        currentDeck.dateUpdated = new Date();
+        currentDeck.save();
 
-        card.question = question || card.question;
-        card.answer = answer || card.answer;
-        card.hint = hint || card.hint;
-        card.deck = deck || card.deck;
+        if (deck && deck.length > 0) {
+            const nextDeck = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
+            if (!nextDeck)
+                throw new Error("Deck not found");
+            else if (!nextDeck.isAccessibleBy(req.user._id).writable) {
+                res.status(401).json({
+                    status: "error",
+                    message: "Unauthorized Operation",
+                });
+                return;
+            }
+            nextDeck.dateUpdated = new Date();
+            nextDeck.save();
+        }
+
+        card.question = question ?? card.question;
+        card.answer = answer ?? card.answer;
+        card.hint = hint ?? card.hint;
+        card.deck = deck ?? card.deck;
         card.save();
 
         res.status(200).json({
@@ -205,6 +224,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             message: "Card updated successfully",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",

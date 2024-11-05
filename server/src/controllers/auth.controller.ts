@@ -1,11 +1,14 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import ms from "ms";
 import User from "../models/user.model";
+import env from "../env";
 
 const cookieOptions = {
     httpOnly: true,
-    secure: true,
+    secure: env.ENV === "production",
+    signed: true,
 }
 
 async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
@@ -61,6 +64,7 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
             message: "Registration Successful",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -80,6 +84,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         res.status(400).json({
             status: "failed",
             message: "Either email or username is required",
+            data: null,
         });
         return;
     }
@@ -90,11 +95,12 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
                 { username: username === undefined ? null : username.toLowerCase() },
                 { email: email == undefined ? null : email }
             ]
-        });
+        }).select("-refreshToken");
         if (!user) {
             res.status(400).json({
                 status: "failed",
                 message: "Account does not exist",
+                data: null,
             });
             return;
         }
@@ -104,6 +110,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
             res.status(401).json({
                 status: "failed",
                 message: "Incorrect Password",
+                data: null,
             });
             return;
         }
@@ -111,16 +118,19 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
         .json({
             status: "success",
             message: "Login Successful",
+            data: user.username,
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();
@@ -137,7 +147,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
             req.user._id,
             { $set: { refreshToken: null } },
             // { new: true }
-        )
+        );
 
         res.status(200)
         .clearCookie("access_token")
@@ -147,6 +157,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
             message: "Logout Successful",
         });
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
@@ -161,11 +172,12 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
  * @access private
  */
 export async function RefreshAccessToken(req: ExpressRequest, res: ExpressResponse) {
-    const incomingRefreshToken = req.cookies?.refresh_token || req.body?.refresh_token;
+    const incomingRefreshToken = req.signedCookies?.refresh_token;
     if (!incomingRefreshToken) {
         res.status(400).json({
             status: "failed",
             message: "Refresh Token not Found",
+            data: null,
         });
         return;
     }
@@ -173,36 +185,41 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
     try {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
-            process.env.REFRESH_TOKEN_SECRET as string
-        )
+            env.REFRESH_TOKEN_SECRET
+        );
         const user = await User.findById((decodedToken as jwt.JwtPayload)?._id).select("-password");
 
         if (!user) {
             res.status(401).json({
                 status: "failed",
                 message: "Invalid Refresh Token",
+                data: null,
             });
             return;
         } else if (incomingRefreshToken !== user?.refreshToken) {
             res.status(401).json({
                 status: "failed",
                 message: "Refresh Token is expired or used",
+                data: null,
             });
             return;
         }
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: 30 * 60 * 1000 })
+        .cookie("access_token", accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
         .json({
             status: "success",
             message: "Access Token refreshed",
+            data: user.username,
         })
     } catch (err) {
+        console.error(err);
         res.status(500).json({
             status: "error",
             message: "Internal Server Error",
+            data: null,
         });
     }
     res.end();

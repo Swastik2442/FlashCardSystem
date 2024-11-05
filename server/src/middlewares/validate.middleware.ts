@@ -6,9 +6,17 @@ function Validate(req: ExpressRequest, res: ExpressResponse, next: NextFunction)
     if (errors.isEmpty())
         next();
     else {
+        let errorCount = 0;
         let error: { [key: string]: any } = {};
-        errors.array().map((err: ValidationError) => (error[err.param] = err.msg));
-        res.status(422).json({ error });
+        errors.array().map((err: ValidationError) => {
+            error[err.param] = err.msg;
+            errorCount++;
+        });
+        res.status(422).json({
+            status: "error",
+            message: (errorCount > 1 ? `${errorCount} Errors` : "An Error") + " occured while processing the request",
+            data: error
+        });
     }
 };
 
