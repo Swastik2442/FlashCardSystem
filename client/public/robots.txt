@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /dashboard/
+Disallow: /play/
+Disallow: /deck/
+Disallow: /users/
