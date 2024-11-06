@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
+import { CSRF_COOKIE_NAME } from "../constants";
 
 /**
  * @route POST card/new
@@ -51,7 +52,9 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         deckById.dateUpdated = new Date();
         deckById.save();
 
-        res.status(201).json({
+        res.status(201)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Card created successfully",
             data: newCard._id,
@@ -144,7 +147,9 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
         deck.save();
 
         await card.deleteOne();
-        res.status(200).json({
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Card deleted successfully",
         });
@@ -219,7 +224,9 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
         card.deck = deck ?? card.deck;
         card.save();
 
-        res.status(200).json({
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Card updated successfully",
         });

@@ -11,8 +11,7 @@ const envSchema = z.object({
     CLIENT_HOST: z.string().url(),
     COOKIE_SIGN_SECRET: z.string().min(1),
     CSRF_TOKEN_SECRET: z.string().min(1),
-    ENV: z
-        .union([
+    NODE_ENV: z.union([
         z.literal("development"),
         z.literal("testing"),
         z.literal("production"),

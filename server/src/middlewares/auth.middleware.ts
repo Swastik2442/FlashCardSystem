@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import jwt from "jsonwebtoken"
 import User from "../models/user.model";
+import { ACCESS_TOKEN_COOKIE_NAME } from "../constants";
 import env from "../env";
 
 /**
@@ -9,7 +10,7 @@ import env from "../env";
  */
 export async function VerifyJWT(req: ExpressRequest, _res: ExpressResponse, next: NextFunction) {
     try {
-        const token = req.signedCookies?.access_token || req.header("Authorization")?.replace("Bearer ", "");
+        const token = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] || req.header("Authorization")?.replace("Bearer ", "");
         if (!token)
             throw new Error("Unauthorized Request");
 

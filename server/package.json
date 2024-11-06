@@ -2,10 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "ts-node --files api/index.ts",
     "dev": "nodemon api/index.ts",
-    "test": "cross-env NODE_ENV=test jest --testTimeout=10000"
+    "test": "cross-env NODE_ENV=testing jest --testTimeout=10000"
   },
   "author": "Swastik Kulshreshtha, Sourabh Yadav and Saurabh Saini",
   "license": "ISC",

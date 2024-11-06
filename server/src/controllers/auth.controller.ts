@@ -4,12 +4,14 @@ import jwt from "jsonwebtoken";
 import ms from "ms";
 import User from "../models/user.model";
 import env from "../env";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, CSRF_COOKIE_NAME } from "../constants";
 
 const cookieOptions = {
     httpOnly: true,
-    secure: env.ENV === "production",
+    secure: true,
     signed: true,
-}
+    sameSite: "none",
+} as const;
 
 async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
     try {
@@ -59,7 +61,9 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
         if (!createdUser)
             throw new Error("User could not be created");
 
-        res.status(200).json({
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Registration Successful",
         });
@@ -118,8 +122,9 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+        .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+        .clearCookie(CSRF_COOKIE_NAME)
         .json({
             status: "success",
             message: "Login Successful",
@@ -150,8 +155,8 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
         );
 
         res.status(200)
-        .clearCookie("access_token")
-        .clearCookie("refresh_token")
+        .clearCookie(ACCESS_TOKEN_COOKIE_NAME)
+        .clearCookie(REFRESH_TOKEN_COOKIE_NAME)
         .json({
             status: "success",
             message: "Logout Successful",
@@ -172,7 +177,7 @@ export async function Logout(req: ExpressRequest, res: ExpressResponse) {
  * @access private
  */
 export async function RefreshAccessToken(req: ExpressRequest, res: ExpressResponse) {
-    const incomingRefreshToken = req.signedCookies?.refresh_token;
+    const incomingRefreshToken = req.signedCookies[REFRESH_TOKEN_COOKIE_NAME];
     if (!incomingRefreshToken) {
         res.status(400).json({
             status: "failed",
@@ -207,8 +212,8 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
 
         const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         res.status(200)
-        .cookie("access_token", accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-        .cookie("refresh_token", refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+        .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
         .json({
             status: "success",
             message: "Access Token refreshed",

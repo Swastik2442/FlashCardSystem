@@ -3,6 +3,7 @@ import { Response as superagentResponse } from "superagent";
 import request from "supertest";
 import mongoose from "mongoose";
 import app from "../src/app";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "../src/constants";
 import env from "../src/env";
 
 const sampleUser = {
@@ -20,8 +21,8 @@ const getCookie = (res: request.Response, idx: number = 0) => {
 
 const setAuthTokens = (res: superagentResponse) => {
     expect(res.header).toHaveProperty("set-cookie");
-    expect(res.headers["set-cookie"][0]).toContain("access_token");
-    expect(res.headers["set-cookie"][1]).toContain("refresh_token");
+    expect(res.headers["set-cookie"][0]).toContain(ACCESS_TOKEN_COOKIE_NAME);
+    expect(res.headers["set-cookie"][1]).toContain(REFRESH_TOKEN_COOKIE_NAME);
     authTokens = {
         access_token: getCookie(res, 0),
         refresh_token: getCookie(res, 1),

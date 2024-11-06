@@ -8,6 +8,7 @@ import authRouter from "./routes/auth.route";
 import userRouter from "./routes/user.route";
 import deckRouter from "./routes/deck.route";
 import cardRouter from "./routes/card.route";
+import { CSRF_COOKIE_NAME } from "./constants";
 import env from "./env";
 
 const app = express();
@@ -31,8 +32,12 @@ app.get("/", (_req: ExpressRequest, res: ExpressResponse) => {
 
 const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsrf({
     getSecret: () => env.CSRF_TOKEN_SECRET,
-    cookieName: "fcs.x-csrf-token",
-    cookieOptions: { signed: true, secure: env.ENV === "production" },
+    cookieName: CSRF_COOKIE_NAME,
+    cookieOptions: {
+        signed: true,
+        secure: true,
+        sameSite: "none",
+    },
     // TODO: Add getSessionIdentifier to return random uuid from jwt to identify session
 });
 

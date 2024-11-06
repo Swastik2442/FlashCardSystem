@@ -2,6 +2,7 @@ import { Request as ExpressRequest, Response as ExpressResponse } from "express"
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
+import { CSRF_COOKIE_NAME } from "../constants";
 
 /**
  * @route POST deck/new
@@ -31,7 +32,9 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
         if (!deckCheck)
             throw new Error("Deck could not be created");
 
-        res.status(201).json({
+        res.status(201)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Deck created successfully",
             data: newDeck._id,
@@ -194,7 +197,9 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
         }
 
         await deck.deleteOne();
-        res.status(200).json({
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Deleted the Deck",
         });
@@ -254,7 +259,9 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
         deck.isPrivate = typeof(isPrivate) == "boolean" ? isPrivate : deck.isPrivate;
         deck.save();
 
-        res.status(200).json({
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Deck updated successfully",
         });
@@ -323,7 +330,9 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
                 { $push: { sharedTo: { user: userByID._id, editable: isEditable } } }
             );
 
-        res.status(200).json({
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
             status: "success",
             message: "Deck sharing updated",
         });

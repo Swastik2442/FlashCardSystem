@@ -1,7 +1,7 @@
 {
   "name": "flashcardsystem",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "author": "Swastik Kulshreshtha, Sourabh Yadav and Saurabh Saini",
+  "license": "ISC",
+  "description": "The Frontend for the Full-Stack Project of FlashCardSystem.",
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-alert-dialog": "^1.1.2",
