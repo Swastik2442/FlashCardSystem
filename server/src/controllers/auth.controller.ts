@@ -44,7 +44,7 @@ export async function Register(req: ExpressRequest, res: ExpressResponse) {
         }).select("-password -refreshToken");
         if (existingUser) {
             res.status(400).json({
-                status: "failed",
+                status: "error",
                 message: "Account already exists",
             });
             return;
@@ -86,7 +86,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
     const { email, username, password } = req.body;
     if (!username && !email) {
         res.status(400).json({
-            status: "failed",
+            status: "error",
             message: "Either email or username is required",
             data: null,
         });
@@ -102,7 +102,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         }).select("-refreshToken");
         if (!user) {
             res.status(400).json({
-                status: "failed",
+                status: "error",
                 message: "Account does not exist",
                 data: null,
             });
@@ -112,7 +112,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const isPasswordValid = await user.isPasswordCorrect(password);
         if (!isPasswordValid) {
             res.status(401).json({
-                status: "failed",
+                status: "error",
                 message: "Incorrect Password",
                 data: null,
             });
@@ -180,7 +180,7 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
     const incomingRefreshToken = req.signedCookies[REFRESH_TOKEN_COOKIE_NAME];
     if (!incomingRefreshToken) {
         res.status(400).json({
-            status: "failed",
+            status: "error",
             message: "Refresh Token not Found",
             data: null,
         });
@@ -196,14 +196,14 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
 
         if (!user) {
             res.status(401).json({
-                status: "failed",
+                status: "error",
                 message: "Invalid Refresh Token",
                 data: null,
             });
             return;
         } else if (incomingRefreshToken !== user?.refreshToken) {
             res.status(401).json({
-                status: "failed",
+                status: "error",
                 message: "Refresh Token is expired or used",
                 data: null,
             });

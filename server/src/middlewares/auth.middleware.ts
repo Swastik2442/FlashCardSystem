@@ -8,7 +8,7 @@ import env from "../env";
  * @desc Verifies the Access Token and adds User param to Request
  * @access private
  */
-export async function VerifyJWT(req: ExpressRequest, _res: ExpressResponse, next: NextFunction) {
+export async function VerifyJWT(req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
     try {
         const token = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] || req.header("Authorization")?.replace("Bearer ", "");
         if (!token)
@@ -22,6 +22,11 @@ export async function VerifyJWT(req: ExpressRequest, _res: ExpressResponse, next
         req.user = user;
         next();
     } catch (err: any) {
-        next(err?.message || "Internal Server Error");
+        res.status(401).json({
+            status: "error",
+            message: err?.message || "Internal Server Error",
+            data: null,
+        });
+        res.end();
     }
 }
