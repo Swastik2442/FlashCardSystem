@@ -2,6 +2,7 @@ import { User, Keyboard, Cloud, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/authProvider";
+import { useKeyPress } from "@/hooks/keyPress";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -11,6 +12,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 export function OptionsMenu() {
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
+
+  const showUserProfile = () => navigate(`/users/${user}`);
+  const showKeyboardShortcuts = () => toast.info("Not Implemented Yet");
+
+  useKeyPress(showUserProfile, { code: "KeyU", altKey: true });
+  useKeyPress(showKeyboardShortcuts, { code: "Slash", shiftKey: true, altKey: true });
 
   function handleLogout() {
     if (user != null) void (async () => {
@@ -41,15 +48,15 @@ export function OptionsMenu() {
           <span className="font-extralight">{user}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate(`/users/${user}`)}>
+        <DropdownMenuItem onClick={showUserProfile}>
           <User />
           <span>Profile</span>
-          <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          <DropdownMenuShortcut>Alt U</DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={showKeyboardShortcuts}>
           <Keyboard />
           <span>Keyboard Shortcuts</span>
-          <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+          <DropdownMenuShortcut>Alt ⇧/</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem disabled>
           <Cloud />
@@ -59,7 +66,6 @@ export function OptionsMenu() {
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut />
           <span>Log out</span>
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
       <span className="sr-only select-none">User Options</span>

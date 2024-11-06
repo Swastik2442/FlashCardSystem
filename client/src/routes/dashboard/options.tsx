@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { useKeyPress } from "@/hooks/keyPress";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -37,6 +38,10 @@ export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
     setIsDropdownMenuOpen(false);
   };
 
+  useKeyPress(() => setIsDropdownMenuOpen(true), { code: "Period", altKey: true });
+  useKeyPress(openDeckDialog, { code: "KeyS", altKey: true });
+  useKeyPress(openCardDialog, { code: "KeyK", altKey: true });
+
   return (
     <>
       <DropdownMenu open={isDropdownMenuOpen} onOpenChange={setIsDropdownMenuOpen}>
@@ -44,7 +49,7 @@ export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
           <Button type="button" title="Creation Menu" variant="outline" size="icon"><Plus /></Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent>
+        <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={openDeckDialog}>Deck</DropdownMenuItem>
           <DropdownMenuItem onClick={openCardDialog}>Card</DropdownMenuItem>
         </DropdownMenuContent>

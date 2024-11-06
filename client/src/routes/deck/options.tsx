@@ -25,6 +25,7 @@ import { likeDeck, removeDeck, shareDeck, unlikeDeck, updateDeck } from "@/api/d
 import { createCard } from "@/api/card";
 import { getUserFromSubstring } from "@/api/user";
 import { SEARCH_USERS_STORAGE_KEY } from "@/constants";
+import { useKeyPress } from "@/hooks/keyPress";
 
 interface IDeckOptionsProps {
   deckID: string;
@@ -83,7 +84,9 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
   const cardForm = useForm<TCardFormSchema>({
     resolver: zodResolver(cardFormSchema),
     defaultValues: { hint: "" },
-  })
+  });
+
+  useKeyPress(() => setDialogOpen(true), { code: "KeyN", altKey: true });
 
   async function handleCardCreation(values: TCardFormSchema) {
     setDialogOpen(false);
@@ -188,13 +191,17 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
     setDropdownMenuOpen(false);
   };
 
+  useKeyPress(() => setDropdownMenuOpen(true), { code: "Period", altKey: true });
+  useKeyPress(openShareDialog, { code: "Backslash", altKey: true });
+  useKeyPress(openEditDialog, { code: "F2" });
+
   return (
     <>
       <DropdownMenu open={dropdownMenuOpen} onOpenChange={setDropdownMenuOpen}>
         <DropdownMenuTrigger asChild>
           <Button type="button" title="Options" variant="outline" size="icon"><EllipsisVertical /></Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={openEditDialog}>
             <Pencil />
             <span>Edit</span>

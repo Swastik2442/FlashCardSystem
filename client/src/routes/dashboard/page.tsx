@@ -1,8 +1,7 @@
 import { useNavigate, useLoaderData, Link } from "react-router-dom";
-import { Lock, Plus, Trash2 } from "lucide-react";
+import { Lock, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import ShowCards from "@/components/showCards";
 import { getFormattedDate } from "@/utils/time";
 import { CreationMenu } from "./options";
@@ -45,12 +44,7 @@ export function Dashboard() {
     <div className="my-4">
       <div className="flex justify-between ml-10 mr-4">
         <h1 className="text-lg select-none">Dashboard</h1>
-        <div className="flex gap-1">
-          <CreationMenu decks={decks} />
-          <Button type="button" title="Deletion Menu" variant="outline" size="icon">
-            <Trash2/>
-          </Button>
-        </div>
+        <CreationMenu decks={decks} />
       </div>
       <hr className="my-4" />
       <motion.div

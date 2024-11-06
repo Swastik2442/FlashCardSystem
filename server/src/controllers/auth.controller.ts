@@ -8,9 +8,9 @@ import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, CSRF_COOKIE_NAME }
 
 const cookieOptions = {
     httpOnly: true,
-    secure: true,
     signed: true,
-    sameSite: "none",
+    secure: env.NODE_ENV === "production",
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax",
 } as const;
 
 async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {

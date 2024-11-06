@@ -164,7 +164,7 @@ export function Playground() {
       <div className="flex justify-center">
         <FlipCard flip={flip}>
           <FlipCardFront>
-            <div className="h-full rounded-lg bg-white p-4 flex flex-col justify-between">
+            <div className="h-full rounded-lg bg-background text-foreground p-4 flex flex-col justify-between">
               <p className="mb-4">{cards[playedCards[currentIndex]].question}</p>
               <div className="flex">
                 <Input id="answer" placeholder="Answer" className="border-r-transparent rounded-r-none" disabled={submitted} />
@@ -175,7 +175,7 @@ export function Playground() {
             </div>
           </FlipCardFront>
           <FlipCardBack>
-            <div className="h-full rounded-lg bg-green-400 p-4">
+            <div className="h-full rounded-lg bg-gradient-to-t from-green-400 to-green-500 text-foreground dark:text-background p-4">
               <p>{cards[playedCards[currentIndex]].answer}</p>
             </div>
           </FlipCardBack>

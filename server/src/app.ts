@@ -35,8 +35,8 @@ const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsr
     cookieName: CSRF_COOKIE_NAME,
     cookieOptions: {
         signed: true,
-        secure: true,
-        sameSite: "none",
+        secure: env.NODE_ENV === "production",
+        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
     },
     // TODO: Add getSessionIdentifier to return random uuid from jwt to identify session
 });
