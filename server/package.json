@@ -2,7 +2,6 @@
   "name": "server",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "start": "ts-node --files api/index.ts",
     "dev": "nodemon api/index.ts",
