@@ -1,5 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/authProvider";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -7,6 +8,10 @@ import { Button } from "@/components/ui/button";
  */
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  if (user)
+    return <Navigate to="/dashboard" replace={true} />;
+
   return (
     <div className="relative flex flex-col  h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-900  text-slate-950 transition-bg">
       <div className="absolute inset-0 overflow-hidden">

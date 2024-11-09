@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Deck from "./deck.model";
+import {  UNCATEGORISED_DECK_NAME } from "../constants";
 import env from "../env";
 
 interface IUser {
@@ -48,10 +49,10 @@ userSchema.pre("save", async function (next) {
     if (this.isNew) {
         const userDeck = await Deck.create({
             owner: this._id,
-            name: "#UNCATEGORISED#",
+            name: UNCATEGORISED_DECK_NAME,
             isPrivate: true
         });
-        userDeck.save();
+        await userDeck.save();
     }
     if (this.isModified("password"))
         this.password = await bcrypt.hash(this.password, 10);

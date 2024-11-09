@@ -1,13 +1,14 @@
 import { getCSRFToken } from "@/api/auth";
 import fetchWithCredentials from "@/utils/fetch";
 import type { TDeckFormSchema, TDeckShareFormSchema } from "@/types/forms";
+import { UNCATEGORISED_DECK_NAME } from "@/constants";
 
 /**
  * @param deck Deck to be checked
  * @returns Whether the Deck contains Uncategorized Cards
  */
 export function isDeckUncategorized(deck: ILessDeck | IMoreDeck) {
-  return deck.name === "#UNCATEGORISED#";
+  return deck.name === UNCATEGORISED_DECK_NAME;
 }
 
 /**

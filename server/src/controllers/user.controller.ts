@@ -1,6 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
+import {  UNCATEGORISED_DECK_NAME } from "../constants";
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
@@ -109,7 +110,7 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
             owner: user._id,
             $or: [
                 { isPrivate: false },
-                { owner: req.user._id },
+                { owner: req.user._id, name: { $ne: UNCATEGORISED_DECK_NAME } },
                 { sharedTo: { $elemMatch: { user: req.user._id, editable: true } } },
             ]
         }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");

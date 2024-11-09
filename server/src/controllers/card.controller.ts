@@ -1,7 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
-import { CSRF_COOKIE_NAME } from "../constants";
+import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
 /**
  * @route POST card/new
@@ -14,15 +14,15 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         var deckById;
         if (!deck) {
             deckById = await Deck.findOne({
-                owner: req.user._id, name: "#UNCATEGORISED#"
+                owner: req.user._id, name: UNCATEGORISED_DECK_NAME
             }).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
             if (!deckById) {
                 deckById = await Deck.create({
                     owner: req.user._id,
-                    name: "#UNCATEGORISED#",
+                    name: UNCATEGORISED_DECK_NAME,
                     isPrivate: true
                 });
-                deckById.save();
+                await deckById.save();
             }
         } else {
             deckById = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");;
@@ -50,7 +50,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             throw new Error("Card could not be created");
 
         deckById.dateUpdated = new Date();
-        deckById.save();
+        await deckById.save();
 
         res.status(201)
         .clearCookie(CSRF_COOKIE_NAME)
@@ -144,7 +144,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
         deck.dateUpdated = new Date();
-        deck.save();
+        await deck.save();
 
         await card.deleteOne();
         res.status(200)
@@ -201,7 +201,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
         currentDeck.dateUpdated = new Date();
-        currentDeck.save();
+        await currentDeck.save();
 
         if (deck && deck.length > 0) {
             const nextDeck = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
@@ -215,14 +215,14 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
                 return;
             }
             nextDeck.dateUpdated = new Date();
-            nextDeck.save();
+            await nextDeck.save();
         }
 
         card.question = question ?? card.question;
         card.answer = answer ?? card.answer;
         card.hint = hint ?? card.hint;
         card.deck = deck ?? card.deck;
-        card.save();
+        await card.save();
 
         res.status(200)
         .clearCookie(CSRF_COOKIE_NAME)

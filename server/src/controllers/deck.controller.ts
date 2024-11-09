@@ -2,7 +2,7 @@ import { Request as ExpressRequest, Response as ExpressResponse } from "express"
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
-import { CSRF_COOKIE_NAME } from "../constants";
+import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
 /**
  * @route POST deck/new
@@ -12,7 +12,7 @@ import { CSRF_COOKIE_NAME } from "../constants";
 export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
     const { name, description, isPrivate } = req.body;
     try {
-        if (name == "#UNCATEGORISED#") {
+        if (name == UNCATEGORISED_DECK_NAME) {
             res.status(422).json({
                 status: "error",
                 message: "Invalid Deck Name",
@@ -188,7 +188,7 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (String(deck.owner) != String(req.user._id) || deck.name == "#UNCATEGORISED#") {
+        } else if (String(deck.owner) != String(req.user._id) || deck.name == UNCATEGORISED_DECK_NAME) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -231,7 +231,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        if (name && name == "#UNCATEGORISED#") {
+        if (name && name == UNCATEGORISED_DECK_NAME) {
             res.status(422).json({
                 status: "error",
                 message: "Invalid Deck Name",
@@ -257,7 +257,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
         deck.name = name ? name : deck.name;
         deck.description = description ? description : deck.description;
         deck.isPrivate = typeof(isPrivate) == "boolean" ? isPrivate : deck.isPrivate;
-        deck.save();
+        await deck.save();
 
         res.status(200)
         .clearCookie(CSRF_COOKIE_NAME)
@@ -304,7 +304,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
         const deck = await Deck.findOne({
             _id: id,
             owner: { $ne: userByID._id },
-            name: { $ne: "#UNCATEGORISED#" },
+            name: { $ne: UNCATEGORISED_DECK_NAME },
         });
         if (!deck) {
             res.status(404).json({
