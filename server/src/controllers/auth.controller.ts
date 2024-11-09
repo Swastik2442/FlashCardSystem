@@ -210,7 +210,8 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
             return;
         }
 
-        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
         res.status(200)
         .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
         .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })

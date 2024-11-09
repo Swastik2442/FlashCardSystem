@@ -96,8 +96,10 @@ export async function refreshTokens() {
   });
 
   const data = await res.json() as ICustomResponse<string>;
-  if (!res?.ok)
+  if (res.status === 401)
+    await logoutUser();
+  if (!res.ok)
     throw new Error(data.message || "Failed to Refresh Tokens");
-  
+
   return data.data;
 }
