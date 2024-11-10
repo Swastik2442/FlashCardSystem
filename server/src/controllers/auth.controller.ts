@@ -26,8 +26,8 @@ async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
         await user.save({ validateBeforeSave: false }); // Saves without triggering Pre Hooks
 
         return {accessToken, refreshToken};
-    } catch (error: any) {
-        throw new Error(`An Error occured while generating Refresh and Access Tokens: ${error.message}`)
+    } catch (err: any) {
+        throw new Error(`An Error occured while generating Refresh and Access Tokens: ${err?.message ?? err}`);
     }
 }
 
@@ -97,7 +97,7 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
         const user = await User.findOne({
             $or: [
                 { username: username === undefined ? null : username.toLowerCase() },
-                { email: email == undefined ? null : email }
+                { email: email === undefined ? null : email }
             ]
         }).select("-refreshToken");
         if (!user) {
@@ -149,9 +149,8 @@ export async function Login(req: ExpressRequest, res: ExpressResponse) {
 export async function Logout(req: ExpressRequest, res: ExpressResponse) {
     try {
         await User.findByIdAndUpdate(
-            req.user._id,
+            req.user!._id,
             { $set: { refreshToken: null } },
-            // { new: true }
         );
 
         res.status(200)
@@ -226,6 +225,185 @@ export async function RefreshAccessToken(req: ExpressRequest, res: ExpressRespon
             status: "error",
             message: "Internal Server Error",
             data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route PATCH auth/edit/username
+ * @desc Edit the Username of the Logged In User
+ * @access private
+ */
+export async function ChangeUsername(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        const { username, password } = req.body;
+
+        const user = await User.findById(req.user!._id).select("-refreshToken");
+        if (!user)
+            throw new Error("User not found");
+
+        const isPasswordValid = await user.isPasswordCorrect(password);
+        if (!isPasswordValid) {
+            res.status(401).json({
+                status: "error",
+                message: "Incorrect Password",
+            });
+            return;
+        }
+
+        const usersWithSameUsername = await User.find({ username: username.toLowerCase() }).limit(1);
+        if (usersWithSameUsername.length > 0 && usersWithSameUsername[0].id !== user.id) {
+            res.status(422).json({
+                status: "error",
+                message: "Username already exists",
+                data: null,
+            });
+            return;
+        }
+
+        user.username = username;
+        await user.save();
+
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
+            status: "success",
+            message: "Username Changed successfully",
+            data: user.username,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route PATCH auth/edit/email
+ * @desc Edit the Email of the Logged In User
+ * @access private
+ */
+export async function ChangeEmail(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        const { email, password } = req.body;
+
+        const user = await User.findById(req.user!._id).select("-refreshToken");
+        if (!user)
+            throw new Error("User not found");
+
+        const isPasswordValid = await user.isPasswordCorrect(password);
+        if (!isPasswordValid) {
+            res.status(401).json({
+                status: "error",
+                message: "Incorrect Password",
+            });
+            return;
+        }
+
+        user.email = email;
+        await user.save();
+
+        res.status(200).json({
+            status: "success",
+            message: "Email Changed Successfully"
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route PATCH auth/edit/password
+ * @desc Edit the Password of the Logged In User
+ * @access private
+ */
+export async function ChangePassword(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        const user = await User.findById(req.user!._id);
+        if (!user)
+            throw new Error("User not found");
+
+        const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+        if (!isPasswordValid) {
+            res.status(401).json({
+                status: "error",
+                message: "Incorrect Password",
+            });
+            return;
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+        res.status(200)
+        .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
+        .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
+            status: "success",
+            message: "Password Changed Successfully",
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route DELETE auth/delete
+ * @desc Delete the Logged In User's Account
+ * @access private
+ */
+export async function DeleteUser(req: ExpressRequest, res: ExpressResponse) {
+    // TODO: Set the User as Deleted and delete after 30 days, if User signs in again remove the deletion
+    try {
+        const { password } = req.body;
+
+        const user = await User.findById(req.user!._id).select("-refreshToken");
+        if (!user)
+            throw new Error("User not found");
+
+        const isPasswordValid = await user.isPasswordCorrect(password);
+        if (!isPasswordValid) {
+            res.status(401).json({
+                status: "error",
+                message: "Incorrect Password",
+            });
+            return;
+        }
+
+        await user.deleteOne();
+        res.status(200)
+        .clearCookie(ACCESS_TOKEN_COOKIE_NAME)
+        .clearCookie(REFRESH_TOKEN_COOKIE_NAME)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
+            status: "success",
+            message: "Deleted the User",
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
         });
     }
     res.end();

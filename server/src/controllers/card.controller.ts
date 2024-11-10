@@ -14,11 +14,11 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
         var deckById;
         if (!deck) {
             deckById = await Deck.findOne({
-                owner: req.user._id, name: UNCATEGORISED_DECK_NAME
+                owner: req.user!._id, name: UNCATEGORISED_DECK_NAME
             }).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
             if (!deckById) {
                 deckById = await Deck.create({
-                    owner: req.user._id,
+                    owner: req.user!._id,
                     name: UNCATEGORISED_DECK_NAME,
                     isPrivate: true
                 });
@@ -26,9 +26,14 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             }
         } else {
             deckById = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");;
-            if (!deckById)
-                throw new Error("Deck not found");
-            else if (!deckById.isAccessibleBy(req.user._id).writable) {
+            if (!deckById) {
+                res.status(404).json({
+                    status: "error",
+                    message: "Deck not found",
+                    data: null,
+                });
+                return;
+            } else if (!deckById.isAccessibleBy(req.user!._id).writable) {
                 res.status(401).json({
                     status: "error",
                     message: "Unauthorized Operation",
@@ -89,9 +94,14 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
         }
 
         const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
-        if (!deck)
-            throw new Error("Deck not found");
-        else if (!deck.isAccessibleBy(req.user._id).readable) {
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+                data: null,
+            });
+            return;
+        } else if (!deck.isAccessibleBy(req.user!._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -134,9 +144,14 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
         }
 
         const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
-        if (!deck)
-            throw new Error("Deck not found");
-        else if (!deck.isAccessibleBy(req.user._id).writable) {
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+            });
+            return;
+        }
+        else if (!deck.isAccessibleBy(req.user!._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -193,7 +208,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
         const currentDeck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!currentDeck)
             throw new Error("Deck not found");
-        else if (!currentDeck.isAccessibleBy(req.user._id).writable) {
+        else if (!currentDeck.isAccessibleBy(req.user!._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -205,9 +220,13 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
 
         if (deck && deck.length > 0) {
             const nextDeck = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
-            if (!nextDeck)
-                throw new Error("Deck not found");
-            else if (!nextDeck.isAccessibleBy(req.user._id).writable) {
+            if (!nextDeck) {
+                res.status(404).json({
+                    status: "error",
+                    message: "Deck not found",
+                });
+                return;
+            } else if (!nextDeck.isAccessibleBy(req.user!._id).writable) {
                 res.status(401).json({
                     status: "error",
                     message: "Unauthorized Operation",

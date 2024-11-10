@@ -22,7 +22,7 @@ interface IDeckAccessible {
 }
 
 interface IDeckMethods {
-    isAccessibleBy(userID: mongoose.Schema.Types.ObjectId): IDeckAccessible;
+    isAccessibleBy(userID: mongoose.Schema.Types.ObjectId | mongoose.Types.ObjectId): IDeckAccessible;
 }
 
 type DeckModel = mongoose.Model<IDeck, {}, IDeckMethods>;
@@ -94,7 +94,7 @@ deckSchema.pre("deleteMany", async function(next) {
     next();
 });
 
-deckSchema.methods.isAccessibleBy = function(userID: mongoose.Schema.Types.ObjectId) {
+deckSchema.methods.isAccessibleBy = function(userID: mongoose.Schema.Types.ObjectId | mongoose.Types.ObjectId) {
     if (String(this.owner) === String(userID))
         return { readable: true, writable: true };
 

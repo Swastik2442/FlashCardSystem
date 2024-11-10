@@ -112,6 +112,11 @@ describe("Auth Routes", () => {
         setAuthTokens(res);
     });
 
+    it.todo("should change the user's username");
+    it.todo("should change the user's email");
+    it.todo("should change the user's password");
+    it.todo("should delete the user");
+
     it("should log out the user", async () => {
         const res = await request(app)
             .get("/auth/logout")

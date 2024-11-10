@@ -117,6 +117,8 @@ describe("User Routes", () => {
         expect(res.body.status).toBe("success");
         expect(res.body.data).toHaveLength(0);
     });
+
+    it.todo("should change the user's name");
 });
 
 describe("Card Routes", () => {
@@ -303,6 +305,8 @@ describe("Deck Routes", () => {
         const deck = await Deck.findById(deckId);
         expect(deck?.likes).toBe(0);
     });
+
+    it.todo("should change the deck's owner");
 
     it("should share the deck with read access", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });

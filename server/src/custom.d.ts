@@ -1,8 +1,13 @@
 import {} from "express-serve-static-core";
-import User from "./models/user.model";
+import mongoose from "mongoose";
+import type { IUser, IUserMethods } from "./models/user.model";
+
+type IRequestUser = Omit<IUser, "password" | "refreshToken">;
 
 declare module "express-serve-static-core" {
     interface Request {
-        user: User;
+        user?: mongoose.Document<unknown, {}, IRequestUser> & Omit<IRequestUser & {
+            _id: mongoose.Types.ObjectId;
+        }, keyof IUserMethods>;
     }
 }

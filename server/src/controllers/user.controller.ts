@@ -1,7 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
-import {  UNCATEGORISED_DECK_NAME } from "../constants";
+import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
@@ -110,8 +110,8 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
             owner: user._id,
             $or: [
                 { isPrivate: false },
-                { owner: req.user._id, name: { $ne: UNCATEGORISED_DECK_NAME } },
-                { sharedTo: { $elemMatch: { user: req.user._id, editable: true } } },
+                { owner: req.user!._id, name: { $ne: UNCATEGORISED_DECK_NAME } },
+                { sharedTo: { $elemMatch: { user: req.user!._id, editable: true } } },
             ]
         }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -139,10 +139,10 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
 export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
     try {
         const likedDecks = await Deck.find({
-            likedBy: req.user._id,
+            likedBy: req.user!._id,
             $or: [
                 { isPrivate: false },
-                { sharedTo: { $elemMatch: { user: req.user._id } } }
+                { sharedTo: { $elemMatch: { user: req.user!._id } } }
             ]
         }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -157,6 +157,41 @@ export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
             status: "error",
             message: "Internal Server Error",
             data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route PATCH user/edit
+ * @desc Edit the Details of the Logged In User
+ * @access private
+ */
+export async function UpdateUser(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        const { fullName } = req.body;
+        if (!fullName) {
+            res.status(422).json({
+                status: "error",
+                message: "No fields to update",
+            });
+            return;
+        }
+
+        req.user!.fullName = fullName ?? req.user!.fullName;
+        await req.user!.save();
+
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
+            status: "success",
+            message: "User updated successfully",
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
         });
     }
     res.end();

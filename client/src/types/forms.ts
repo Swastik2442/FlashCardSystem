@@ -3,8 +3,8 @@ import { z } from "zod";
 export const loginFormSchema = z.object({
   email: z.string().email("Invalid email address."),
   password: z.string()
-  .min(8, { message: "Password must be at least 8 characters." })
-  .max(128, { message: "Password cannot be more than 128 characters." }),
+    .min(8, { message: "Password must be at least 8 characters." })
+    .max(128, { message: "Password cannot be more than 128 characters." }),
 });
 export type TLoginFormSchema = z.infer<typeof loginFormSchema>;
 
@@ -25,23 +25,23 @@ export type TRegisterFormSchema = z.infer<typeof registerFormSchema>;
 
 export const deckFormSchema = z.object({
   name: z.string()
-  .min(3, { message: "Name must be at least 3 characters." })
-  .max(64, { message: "Name must be at most 64 characters." }),
+    .min(3, { message: "Name must be at least 3 characters." })
+    .max(64, { message: "Name must be at most 64 characters." }),
   description: z.string()
-  .max(256, { message: "Description must be at most 256 characters." }),
+    .max(256, { message: "Description must be at most 256 characters." }),
   isPrivate: z.boolean().default(true).optional(),
 });
 export type TDeckFormSchema = z.infer<typeof deckFormSchema>;
 
 export const cardFormSchema = z.object({
   question: z.string()
-  .min(3, { message: "Question must be at least 3 characters." })
-  .max(64, { message: "Question must be at most 128 characters." }),
+    .min(3, { message: "Question must be at least 3 characters." })
+    .max(128, { message: "Question must be at most 128 characters." }),
   answer: z.string()
-  .min(3, { message: "Answer must be at least 3 characters." })
-  .max(64, { message: "Answer must be at most 128 characters." }),
+    .min(3, { message: "Answer must be at least 3 characters." })
+    .max(128, { message: "Answer must be at most 128 characters." }),
   hint: z.string()
-  .max(64, { message: "Hint must be at most 64 characters." }),
+    .max(64, { message: "Hint must be at most 64 characters." }),
   deck: z.string().optional(),
 });
 export type TCardFormSchema = z.infer<typeof cardFormSchema>;

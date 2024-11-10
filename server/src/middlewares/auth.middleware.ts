@@ -10,12 +10,14 @@ import env from "../env";
  */
 export async function VerifyJWT(req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
     try {
-        const token = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] || req.header("Authorization")?.replace("Bearer ", "");
+        const token = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] ?? req.header("Authorization")?.replace("Bearer ", "");
         if (!token)
             throw new Error("Unauthorized Request");
 
         const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
-        const user = await User.findById((decodedToken as jwt.JwtPayload)?._id).select("-password -refreshToken");
+        const user = await User.findById(
+            (decodedToken as jwt.JwtPayload)?._id
+        ).select("-password -refreshToken -__v");
         if (!user)
             throw new Error("Invalid Access Token");
 

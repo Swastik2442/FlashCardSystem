@@ -5,7 +5,7 @@ import Deck from "./deck.model";
 import {  UNCATEGORISED_DECK_NAME } from "../constants";
 import env from "../env";
 
-interface IUser {
+export interface IUser {
     fullName: string;
     email: string;
     username: string;
@@ -13,7 +13,7 @@ interface IUser {
     refreshToken: string;
 }
 
-interface IUserMethods {
+export interface IUserMethods {
     isPasswordCorrect(password: string): Promise<boolean>;
     generateAccessToken(): string;
     generateRefreshToken(): string;
