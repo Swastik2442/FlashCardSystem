@@ -55,7 +55,7 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
 export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
     const str = req.params.str;
     try {
-        let users = await User.find({
+        const users = await User.find({
             username: { $regex: str, $options: "i" }
         }).limit(5).select("-email -password -refreshToken -__v");
         if (!users || users.length === 0) {

@@ -13,7 +13,7 @@ interface ICardMethods {
     isEditableBy(user: mongoose.Schema.Types.ObjectId): boolean;
 }
 
-type CardModel = mongoose.Model<ICard, {}, ICardMethods>;
+type CardModel = mongoose.Model<ICard, unknown, ICardMethods>;
 
 const cardSchema = new mongoose.Schema<ICard, CardModel, ICardMethods>({
     question: {

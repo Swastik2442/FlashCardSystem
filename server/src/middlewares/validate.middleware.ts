@@ -7,7 +7,7 @@ function Validate(req: ExpressRequest, res: ExpressResponse, next: NextFunction)
         next();
     else {
         let errorCount = 0;
-        let error: { [key: string]: any } = {};
+        const error: Record<string, unknown> = {};
         errors.array().map((err: ValidationError) => {
             error[err.param] = err.msg;
             errorCount++;

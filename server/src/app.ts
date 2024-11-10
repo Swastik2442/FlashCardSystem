@@ -76,7 +76,7 @@ app.get("/csrf-token", (req, res) => {
 });
 
 app.use(doubleCsrfProtection);
-app.use((err: any, _req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+app.use((err: unknown, _req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
     if (err == invalidCsrfTokenError) {
         res.status(403);
         res.json({

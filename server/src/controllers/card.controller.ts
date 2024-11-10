@@ -11,7 +11,7 @@ import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
     const { question, answer, hint, deck } = req.body;
     try {
-        var deckById;
+        let deckById;
         if (!deck) {
             deckById = await Deck.findOne({
                 owner: req.user!._id, name: UNCATEGORISED_DECK_NAME

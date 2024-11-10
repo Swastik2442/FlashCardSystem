@@ -97,6 +97,10 @@ router.patch(
         .notEmpty()
         .withMessage("User is required")
         .trim()
+        .isLength({ min: 2, max: 32 })
+        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
+        .toLowerCase()
+        .matches(/^[a-z0-9_]+$/)
         .escape(),
     Validate,
     ChangeDeckOwner
@@ -113,6 +117,10 @@ router.post(
         .notEmpty()
         .withMessage("User ID is required")
         .trim()
+        .isLength({ min: 2, max: 32 })
+        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
+        .toLowerCase()
+        .matches(/^[a-z0-9_]+$/)
         .escape(),
     check("isEditable")
         .isBoolean(),
@@ -131,6 +139,10 @@ router.post(
         .notEmpty()
         .withMessage("User ID is required")
         .trim()
+        .isLength({ min: 2, max: 32 })
+        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
+        .toLowerCase()
+        .matches(/^[a-z0-9_]+$/)
         .escape(),
     check("unshare")
         .notEmpty()

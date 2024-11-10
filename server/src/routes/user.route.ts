@@ -19,6 +19,7 @@ router.get(
         .trim()
         .isLength({ min: 2, max: 32 })
         .withMessage("Must be at least 2 Characters and at most 32 Characters long")
+        .toLowerCase()
         .matches(/^[a-z0-9_]+$/)
         .withMessage("Can only contain lowercase letters, numbers, and underscores")
         .escape(),

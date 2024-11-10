@@ -328,7 +328,7 @@ export async function ChangeDeckOwner(req: ExpressRequest, res: ExpressResponse)
             status: "success",
             message: "Deck Owner updated",
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error(err);
         res.status(500).json({
             status: "error",
@@ -390,7 +390,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             status: "success",
             message: "Deck sharing updated",
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error(err);
         res.status(500).json({
             status: "error",

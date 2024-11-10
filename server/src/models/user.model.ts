@@ -19,7 +19,7 @@ export interface IUserMethods {
     generateRefreshToken(): string;
 }
 
-type UserModel = mongoose.Model<IUser, {}, IUserMethods>;
+type UserModel = mongoose.Model<IUser, unknown, IUserMethods>;
 
 const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
     fullName: {

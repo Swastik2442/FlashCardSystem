@@ -23,10 +23,10 @@ export async function VerifyJWT(req: ExpressRequest, res: ExpressResponse, next:
 
         req.user = user;
         next();
-    } catch (err: any) {
+    } catch (err: unknown) {
         res.status(401).json({
             status: "error",
-            message: err?.message || "Internal Server Error",
+            message: err instanceof Error ? err.message : "Internal Server Error",
             data: null,
         });
         res.end();

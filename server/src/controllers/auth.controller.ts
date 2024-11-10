@@ -26,8 +26,8 @@ async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
         await user.save({ validateBeforeSave: false }); // Saves without triggering Pre Hooks
 
         return {accessToken, refreshToken};
-    } catch (err: any) {
-        throw new Error(`An Error occured while generating Refresh and Access Tokens: ${err?.message ?? err}`);
+    } catch (err: unknown) {
+        throw new Error(`An Error occured while generating Refresh and Access Tokens: ${err instanceof Error ? err.message : err}`);
     }
 }
 
@@ -269,7 +269,7 @@ export async function ChangeUsername(req: ExpressRequest, res: ExpressResponse) 
         .clearCookie(CSRF_COOKIE_NAME)
         .json({
             status: "success",
-            message: "Username Changed successfully",
+            message: "Username changed successfully",
             data: user.username,
         });
     } catch (err) {
@@ -310,7 +310,7 @@ export async function ChangeEmail(req: ExpressRequest, res: ExpressResponse) {
 
         res.status(200).json({
             status: "success",
-            message: "Email Changed Successfully"
+            message: "Email changed successfully"
         });
     } catch (err) {
         console.error(err);
@@ -355,7 +355,7 @@ export async function ChangePassword(req: ExpressRequest, res: ExpressResponse) 
         .clearCookie(CSRF_COOKIE_NAME)
         .json({
             status: "success",
-            message: "Password Changed Successfully",
+            message: "Password changed successfully",
         });
     } catch (err) {
         console.error(err);

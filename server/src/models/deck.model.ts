@@ -25,7 +25,7 @@ interface IDeckMethods {
     isAccessibleBy(userID: mongoose.Schema.Types.ObjectId | mongoose.Types.ObjectId): IDeckAccessible;
 }
 
-type DeckModel = mongoose.Model<IDeck, {}, IDeckMethods>;
+type DeckModel = mongoose.Model<IDeck, unknown, IDeckMethods>;
 
 const deckSchema = new mongoose.Schema<IDeck, DeckModel, IDeckMethods>({
     owner: {
@@ -76,7 +76,7 @@ const deckSchema = new mongoose.Schema<IDeck, DeckModel, IDeckMethods>({
     ]
 });
 
-deckSchema.pre("save", async function(next) {
+deckSchema.pre("save", function(next) {
     this.dateUpdated = new Date();
     next();
 });
