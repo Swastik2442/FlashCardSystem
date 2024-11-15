@@ -1,6 +1,24 @@
 import fetchWithCredentials from "@/utils/fetch";
 
 /**
+ * Makes a GET request to get the private details of the logged in User
+ * @returns Details about the User
+ */
+export async function getUserPrivate() {
+  const res = await fetchWithCredentials(
+    `${import.meta.env.VITE_SERVER_HOST}/user`, "get",
+  ).catch((err: Error) => {
+    throw new Error(err?.message || "Failed to get User details");
+  });
+
+  const userData = await res.json() as ICustomResponse<IUserPrivate>;
+  if (!res?.ok)
+    throw new Error(userData.message || "Failed to get User details");
+
+  return userData.data;
+}
+
+/**
  * Makes a GET request to get Information about a User
  * @param user Username or User ID of the User
  * @returns information about the User
@@ -27,7 +45,7 @@ export async function getUser(user: string) {
  */
 export async function getUserFromSubstring(substring: string) {
   const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/user/getsub/${substring}`,
+    `${import.meta.env.VITE_SERVER_HOST}/user/substr/${substring}`,
     "get",
   ).catch((err: Error) => {
     throw new Error(err?.message || "No such User found");

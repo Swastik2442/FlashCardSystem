@@ -6,6 +6,33 @@ import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
 /**
+ * @route GET user/
+ * @desc Gets the logged in User's Private Details
+ * @access private
+ */
+export async function GetUserPrivate(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        res.status(200).json({
+            status: "success",
+            message: "User found",
+            data: {
+                "fullName": req.user!.fullName,
+                "username": req.user!.username,
+                "email": req.user!.email,
+            },
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
+
+/**
  * @route GET user/get/:username
  * @desc Gets the User with the given Username/ID
  * @access public
@@ -48,7 +75,7 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
 }
 
 /**
- * @route GET user/getsub/:str
+ * @route GET user/substr/:str
  * @desc Gets the Users whose username is a substring of the given string
  * @access public
  */

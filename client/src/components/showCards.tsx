@@ -96,7 +96,7 @@ function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILe
         className="flex flex-wrap gap-4 mx-8"
       >
         {cards.map((card, idx) => (
-          <Card className="min-w-72 flex-1" key={10000 + idx}>
+          <Card className="min-w-72 flex-1" key={idx}>
             <CardHeader>
               <CardTitle>{card.question}</CardTitle>
             </CardHeader>
@@ -111,8 +111,21 @@ function ShowCards({ decks, cards, uncategorizedDeck, uponChange }: { decks: ILe
           </Card>
         ))}
       </motion.div>
-      <ConfirmationDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onConfirm={handleCardDeletion} confirmButtonTitle="Delete" dialogMessage="This action cannot be undone. This will permanently delete the card from the servers." />
-      <CardEditDialog dialogOpen={editDialogOpen} setDialogOpen={setEditDialogOpen} cardForm={cardForm} handleCardEditing={handleCardEditing} decks={decks} uncategorizedDeck={uncategorizedDeck} />
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleCardDeletion}
+        confirmButtonTitle="Delete"
+        dialogMessage="This action cannot be undone. This will permanently delete the card from the servers."
+      />
+      <CardEditDialog
+        dialogOpen={editDialogOpen}
+        setDialogOpen={setEditDialogOpen}
+        cardForm={cardForm}
+        handleCardEditing={handleCardEditing}
+        decks={decks}
+        uncategorizedDeck={uncategorizedDeck}
+      />
     </>
   )
 }

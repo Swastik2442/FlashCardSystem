@@ -2,14 +2,25 @@ import express from "express";
 import { check, oneOf } from "express-validator";
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
-import { GetUser, GetUserSub, GetLikedDecks, GetUserDecks, UpdateUser } from "../controllers/user.controller";
+import { GetUserPrivate, GetUser, GetUserSub, GetLikedDecks, GetUserDecks, UpdateUser } from "../controllers/user.controller";
 
 const router = express.Router();
 router.use(VerifyJWT);
 
-router.get("/", (req, res) => {
-    res.redirect("/user/get/" + encodeURIComponent(req.user!.username));
-});
+router.get("/", GetUserPrivate);
+
+router.patch(
+    "/",
+    oneOf([
+        check("fullName")
+            .notEmpty()
+            .trim()
+            .isLength({ min: 3, max: 64 })
+            .escape(),
+    ], "At least one field is required"),
+    Validate,
+    UpdateUser
+);
 
 router.get(
     "/get/:username",
@@ -28,7 +39,7 @@ router.get(
 );
 
 router.get(
-    "/getsub/:str",
+    "/substr/:str",
     check("str")
         .notEmpty()
         .withMessage("str is required")
@@ -59,18 +70,5 @@ router.get(
 );
 
 router.get("/liked", GetLikedDecks);
-
-router.patch(
-    "/edit",
-    oneOf([
-        check("fullName")
-            .notEmpty()
-            .trim()
-            .isLength({ min: 3, max: 64 })
-            .escape(),
-    ], "At least one field is required"),
-    Validate,
-    UpdateUser
-);
 
 export default router;

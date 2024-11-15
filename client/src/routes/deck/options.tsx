@@ -248,7 +248,13 @@ function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsPro
   }
 
   return (
-    <ConfirmationDialog open={dialogOpen} onOpenChange={setDialogOpen} onConfirm={handleDeckDeletion} dialogMessage="This action cannot be undone. This will permanently delete the deck and remove all the cards present in it." confirmButtonTitle="Delete" />
+    <ConfirmationDialog
+      open={dialogOpen}
+      onOpenChange={setDialogOpen}
+      onConfirm={handleDeckDeletion}
+      dialogMessage="This action cannot be undone. This will permanently delete the deck and remove all the cards present in it."
+      confirmButtonTitle="Delete"
+    />
   );
 }
 
