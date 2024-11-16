@@ -2,7 +2,7 @@ import { Request as ExpressRequest, Response as ExpressResponse } from "express"
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
-import { CSRF_COOKIE_NAME } from "../constants";
+import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
 /**
  * @route POST deck/new
@@ -12,7 +12,7 @@ import { CSRF_COOKIE_NAME } from "../constants";
 export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
     const { name, description, isPrivate } = req.body;
     try {
-        if (name == "#UNCATEGORISED#") {
+        if (name == UNCATEGORISED_DECK_NAME) {
             res.status(422).json({
                 status: "error",
                 message: "Invalid Deck Name",
@@ -22,7 +22,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
         }
 
         const newDeck = await Deck.create({
-            owner: req.user._id,
+            owner: req.user!._id,
             name: name,
             description: description,
             isPrivate: isPrivate
@@ -66,7 +66,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 data: null,
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id).readable) {
+        } else if (!deck.isAccessibleBy(req.user!._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
@@ -85,9 +85,9 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
                 dateCreated: deck.dateCreated,
                 dateUpdated: deck.dateUpdated,
                 isPrivate: deck.isPrivate,
-                isEditable: deck.isAccessibleBy(req.user._id).writable,
+                isEditable: deck.isAccessibleBy(req.user!._id).writable,
                 likes: deck.likes,
-                isLiked: deck.likedBy.includes(req.user._id),
+                isLiked: deck.likedBy.includes(req.user!.id),
             },
         });
     } catch (err) {
@@ -117,7 +117,7 @@ export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
                 data: null,
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id).readable) {
+        } else if (!deck.isAccessibleBy(req.user!._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
@@ -152,8 +152,8 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
     try {
         const decks = await Deck.find({
             $or: [
-                { owner: req.user._id },
-                { sharedTo: { $elemMatch: { user: req.user._id } } },
+                { owner: req.user!._id },
+                { sharedTo: { $elemMatch: { user: req.user!._id } } },
             ]
         }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -188,7 +188,7 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (String(deck.owner) != String(req.user._id) || deck.name == "#UNCATEGORISED#") {
+        } else if (String(deck.owner) != String(req.user!._id) || deck.name == UNCATEGORISED_DECK_NAME) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -231,7 +231,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        if (name && name == "#UNCATEGORISED#") {
+        if (name && name == UNCATEGORISED_DECK_NAME) {
             res.status(422).json({
                 status: "error",
                 message: "Invalid Deck Name",
@@ -246,7 +246,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id).writable) {
+        } else if (!deck.isAccessibleBy(req.user!._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -254,10 +254,10 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        deck.name = name ? name : deck.name;
-        deck.description = description ? description : deck.description;
-        deck.isPrivate = typeof(isPrivate) == "boolean" ? isPrivate : deck.isPrivate;
-        deck.save();
+        deck.name = name ?? deck.name;
+        deck.description = description ?? deck.description;
+        deck.isPrivate = typeof isPrivate == "boolean" ? isPrivate : deck.isPrivate;
+        await deck.save();
 
         res.status(200)
         .clearCookie(CSRF_COOKIE_NAME)
@@ -278,8 +278,68 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
 /**
- * @route POST deck/share/:did
- * @desc Shares the Deck with the given ID with the given User ID
+ * @route PATCH deck/owner/:did
+ * @desc Changes the Owner of the Deck with the given ID
+ * @access public
+ */
+export async function ChangeDeckOwner(req: ExpressRequest, res: ExpressResponse) {
+    const id = req.params.did;
+    try {
+        const { user } = req.body;
+
+        let userByID;
+        if (user.length === 24 && checkForHexRegExp.test(user))
+            userByID = await User.findById(user).select("-password -refreshToken");
+        if (!userByID) {
+            userByID = await User.findOne({ username: user.toLowerCase() }).select("-password -refreshToken");
+            if (!userByID || String(userByID._id) == String(req.user!._id)) {
+                res.status(422).json({
+                    status: "error",
+                    message: "Invalid User ID",
+                });
+                return;
+            }
+        }
+
+        const deck = await Deck.findOne({
+            _id: id,
+            owner: req.user!._id,
+            name: { $ne: UNCATEGORISED_DECK_NAME },
+        });
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+            });
+            return;
+        }
+
+        await Deck.updateOne(
+            { _id: deck._id },
+            {
+                owner: userByID._id,
+                $pull: { sharedTo: { user: userByID._id } }
+            }
+        );
+
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
+            status: "success",
+            message: "Deck Owner updated",
+        });
+    } catch (err: unknown) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+        });
+    }
+}
+
+/**
+ * @route POST deck/share/:did or POST deck/unshare/:did
+ * @desc Shares/Unshares the Deck with the given ID with the given User ID
  * @access public
  */
 export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
@@ -292,7 +352,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             userByID = await User.findById(user).select("-password -refreshToken");
         if (!userByID) {
             userByID = await User.findOne({ username: user.toLowerCase() }).select("-password -refreshToken");
-            if (!userByID || String(userByID._id) == String(req.user._id)) {
+            if (!userByID || String(userByID._id) == String(req.user!._id)) {
                 res.status(422).json({
                     status: "error",
                     message: "Invalid User ID",
@@ -303,19 +363,13 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
 
         const deck = await Deck.findOne({
             _id: id,
-            owner: { $ne: userByID._id },
-            name: { $ne: "#UNCATEGORISED#" },
+            owner: req.user!._id,
+            name: { $ne: UNCATEGORISED_DECK_NAME },
         });
         if (!deck) {
             res.status(404).json({
                 status: "error",
                 message: "Deck not found",
-            });
-            return;
-        } else if (String(deck.owner) != String(req.user._id)) {
-            res.status(401).json({
-                status: "error",
-                message: "Unauthorized Operation",
             });
             return;
         }
@@ -336,7 +390,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
             status: "success",
             message: "Deck sharing updated",
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error(err);
         res.status(500).json({
             status: "error",
@@ -361,7 +415,7 @@ export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
                 message: "Deck not found",
             });
             return;
-        } else if (!deck.isAccessibleBy(req.user._id).readable) {
+        } else if (!deck.isAccessibleBy(req.user!._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Deck is Private",
@@ -400,7 +454,7 @@ export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        if (deck.likedBy.includes(req.user._id)) {
+        if (deck.likedBy.includes(req.user!.id)) {
             res.status(200).json({
                 status: "success",
                 message: "Already liked",
@@ -408,7 +462,7 @@ export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        deck.likedBy.push(req.user._id);
+        deck.likedBy.push(req.user!.id);
         deck.likes++;
         await deck.save();
 
@@ -443,7 +497,7 @@ export async function UnlikeDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        if (!deck.likedBy.includes(req.user._id)) {
+        if (!deck.likedBy.includes(req.user!.id)) {
             res.status(200).json({
                 status: "success",
                 message: "Unliked the Deck",
@@ -451,7 +505,7 @@ export async function UnlikeDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        deck.likedBy.splice(deck.likedBy.indexOf(req.user._id), 1);
+        deck.likedBy.splice(deck.likedBy.indexOf(req.user!.id), 1);
         deck.likes--;
         await deck.save();
 

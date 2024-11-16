@@ -1,8 +1,36 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
+import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
+
+/**
+ * @route GET user/
+ * @desc Gets the logged in User's Private Details
+ * @access private
+ */
+export async function GetUserPrivate(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        res.status(200).json({
+            status: "success",
+            message: "User found",
+            data: {
+                "fullName": req.user!.fullName,
+                "username": req.user!.username,
+                "email": req.user!.email,
+            },
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+            data: null,
+        });
+    }
+    res.end();
+}
 
 /**
  * @route GET user/get/:username
@@ -47,14 +75,14 @@ export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
 }
 
 /**
- * @route GET user/getsub/:str
+ * @route GET user/substr/:str
  * @desc Gets the Users whose username is a substring of the given string
  * @access public
  */
 export async function GetUserSub(req: ExpressRequest, res: ExpressResponse) {
     const str = req.params.str;
     try {
-        let users = await User.find({
+        const users = await User.find({
             username: { $regex: str, $options: "i" }
         }).limit(5).select("-email -password -refreshToken -__v");
         if (!users || users.length === 0) {
@@ -109,8 +137,8 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
             owner: user._id,
             $or: [
                 { isPrivate: false },
-                { owner: req.user._id },
-                { sharedTo: { $elemMatch: { user: req.user._id, editable: true } } },
+                { owner: req.user!._id, name: { $ne: UNCATEGORISED_DECK_NAME } },
+                { sharedTo: { $elemMatch: { user: req.user!._id, editable: true } } },
             ]
         }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -138,10 +166,10 @@ export async function GetUserDecks(req: ExpressRequest, res: ExpressResponse) {
 export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
     try {
         const likedDecks = await Deck.find({
-            likedBy: req.user._id,
+            likedBy: req.user!._id,
             $or: [
                 { isPrivate: false },
-                { sharedTo: { $elemMatch: { user: req.user._id } } }
+                { sharedTo: { $elemMatch: { user: req.user!._id } } }
             ]
         }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -156,6 +184,41 @@ export async function GetLikedDecks(req: ExpressRequest, res: ExpressResponse) {
             status: "error",
             message: "Internal Server Error",
             data: null,
+        });
+    }
+    res.end();
+}
+
+/**
+ * @route PATCH user/edit
+ * @desc Edit the Details of the Logged In User
+ * @access private
+ */
+export async function UpdateUser(req: ExpressRequest, res: ExpressResponse) {
+    try {
+        const { fullName } = req.body;
+        if (!fullName) {
+            res.status(422).json({
+                status: "error",
+                message: "No fields to update",
+            });
+            return;
+        }
+
+        req.user!.fullName = fullName ?? req.user!.fullName;
+        await req.user!.save();
+
+        res.status(200)
+        .clearCookie(CSRF_COOKIE_NAME)
+        .json({
+            status: "success",
+            message: "User updated successfully",
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
         });
     }
     res.end();

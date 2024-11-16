@@ -7,6 +7,10 @@ interface IUserWithID extends IUser {
   readonly _id: string;
 }
 
+interface IUserPrivate extends IUser {
+  email: string;
+}
+
 interface ILessDeck {
   readonly _id: string;
   name: string;

@@ -1,7 +1,7 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
-import { CSRF_COOKIE_NAME } from "../constants";
+import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
 /**
  * @route POST card/new
@@ -11,24 +11,29 @@ import { CSRF_COOKIE_NAME } from "../constants";
 export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
     const { question, answer, hint, deck } = req.body;
     try {
-        var deckById;
+        let deckById;
         if (!deck) {
             deckById = await Deck.findOne({
-                owner: req.user._id, name: "#UNCATEGORISED#"
+                owner: req.user!._id, name: UNCATEGORISED_DECK_NAME
             }).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
             if (!deckById) {
                 deckById = await Deck.create({
-                    owner: req.user._id,
-                    name: "#UNCATEGORISED#",
+                    owner: req.user!._id,
+                    name: UNCATEGORISED_DECK_NAME,
                     isPrivate: true
                 });
-                deckById.save();
+                await deckById.save();
             }
         } else {
             deckById = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");;
-            if (!deckById)
-                throw new Error("Deck not found");
-            else if (!deckById.isAccessibleBy(req.user._id).writable) {
+            if (!deckById) {
+                res.status(404).json({
+                    status: "error",
+                    message: "Deck not found",
+                    data: null,
+                });
+                return;
+            } else if (!deckById.isAccessibleBy(req.user!._id).writable) {
                 res.status(401).json({
                     status: "error",
                     message: "Unauthorized Operation",
@@ -50,7 +55,7 @@ export async function CreateCard(req: ExpressRequest, res: ExpressResponse) {
             throw new Error("Card could not be created");
 
         deckById.dateUpdated = new Date();
-        deckById.save();
+        await deckById.save();
 
         res.status(201)
         .clearCookie(CSRF_COOKIE_NAME)
@@ -89,9 +94,14 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
         }
 
         const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
-        if (!deck)
-            throw new Error("Deck not found");
-        else if (!deck.isAccessibleBy(req.user._id).readable) {
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+                data: null,
+            });
+            return;
+        } else if (!deck.isAccessibleBy(req.user!._id).readable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -134,9 +144,14 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
         }
 
         const deck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
-        if (!deck)
-            throw new Error("Deck not found");
-        else if (!deck.isAccessibleBy(req.user._id).writable) {
+        if (!deck) {
+            res.status(404).json({
+                status: "error",
+                message: "Deck not found",
+            });
+            return;
+        }
+        else if (!deck.isAccessibleBy(req.user!._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -144,7 +159,7 @@ export async function DeleteCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
         deck.dateUpdated = new Date();
-        deck.save();
+        await deck.save();
 
         await card.deleteOne();
         res.status(200)
@@ -193,7 +208,7 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
         const currentDeck = await Deck.findById(card.deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!currentDeck)
             throw new Error("Deck not found");
-        else if (!currentDeck.isAccessibleBy(req.user._id).writable) {
+        else if (!currentDeck.isAccessibleBy(req.user!._id).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
@@ -201,13 +216,17 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
         currentDeck.dateUpdated = new Date();
-        currentDeck.save();
+        await currentDeck.save();
 
         if (deck && deck.length > 0) {
             const nextDeck = await Deck.findById(deck).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
-            if (!nextDeck)
-                throw new Error("Deck not found");
-            else if (!nextDeck.isAccessibleBy(req.user._id).writable) {
+            if (!nextDeck) {
+                res.status(404).json({
+                    status: "error",
+                    message: "Deck not found",
+                });
+                return;
+            } else if (!nextDeck.isAccessibleBy(req.user!._id).writable) {
                 res.status(401).json({
                     status: "error",
                     message: "Unauthorized Operation",
@@ -215,14 +234,14 @@ export async function UpdateCard(req: ExpressRequest, res: ExpressResponse) {
                 return;
             }
             nextDeck.dateUpdated = new Date();
-            nextDeck.save();
+            await nextDeck.save();
         }
 
         card.question = question ?? card.question;
         card.answer = answer ?? card.answer;
         card.hint = hint ?? card.hint;
         card.deck = deck ?? card.deck;
-        card.save();
+        await card.save();
 
         res.status(200)
         .clearCookie(CSRF_COOKIE_NAME)

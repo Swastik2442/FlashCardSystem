@@ -10,21 +10,27 @@ router.use(VerifyJWT);
 router.post(
     "/new",
     check("question")
-    .notEmpty()
-    .withMessage("Question is required")
-    .trim()
-    .escape(),
+        .notEmpty()
+        .withMessage("Question is required")
+        .trim()
+        .isLength({ min: 3, max: 128 })
+        .withMessage("Must be at least 3 Characters and at most 128 Characters long")
+        .escape(),
     check("answer")
-    .notEmpty()
-    .withMessage("Answer is required")
-    .trim()
-    .escape(),
+        .notEmpty()
+        .withMessage("Answer is required")
+        .trim()
+        .isLength({ min: 3, max: 128 })
+        .withMessage("Must be at least 3 Characters and at most 128 Characters long")
+        .escape(),
     check("hint")
-    .trim()
-    .escape(),
+        .trim()
+        .isLength({ max: 64 })
+        .withMessage("Must be at most 64 Characters long")
+        .escape(),
     check("deck")
-    .trim()
-    .escape(),
+        .trim()
+        .escape(),
     Validate,
     CreateCard
 );
@@ -32,10 +38,10 @@ router.post(
 router.get(
     "/:cid",
     check("cid")
-    .notEmpty()
-    .withMessage("Card ID is required")
-    .trim()
-    .escape(),
+        .notEmpty()
+        .withMessage("Card ID is required")
+        .trim()
+        .escape(),
     Validate,
     GetCard
 );
@@ -43,10 +49,10 @@ router.get(
 router.delete(
     "/:cid",
     check("cid")
-    .notEmpty()
-    .withMessage("Card ID is required")
-    .trim()
-    .escape(),
+        .notEmpty()
+        .withMessage("Card ID is required")
+        .trim()
+        .escape(),
     Validate,
     DeleteCard
 );
@@ -54,27 +60,30 @@ router.delete(
 router.patch(
     "/:cid",
     check("cid")
-    .notEmpty()
-    .withMessage("Card ID is required")
-    .trim()
-    .escape(),
+        .notEmpty()
+        .withMessage("Card ID is required")
+        .trim()
+        .escape(),
     oneOf([
         check("question")
-        .notEmpty()
-        .trim()
-        .escape(),
+            .notEmpty()
+            .trim()
+            .isLength({ min: 3, max: 128 })
+            .escape(),
         check("answer")
-        .notEmpty()
-        .trim()
-        .escape(),
+            .notEmpty()
+            .trim()
+            .isLength({ min: 3, max: 128 })
+            .escape(),
         check("hint")
-        .notEmpty()
-        .trim()
-        .escape(),
+            .notEmpty()
+            .trim()
+            .isLength({ max: 64 })
+            .escape(),
         check("deck")
-        .notEmpty()
-        .trim()
-        .escape(),
+            .notEmpty()
+            .trim()
+            .escape(),
     ], "At least one field is required"),
     Validate,
     UpdateCard

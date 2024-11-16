@@ -4,7 +4,7 @@ import ShowCards from "@/components/showCards";
 import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./options";
 import { isDeckUncategorized, getDeck, getDeckCards, getAllDecks } from "@/api/deck";
 import { getUser } from "@/api/user";
-import { DECKS_STORAGE_KEY } from "@/constants";
+import { DECKS_STORAGE_KEY, UNCATEGORISED_DECK_NAME } from "@/constants";
 
 interface IDeckLoaderData {
   ownerInfo: IUser;
@@ -46,7 +46,7 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
   const decks = allDecks.filter((deck) => !isDeckUncategorized(deck));
   const uncat = allDecks.find(isDeckUncategorized);
 
-  return { ownerInfo: ownerInfo, deckInfo: deckInfo, cards: cards, allDecks: decks, uncategorizedDeck: uncat ?? { _id: "", name: "#UNCATEGORISED#", isPrivate: true, dateUpdated: "" } };
+  return { ownerInfo: ownerInfo, deckInfo: deckInfo, cards: cards, allDecks: decks, uncategorizedDeck: uncat ?? { _id: "", name: UNCATEGORISED_DECK_NAME, isPrivate: true, dateUpdated: "" } };
 }
 
 /**

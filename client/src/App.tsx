@@ -13,6 +13,7 @@ import { Dashboard, DashboardLoader } from "@/routes/dashboard/page";
 import { Deck, DeckLoader } from "@/routes/deck/page";
 import { UserProfile, UserProfileLoader } from "@/routes/userProfile";
 import { Playground, PlaygroundLoader } from "@/routes/playground";
+import { Settings, SettingsLoader } from "@/routes/settings/page";
 
 const Router = createBrowserRouter([
   {
@@ -89,6 +90,30 @@ const Router = createBrowserRouter([
           </>
         ),
         loader: UserProfileLoader,
+        errorElement: <ErrorBoundary />,
+      },
+      {
+        path: "/settings",
+        element: (
+          <>
+            <Header />
+            <Settings />
+            <Footer />
+          </>
+        ),
+        loader: SettingsLoader,
+        errorElement: <ErrorBoundary />,
+      },
+      {
+        path: "/settings/:name",
+        element: (
+          <>
+            <Header />
+            <Settings />
+            <Footer />
+          </>
+        ),
+        loader: SettingsLoader,
         errorElement: <ErrorBoundary />,
       },
     ]

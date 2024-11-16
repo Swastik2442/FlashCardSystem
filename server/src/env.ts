@@ -15,8 +15,7 @@ const envSchema = z.object({
         z.literal("development"),
         z.literal("testing"),
         z.literal("production"),
-        ])
-        .default("development"),
+    ]).default("development"),
 });
 
 const env = envSchema.parse(process.env);

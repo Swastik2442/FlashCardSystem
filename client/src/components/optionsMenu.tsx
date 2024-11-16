@@ -1,4 +1,4 @@
-import { User, Keyboard, Cloud, LogOut } from "lucide-react";
+import { User, Keyboard, Cloud, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/authProvider";
@@ -15,6 +15,7 @@ export function OptionsMenu() {
 
   const showUserProfile = () => navigate(`/users/${user}`);
   const showKeyboardShortcuts = () => toast.info("Not Implemented Yet");
+  const showAppSettings = () => navigate("/settings");
 
   useKeyPress(showUserProfile, { code: "KeyU", altKey: true });
   useKeyPress(showKeyboardShortcuts, { code: "Slash", shiftKey: true, altKey: true });
@@ -63,6 +64,10 @@ export function OptionsMenu() {
           <span>API</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={showAppSettings}>
+          <Settings />
+          <span>Settings</span>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut />
           <span>Log out</span>
