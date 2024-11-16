@@ -39,6 +39,11 @@ function ChangePasswordOption() {
     },
   });
 
+  const handleFormCancel = () => {
+    setDialogOpen(false);
+    passwordForm.clearErrors();
+  }
+
   async function handlePasswordCreation(values: TChangePasswordFormSchema) {
     try {
       await changePassword(values);
@@ -91,7 +96,7 @@ function ChangePasswordOption() {
                 )}
               />
               <DialogFooter>
-                <Button onClick={() => setDialogOpen(false)} type="button" title="Cancel" variant="outline">Cancel</Button>
+                <Button onClick={handleFormCancel} type="button" title="Cancel" variant="outline">Cancel</Button>
                 <Button onClick={() => passwordForm.reset()} type="button" title="Reset" variant="secondary">Reset</Button>
                 <Button type="submit" title="Change">Change</Button>
               </DialogFooter>

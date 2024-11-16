@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Check, ChevronsUpDown, Link2 } from "lucide-react";
+import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Check, ChevronsUpDown, Link2, UserCog } from "lucide-react";
 import { useAuth } from "@/contexts/authProvider";
 import { useMediaQuery } from "@/hooks/mediaQuery";
 import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,9 +19,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import ConfirmationDialog from "@/components/confirmationDialog";
 import { cn } from "@/utils/css";
-import { deckFormSchema, deckShareFormSchema, cardFormSchema } from "@/types/forms";
-import type { TDeckFormSchema, TDeckShareFormSchema, TCardFormSchema } from "@/types/forms";
-import { likeDeck, removeDeck, shareDeck, unlikeDeck, updateDeck } from "@/api/deck";
+import { deckFormSchema, deckShareFormSchema, deckOwnerFormSchema, cardFormSchema } from "@/types/forms";
+import type { TDeckFormSchema, TDeckShareFormSchema, TDeckOwnerFormSchema, TCardFormSchema } from "@/types/forms";
+import { likeDeck, unlikeDeck, removeDeck, shareDeck, changeDeckOwner, updateDeck } from "@/api/deck";
 import { createCard } from "@/api/card";
 import { getUserFromSubstring } from "@/api/user";
 import { SEARCH_USERS_STORAGE_KEY } from "@/constants";
@@ -176,6 +176,7 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
   const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [changeOwnerDialogOpen, setChangeOwnerDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const openEditDialog = () => {
@@ -184,6 +185,10 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
   };
   const openShareDialog = () => {
     setShareDialogOpen(true);
+    setDropdownMenuOpen(false);
+  };
+  const openChangeOwnerDialog = () => {
+    setChangeOwnerDialogOpen(true);
     setDropdownMenuOpen(false);
   };
   const openDeleteDialog = () => {
@@ -210,6 +215,10 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
             <Share2 />
             <span>Share</span>
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={openChangeOwnerDialog} disabled={user != owner}>
+            <UserCog />
+            <span>Change Owner</span>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={openDeleteDialog} disabled={user != owner}>
             <Trash2 />
             <span>Delete</span>
@@ -220,6 +229,7 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
       <DeckEditDialog deckID={deckID} deck={deck} dialogOpen={editDialogOpen} setDialogOpen={setEditDialogOpen} />
       {user == owner && <>
         <DeckShareDialog deckID={deckID} dialogOpen={shareDialogOpen} setDialogOpen={setShareDialogOpen} />
+        <DeckOwnerChangeDialog deckID={deckID} dialogOpen={changeOwnerDialogOpen} setDialogOpen={setChangeOwnerDialogOpen} />
         <DeckDeleteDialog deckID={deckID} dialogOpen={deleteDialogOpen} setDialogOpen={setDeleteDialogOpen} />
       </>}
     </>
@@ -378,7 +388,7 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
     setDialogOpen(false);
     try {
       await shareDeck(deckID, values);
-      toast.success("Deck  Shared");
+      toast.success("Deck Shared");
       deckShareForm.reset();
     } catch (err) {
       console.error(err);
@@ -447,6 +457,65 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
 }
 
 /**
+ * A Dialog for Sharing/Unsharing the Deck
+ * @param deckID ID of the Deck
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ * @returns 
+ */
+function DeckOwnerChangeDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
+  const navigate = useNavigate();
+  const deckOwnerChangeForm = useForm<TDeckOwnerFormSchema>({
+    resolver: zodResolver(deckOwnerFormSchema),
+  });
+
+  async function handleDeckSharing(values: TDeckOwnerFormSchema) {
+    setDialogOpen(false);
+    try {
+      await changeDeckOwner(deckID, values);
+      toast.success("Deck Owner Changed");
+      deckOwnerChangeForm.reset();
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      console.error(err);
+      toast.error((err instanceof Error) ? err.message : "Failed to Change the Deck's Owner");
+    }
+  }
+
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Change Deck Owner</DialogTitle>
+          <DialogDescription>
+            Change the Owner of the Deck. Making this change will remove your access from the Deck, unless shared by the new Owner.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...deckOwnerChangeForm}>
+          <form className="grid gap-2" onSubmit={deckOwnerChangeForm.handleSubmit(handleDeckSharing)}>
+            <FormField
+              control={deckOwnerChangeForm.control}
+              name="user"
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
+                  <FormLabel className="text-right">New Owner</FormLabel>
+                  <UserSearchField form={deckOwnerChangeForm} value={field.value} />
+                  <FormMessage className="col-span-4 text-right" />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button onClick={() => setDialogOpen(false)} type="button" title="Cancel" variant="outline">Cancel</Button>
+              <Button type="submit" title="Change Owner" variant="destructive">Change Owner</Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
  * @returns Users stored in the Local Storage if any
  */
 function getInitialUsers() {
@@ -475,7 +544,7 @@ function getInitialUsers() {
  * @param form `react-hook-form` Form to be used for setting value to
  * @param value User ID selected in the Form
  */
-function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema>>, value: string }) {
+function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema | TDeckOwnerFormSchema>>, value: string }) {
   const [usersList, setUsersList] = useState<IUserWithID[]>(getInitialUsers());
   const [searchTerm, setSearchTerm] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);

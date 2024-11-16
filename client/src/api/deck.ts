@@ -1,6 +1,6 @@
 import { getCSRFToken } from "@/api/auth";
 import fetchWithCredentials from "@/utils/fetch";
-import type { TDeckFormSchema, TDeckShareFormSchema } from "@/types/forms";
+import type { TDeckFormSchema, TDeckShareFormSchema, TDeckOwnerFormSchema } from "@/types/forms";
 import { UNCATEGORISED_DECK_NAME } from "@/constants";
 
 /**
@@ -209,4 +209,28 @@ export async function shareDeck(deckID: string, data: TDeckShareFormSchema) {
     throw new Error(shareDeckData.message || `Failed to ${shareORunshare} the Deck`);
 
   return shareDeckData.message;
+}
+
+/**
+ * Makes a PATCH request to change the Deck's Owner
+ * @param deckID ID of the Deck
+ * @param data information regarding the new Owner
+ * @returns Message from the Server
+ */
+export async function changeDeckOwner(deckID: string, data: TDeckOwnerFormSchema) {
+  const csrfToken = await getCSRFToken();
+  const res = await fetchWithCredentials(
+    `${import.meta.env.VITE_SERVER_HOST}/deck/owner/${deckID}`,
+    "PATCH",
+    JSON.stringify(data),
+    csrfToken
+  ).catch((err: Error) => {
+    throw new Error(err?.message || "Failed to change the Deck Owner");
+  });
+
+  const deckOwnerData = await res.json() as ICustomResponse<undefined>;
+  if (!res?.ok)
+    throw new Error(deckOwnerData.message || "Failed to change the Deck Owner");
+
+  return deckOwnerData.message;
 }
