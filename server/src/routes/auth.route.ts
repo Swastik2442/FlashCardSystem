@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post(
     "/register",
-        check("fullName")
+    check("fullName")
         .notEmpty()
         .withMessage("Full Name is required")
         .trim()

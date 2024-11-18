@@ -119,9 +119,9 @@ export function Playground() {
       },
     },
     {
-      title: "Back to Deck",
+      title: `Back to ${isDeckUncategorized(deck) ? "Dashboard" : "Deck"}`,
       icon: <Home />,
-      onClick: () => navigate(`/deck/${deckID}`),
+      onClick: () => navigate(isDeckUncategorized(deck) ? "/dashboard" : `/deck/${deckID}`),
     },
     {
       title: "Next",

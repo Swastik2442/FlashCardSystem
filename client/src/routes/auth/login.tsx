@@ -71,9 +71,14 @@ export default function Login() {
           </form>
         </Form>
         <div className="mt-4 text-center text-sm">
-          Don&apos;t have an account?{" "}
+          Don&apos;t have an account?&nbsp;
           <Link to="/auth/register" className="underline">
             Sign up
+          </Link>
+        </div>
+        <div className="text-center text-sm">
+          <Link to="#" className="underline" onClick={() => toast.info("Not implemented yet")}>
+            Forgot Password?
           </Link>
         </div>
         </CardContent>

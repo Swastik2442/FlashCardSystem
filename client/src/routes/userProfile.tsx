@@ -48,7 +48,7 @@ export function UserProfile() {
         </h1>
       </div>
       <hr className="my-4" />
-      {userDecks.length > 0 ?  (
+      {userDecks.length > 0 ? (
         <div className="flex flex-wrap gap-4 mx-8">
         {userDecks.map((deck, idx) => (
             <Card className="min-w-72 flex-1" key={idx}>
@@ -69,7 +69,7 @@ export function UserProfile() {
           <span className="font-thin">No Decks found</span>
         </div>
       )}
-      {likedDecks ? <>
+      {likedDecks && <>
         <hr className="my-4" />
         <h2 className="ml-10 select-none mb-4">Liked Decks</h2>
         <div className="flex flex-wrap gap-4 mx-8">
@@ -82,12 +82,12 @@ export function UserProfile() {
               </Link>
               <CardFooter className="flex justify-between">
                 <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
-                <span>{deck.isPrivate ? <Lock className="size-4" /> : ""}</span>
+                {deck.isPrivate && <Lock className="size-4" />}
               </CardFooter>
             </Card>
           ))}
         </div>
-      </> : <></>}
+      </>}
     </div>
   );
 }
