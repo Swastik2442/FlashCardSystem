@@ -1,8 +1,9 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
+import Ratelimiter from "../middlewares/ratelimit.middleware";
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
-import { CreateCard, GetCard, DeleteCard, UpdateCard } from "../controllers/card.controller";
+import { CreateCard, GetCard, PopulateCard, DeleteCard, UpdateCard } from "../controllers/card.controller";
 
 const router = express.Router();
 router.use(VerifyJWT);
@@ -33,6 +34,18 @@ router.post(
         .escape(),
     Validate,
     CreateCard
+);
+
+router.get(
+    "/populate/:cid",
+    check("cid")
+        .notEmpty()
+        .withMessage("Card ID is required")
+        .trim()
+        .escape(),
+    Validate,
+    Ratelimiter,
+    PopulateCard
 );
 
 router.get(

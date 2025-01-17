@@ -4,7 +4,7 @@ export const loginFormSchema = z.object({
   email: z.string().email("Invalid email address."),
   password: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
-    .max(128, { message: "Password cannot be more than 128 characters." }),
+    .max(64, { message: "Password cannot be more than 64 characters." }),
 });
 export type TLoginFormSchema = z.infer<typeof loginFormSchema>;
 
@@ -19,7 +19,7 @@ export const registerFormSchema = z.object({
     .max(32, { message: "Username cannot be more than 32 characters." }),
   password: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
-    .max(128, { message: "Password cannot be more than 128 characters." }),
+    .max(64, { message: "Password cannot be more than 64 characters." }),
 });
 export type TRegisterFormSchema = z.infer<typeof registerFormSchema>;
 
@@ -37,7 +37,7 @@ export const changeUsernameFormSchema = z.object({
     .max(32, { message: "Username cannot be more than 32 characters." }),
   password: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
-    .max(128, { message: "Password cannot be more than 128 characters." }),
+    .max(64, { message: "Password cannot be more than 64 characters." }),
 });
 export type TChangeUsernameFormSchema = z.infer<typeof changeUsernameFormSchema>;
 
@@ -47,17 +47,17 @@ export type TChangeEmailFormSchema = z.infer<typeof changeEmailFormSchema>;
 export const changePasswordFormSchema = z.object({
   oldPassword: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
-    .max(128, { message: "Password cannot be more than 128 characters." }),
+    .max(64, { message: "Password cannot be more than 64 characters." }),
   newPassword: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
-    .max(128, { message: "Password cannot be more than 128 characters." }),
+    .max(64, { message: "Password cannot be more than 64 characters." }),
 });
 export type TChangePasswordFormSchema = z.infer<typeof changePasswordFormSchema>;
 
 export const deckFormSchema = z.object({
   name: z.string()
     .min(3, { message: "Name must be at least 3 characters." })
-    .max(64, { message: "Name must be at most 64 characters." }),
+    .max(32, { message: "Name must be at most 32 characters." }),
   description: z.string()
     .max(256, { message: "Description must be at most 256 characters." }),
   isPrivate: z.boolean().default(true).optional(),

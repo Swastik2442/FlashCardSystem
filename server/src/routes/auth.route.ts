@@ -32,8 +32,8 @@ router.post(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     Register,
 );
@@ -51,7 +51,7 @@ router.post(
         check("email")
             .isEmail()
             .normalizeEmail(),
-    ], "Any one of username or email is required"),
+    ], "Either username or email is required"),
     check("password")
         .notEmpty()
         .withMessage("Password is required"),
@@ -68,8 +68,8 @@ router.delete(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     DeleteUser
 );
@@ -90,8 +90,8 @@ router.patch(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangeUsername
 );
@@ -106,8 +106,8 @@ router.patch(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangeEmail
 );
@@ -118,13 +118,13 @@ router.patch(
     check("oldPassword")
         .notEmpty()
         .withMessage("Old Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     check("newPassword")
         .notEmpty()
         .withMessage("New Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangePassword
 );

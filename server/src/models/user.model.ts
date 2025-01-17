@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Deck from "./deck.model";
-import {  UNCATEGORISED_DECK_NAME } from "../constants";
+import { UNCATEGORISED_DECK_NAME } from "../constants";
 import env from "../env";
 
 export interface IUser {

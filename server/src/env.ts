@@ -4,6 +4,9 @@ import { z } from "zod";
 const envSchema = z.object({
     PORT: z.coerce.number().min(1024).max(49151).optional().default(2442),
     MONGODB_CONNECTION_URI: z.string().url(),
+    GEMINI_API_KEY: z.string().min(1),
+    KV_REST_API_URL: z.string().url(),
+    KV_REST_API_TOKEN: z.string().min(1),
     ACCESS_TOKEN_SECRET: z.string().min(1),
     REFRESH_TOKEN_SECRET: z.string().min(1),
     ACCESS_TOKEN_EXPIRY: z.string().min(1).optional().default("30m"),

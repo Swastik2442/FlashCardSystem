@@ -1,5 +1,7 @@
 import env from "./env";
 
+export const GEMINI_MODEL_NAME = "gemini-1.5-flash";
+
 const COOKIE_PREFIX = env.NODE_ENV === "production" ? "__Host-" : "";
 
 export const ACCESS_TOKEN_COOKIE_NAME = COOKIE_PREFIX + "fcs.access-token";

@@ -96,7 +96,7 @@ export async function refreshTokens() {
   });
 
   const data = await res.json() as ICustomResponse<string>;
-  if (res.status === 401)
+  if (res.status == 400 || res.status == 401)
     await logoutUser();
   if (!res.ok)
     throw new Error(data.message || "Failed to Refresh Tokens");

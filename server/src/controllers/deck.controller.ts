@@ -1,13 +1,55 @@
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
-import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
+import env from "../env";
+import { GEMINI_MODEL_NAME, CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
+
+interface CardSchema {
+    question: string;
+    answer: string;
+    hint?: string;
+}
+
+const cardsSchema = {
+    description: "Question, Answer, and Hint for a Set of Learning Cards (Results only in Characters typeable on a Keyboard)",
+    type: SchemaType.ARRAY,
+    items: {
+        type: SchemaType.OBJECT,
+        properties: {
+            question: {
+                type: SchemaType.STRING,
+                description: "Question of the Card in less than 128 characters",
+                nullable: false,
+            },
+            answer: {
+                type: SchemaType.STRING,
+                description: "Answer of the Card in less than 128 characters",
+                nullable: false,
+            },
+            hint: {
+                type: SchemaType.STRING,
+                description: "Hint for the Answer of the Card in less than 64 characters",
+                nullable: true,
+            }
+        },
+    }
+};
+
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+const cardsModel = genAI.getGenerativeModel({
+    model: GEMINI_MODEL_NAME,
+    generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: cardsSchema,
+    },
+});
 
 /**
  * @route POST deck/new
  * @desc Creates a new Deck
- * @access public
+ * @access private
  */
 export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
     const { name, description, isPrivate } = req.body;
@@ -53,7 +95,7 @@ export async function CreateDeck(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route GET deck/:did
  * @desc Gets the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -104,7 +146,7 @@ export async function GetDeck(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route GET deck/cards/:did
  * @desc Gets all the Cards in the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -146,7 +188,7 @@ export async function GetDeckCards(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route GET deck/all
  * @desc Gets all the Decks owned by or shared to the User
- * @access public
+ * @access private
  */
 export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
     try {
@@ -176,7 +218,7 @@ export async function GetAllDecks(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route DELETE deck/:did
  * @desc Deletes the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -216,7 +258,7 @@ export async function DeleteDeck(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route PATCH deck/:did
  * @desc Updates the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -239,7 +281,7 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        const deck = await Deck.findById(id);
+        const deck = await Deck.findById(id).select("-dateUpdated -likes -likedBy -__v");
         if (!deck) {
             res.status(404).json({
                 status: "error",
@@ -275,12 +317,55 @@ export async function UpdateDeck(req: ExpressRequest, res: ExpressResponse) {
     res.end();
 }
 
+/**
+ * @route GET deck/populate/:did
+ * @desc Populates the Deck with the given ID with AI-generated Learning Cards
+ * @access private
+ */
+export async function PopulateDeck(req: ExpressRequest, res: ExpressResponse) {
+    const id = req.params.did;
+        try {
+            const deck = await Deck.findById(id).select("-dateCreated -likes -likedBy -__v");
+            if (!deck || deck.name == UNCATEGORISED_DECK_NAME) {
+                res.status(404).json({
+                    status: "error",
+                    message: "Deck not found",
+                });
+                return;
+            } else if (!deck.isAccessibleBy(req.user!._id).writable) {
+                res.status(401).json({
+                    status: "error",
+                    message: "Unauthorized Operation",
+                });
+                return;
+            }
+
+            const result = await cardsModel.generateContent(
+                `Generate the Content for 5 Learning Cards where the collection's name is "${deck.name}" and the collection's description is "${deck.description}"`
+            );
+            const newCards: CardSchema[] = JSON.parse(result.response.text());
+            await Card.create(newCards.map(card => ({ ...card, deck: deck._id })));
+
+            res.status(200).json({
+                status: "success",
+                message: "Deck Content Generated",
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({
+                status: "error",
+                message: "Internal Server Error",
+            });
+        }
+        res.end();
+}
+
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
 /**
  * @route PATCH deck/owner/:did
  * @desc Changes the Owner of the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function ChangeDeckOwner(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -340,7 +425,7 @@ export async function ChangeDeckOwner(req: ExpressRequest, res: ExpressResponse)
 /**
  * @route POST deck/share/:did or POST deck/unshare/:did
  * @desc Shares/Unshares the Deck with the given ID with the given User ID
- * @access public
+ * @access private
  */
 export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -403,7 +488,7 @@ export async function ShareDeck(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route GET deck/likes/:did
  * @desc Get the User IDs that liked the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -440,7 +525,7 @@ export async function GetDeckLikes(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route GET deck/likes/add/:did
  * @desc Likes the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;
@@ -483,7 +568,7 @@ export async function LikeDeck(req: ExpressRequest, res: ExpressResponse) {
 /**
  * @route GET deck/likes/remove/:did
  * @desc Unlikes the Deck with the given ID
- * @access public
+ * @access private
  */
 export async function UnlikeDeck(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.did;

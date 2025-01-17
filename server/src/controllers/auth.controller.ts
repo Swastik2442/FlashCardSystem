@@ -27,7 +27,7 @@ async function generateAccessAndRefreshTokens(userId: mongoose.Types.ObjectId) {
 
         return {accessToken, refreshToken};
     } catch (err: unknown) {
-        throw new Error(`An Error occured while generating Refresh and Access Tokens: ${err instanceof Error ? err.message : err}`);
+        throw new Error(`An Error occurred while generating Refresh and Access Tokens: ${err instanceof Error ? err.message : err}`);
     }
 }
 
