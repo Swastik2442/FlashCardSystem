@@ -7,7 +7,7 @@ import type { IFloatingDockItem } from "@/components/ui/floating-dock";
 import { FlipCard, FlipCardBack, FlipCardFront } from "@/components/ui/flip-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getAllDecks, getDeck, getDeckCards, isDeckUncategorized } from "@/api/deck";
+import { getAllDecks, getDeck, getDeckCards, isDeckUncategorised } from "@/api/deck";
 import { secondsToString } from "@/utils/time";
 
 interface IPlaygroundLoaderData {
@@ -25,10 +25,10 @@ export async function PlaygroundLoader({ params }: LoaderFunctionArgs): Promise<
   let deckID = params.did;
   if (!deckID) {
     const allDecks = await getAllDecks();
-    const uncat = allDecks.find(isDeckUncategorized);
+    const uncat = allDecks.find(isDeckUncategorised);
     if (!uncat)
-      throw new Error("Uncategorized Deck not found");
-    
+      throw new Error("Uncategorised Deck not found");
+
     deckID = uncat._id;
     const cards = await getDeckCards(deckID);
     return { deckID, deck: uncat, cards };
@@ -119,9 +119,9 @@ export function Playground() {
       },
     },
     {
-      title: `Back to ${isDeckUncategorized(deck) ? "Dashboard" : "Deck"}`,
+      title: `Back to ${isDeckUncategorised(deck) ? "Dashboard" : "Deck"}`,
       icon: <Home />,
-      onClick: () => navigate(isDeckUncategorized(deck) ? "/dashboard" : `/deck/${deckID}`),
+      onClick: () => navigate(isDeckUncategorised(deck) ? "/dashboard" : `/deck/${deckID}`),
     },
     {
       title: "Next",
@@ -158,7 +158,7 @@ export function Playground() {
     <>
       <hr />
       <div className="ml-10 mr-4 flex justify-between my-4">
-        <span>{isDeckUncategorized(deck) ? "Play" : deck.name}</span>
+        <span>{isDeckUncategorised(deck) ? "Play" : deck.name}</span>
         <span>{secondsToString(timer)}</span>
       </div>
       <div className="flex justify-center">
@@ -167,8 +167,21 @@ export function Playground() {
             <div className="h-full rounded-lg bg-background text-foreground p-4 flex flex-col justify-between">
               <p className="mb-4">{cards[playedCards[currentIndex]].question}</p>
               <div className="flex">
-                <Input id="answer" placeholder="Answer" className="border-r-transparent rounded-r-none" disabled={submitted} />
-                <Button onClick={handleCheckAnswer} type="submit" title="Submit Answer" variant="outline" size="icon" className="rounded-l-none" disabled={submitted}>
+                <Input
+                  id="answer"
+                  placeholder="Answer"
+                  className="border-r-transparent rounded-r-none"
+                  disabled={submitted}
+                />
+                <Button
+                  onClick={handleCheckAnswer}
+                  type="submit"
+                  title="Submit Answer"
+                  variant="outline"
+                  size="icon"
+                  className="rounded-l-none"
+                  disabled={submitted}
+                >
                   <Check />
                 </Button>
               </div>

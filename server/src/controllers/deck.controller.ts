@@ -3,34 +3,31 @@ import { Request as ExpressRequest, Response as ExpressResponse } from "express"
 import User from "../models/user.model";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
+import type { ICard } from "../models/card.model";
 import env from "../env";
 import { GEMINI_MODEL_NAME, CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
-interface CardSchema {
-    question: string;
-    answer: string;
-    hint?: string;
-}
+type CardSchema = Omit<ICard, "deck">;
 
-const cardsSchema = {
-    description: "Question, Answer, and Hint for a Set of Learning Cards (Results only in Characters typeable on a Keyboard)",
+const aiCardsSchema = {
+    description: "Question, Answer, and Hint for a Set of Learning Cards (Results only in Characters typeable on a Keyboard with few or no Punctuation Marks)",
     type: SchemaType.ARRAY,
     items: {
         type: SchemaType.OBJECT,
         properties: {
             question: {
                 type: SchemaType.STRING,
-                description: "Question of the Card in less than 128 characters",
+                description: "Question of the Card in less than 64 characters",
                 nullable: false,
             },
             answer: {
                 type: SchemaType.STRING,
-                description: "Answer of the Card in less than 128 characters",
+                description: "Answer of the Card in less than 64 characters",
                 nullable: false,
             },
             hint: {
                 type: SchemaType.STRING,
-                description: "Hint for the Answer of the Card in less than 64 characters",
+                description: "Hint for the Answer of the Card in less than 32 characters",
                 nullable: true,
             }
         },
@@ -38,11 +35,11 @@ const cardsSchema = {
 };
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const cardsModel = genAI.getGenerativeModel({
+const aiCardsModel = genAI.getGenerativeModel({
     model: GEMINI_MODEL_NAME,
     generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: cardsSchema,
+        responseSchema: aiCardsSchema,
     },
 });
 
@@ -340,7 +337,7 @@ export async function PopulateDeck(req: ExpressRequest, res: ExpressResponse) {
                 return;
             }
 
-            const result = await cardsModel.generateContent(
+            const result = await aiCardsModel.generateContent(
                 `Generate the Content for 5 Learning Cards where the collection's name is "${deck.name}" and the collection's description is "${deck.description}"`
             );
             const newCards: CardSchema[] = JSON.parse(result.response.text());

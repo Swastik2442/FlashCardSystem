@@ -2,26 +2,29 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import Deck from "../models/deck.model";
 import Card from "../models/card.model";
+import type { ICard } from "../models/card.model";
 import env from "../env";
 import { GEMINI_MODEL_NAME, CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
 
-const cardSchema = {
-    description: "Question, Answer, and Hint for a Learning Card (Results only in Characters typeable on a Keyboard)",
+type CardSchema = Omit<ICard, "deck">;
+
+const aiCardSchema = {
+    description: "Question, Answer, and Hint for a Learning Card (Results only in Characters typeable on a Keyboard with few or no Punctuation Marks)",
     type: SchemaType.OBJECT,
     properties: {
         question: {
             type: SchemaType.STRING,
-            description: "Question of the Card in less than 128 characters",
+            description: "Question of the Card in less than 64 characters",
             nullable: false,
         },
         answer: {
             type: SchemaType.STRING,
-            description: "Answer of the Card in less than 128 characters",
+            description: "Answer of the Card in less than 64 characters",
             nullable: false,
         },
         hint: {
             type: SchemaType.STRING,
-            description: "Hint for the Answer of the Card in less than 64 characters",
+            description: "Hint for the Answer of the Card in less than 32 characters",
             nullable: true,
         }
     },
@@ -29,11 +32,11 @@ const cardSchema = {
 };
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const cardModel = genAI.getGenerativeModel({
+const aiCardModel = genAI.getGenerativeModel({
     model: GEMINI_MODEL_NAME,
     generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: cardSchema,
+        responseSchema: aiCardSchema,
     },
 });
 
@@ -168,7 +171,7 @@ export async function GetCard(req: ExpressRequest, res: ExpressResponse) {
 export async function PopulateCard(req: ExpressRequest, res: ExpressResponse) {
     const id = req.params.cid;
     try {
-        const card = await Card.findById(id).select("-__v -question -answer -hint");
+        const card = await Card.findById(id).select("-__v");
         if (!card) {
             res.status(404).json({
                 status: "error",
@@ -188,15 +191,20 @@ export async function PopulateCard(req: ExpressRequest, res: ExpressResponse) {
             return;
         }
 
-        let question = "Generate the Question, Answer and Hint for a single Learning Card";
+        let question = "Generate better but almost similar Question, Answer and Hint for a Learning Card";
+        if (card.question.length > 5 && card.answer.length > 3)
+            question += ` where the original question is "${card.question}", answer is "${card.answer}" and hint is "${card.hint}"`;
         if (deck.name != UNCATEGORISED_DECK_NAME)
-            question += ` where the collection's name is "${deck.name}" and the collection's description is "${deck.description}"`;
-        const result = await cardModel.generateContent(question);
+            question += `. Furthermore, the collection's name is "${deck.name}" and the collection's description is "${deck.description}".`;
+        question += "If any of the values are not understandable, please ignore them and generate a random set of Question, Answer and Hint based on Spirituality.";
+
+        const result = await aiCardModel.generateContent(question);
+        const asObj: CardSchema = JSON.parse(result.response.text());
 
         res.status(200).json({
             status: "success",
             message: "Card Content Generated",
-            data: result.response.text(),
+            data: asObj,
         });
     } catch (err) {
         console.error(err);

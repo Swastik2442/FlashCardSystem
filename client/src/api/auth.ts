@@ -1,88 +1,6 @@
+import { makeRequest } from "@/api/common";
 import fetchWithCredentials from "@/utils/fetch";
-import type { TLoginFormSchema, TRegisterFormSchema, TUserDetailsFormSchema, TChangeUsernameFormSchema, TChangeEmailFormSchema, TChangePasswordFormSchema } from "@/types/forms";
-
-/**
- * Makes a GET request to get the CSRF Token
- * @returns CSRF Token
- */
-export async function getCSRFToken() {
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/csrf-token`,
-    "get"
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to get CSRF Token");
-  });
-
-  const data = await res.json() as ICustomResponse<string>;
-  if (!res?.ok)
-    throw new Error(data.message || "Failed to get CSRF Token");
-
-  return data.data;
-}
-
-/**
- * Makes a POST request to register a new user
- * @param data information about the user
- * @returns Message from the Server
- */
-export async function registerUser(data: TRegisterFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/register`,
-    "post",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Register");
-  });
-
-  const registerData = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(registerData.message || "Failed to Register");
-
-  return registerData.message;
-}
-
-/**
- * Makes a POST request to login a user
- * @param data information about the user
- * @returns Username of the logged in user
- */
-export async function loginUser(data: TLoginFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/login`,
-    "post",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Login");
-  });
-
-  const loginData = await res.json() as ICustomResponse<string>;
-  if (!res?.ok)
-    throw new Error(loginData.message || "Failed to Login");
-
-  return loginData.data;
-}
-
-/**
- * Makes a GET request to logout the user
- * @returns Message from the Server
- */
-export async function logoutUser() {
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/logout`, "get"
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Logout");
-  });
-
-  const data = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(data.message || "Failed to Logout");
-
-  return data.message;
-}
+import type { TLoginFormSchema, TRegisterFormSchema, TChangeUsernameFormSchema, TChangeEmailFormSchema, TChangePasswordFormSchema } from "@/types/forms";
 
 /**
  * Makes a GET request to refresh the user tokens
@@ -97,7 +15,7 @@ export async function refreshTokens() {
 
   const data = await res.json() as ICustomResponse<string>;
   if (res.status == 400 || res.status == 401)
-    await logoutUser();
+    return null;
   if (!res.ok)
     throw new Error(data.message || "Failed to Refresh Tokens");
 
@@ -105,26 +23,47 @@ export async function refreshTokens() {
 }
 
 /**
- * Makes a PATCH request to update the user details
+ * Makes a POST request to register a new user
  * @param data information about the user
  * @returns Message from the Server
  */
-export async function updateUser(data: TUserDetailsFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/user`,
-    "PATCH",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Edit User details");
-  });
+export async function registerUser(data: TRegisterFormSchema) {
+  const response = await makeRequest<undefined>(
+    "/auth/register",
+    "post",
+    data,
+    "Failed to Register"
+  );
+  return response.message;
+}
 
-  const userData = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(userData.message || "Failed to Edit User details");
+/**
+ * Makes a POST request to login a user
+ * @param data information about the user
+ * @returns Username of the logged in user
+ */
+export async function loginUser(data: TLoginFormSchema) {
+  const response = await makeRequest<string>(
+    "/auth/login",
+    "post",
+    data,
+    "Failed to Login"
+  );
+  return response.data;
+}
 
-  return userData.message;
+/**
+ * Makes a GET request to logout the user
+ * @returns Message from the Server
+ */
+export async function logoutUser() {
+  const response = await makeRequest<undefined>(
+    "/auth/logout",
+    "get",
+    null,
+    "Failed to Logout"
+  );
+  return response.message;
 }
 
 /**
@@ -133,21 +72,13 @@ export async function updateUser(data: TUserDetailsFormSchema) {
  * @returns Username of the User
  */
 export async function changeUsername(data: TChangeUsernameFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/edit/username`,
+  const response = await makeRequest<string>(
+    "/auth/edit/username",
     "PATCH",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Change Username");
-  });
-
-  const userData = await res.json() as ICustomResponse<string>;
-  if (!res?.ok)
-    throw new Error(userData.message || "Failed to Change Username");
-
-  return userData.data;
+    data,
+    "Failed to Change Username"
+  );
+  return response.data;
 }
 
 /**
@@ -156,21 +87,13 @@ export async function changeUsername(data: TChangeUsernameFormSchema) {
  * @returns Message from the Server
  */
 export async function changeEmail(data: TChangeEmailFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/edit/email`,
+  const response = await makeRequest<undefined>(
+    "/auth/edit/email",
     "PATCH",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Change Email");
-  });
-
-  const userData = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(userData.message || "Failed to Change Email");
-
-  return userData.message;
+    data,
+    "Failed to Change Email"
+  );
+  return response.message;
 }
 
 /**
@@ -179,21 +102,13 @@ export async function changeEmail(data: TChangeEmailFormSchema) {
  * @returns Message from the Server
  */
 export async function changePassword(data: TChangePasswordFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/edit/password`,
+  const response = await makeRequest<undefined>(
+    "/auth/edit/password",
     "PATCH",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Change Password");
-  });
-
-  const userData = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(userData.message || "Failed to Change Password");
-
-  return userData.message;
+    data,
+    "Failed to Change Password"
+  );
+  return response.message;
 }
 
 /**
@@ -201,19 +116,11 @@ export async function changePassword(data: TChangePasswordFormSchema) {
  * @returns Message from the Server
  */
 export async function deleteUser() {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/auth/delete`,
+  const response = await makeRequest<undefined>(
+    "/auth/delete",
     "delete",
     null,
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Delete User");
-  });
-
-  const data = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(data.message || "Failed to Delete User");
-
-  return data.message;
+    "Failed to Delete User"
+  );
+  return response.message;
 }

@@ -1,31 +1,26 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, SetStateAction, useState, useEffect } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Check, ChevronsUpDown, Link2, UserCog } from "lucide-react";
+import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Link2, UserCog, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/authProvider";
-import { useMediaQuery } from "@/hooks/mediaQuery";
+import { useKeyPress } from "@/hooks/keyPress";
 import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import ConfirmationDialog from "@/components/confirmationDialog";
-import { cn } from "@/utils/css";
+import UserSearchField from "@/components/userSearchField";
 import { deckFormSchema, deckShareFormSchema, deckOwnerFormSchema, cardFormSchema } from "@/types/forms";
 import type { TDeckFormSchema, TDeckShareFormSchema, TDeckOwnerFormSchema, TCardFormSchema } from "@/types/forms";
-import { likeDeck, unlikeDeck, removeDeck, shareDeck, changeDeckOwner, updateDeck } from "@/api/deck";
+import { likeDeck, unlikeDeck, removeDeck, shareDeck, changeDeckOwner, updateDeck, populateDeck } from "@/api/deck";
 import { createCard } from "@/api/card";
-import { getUserFromSubstring } from "@/api/user";
-import { SEARCH_USERS_STORAGE_KEY } from "@/constants";
-import { useKeyPress } from "@/hooks/keyPress";
+import { LoadingIcon } from "@/components/icons";
 
 interface IDeckOptionsProps {
   deckID: string;
@@ -38,10 +33,21 @@ interface IDeckOptionsProps {
  * @param deckID ID of the Deck
  * @param cardsCount Number of Cards in the Deck
  */
-export function DeckPlayButton({ deckID, cardsCount }: { deckID: string, cardsCount: number }) {
+export function DeckPlayButton({
+  deckID,
+  cardsCount
+}: {
+  deckID: string,
+  cardsCount: number
+}) {
   const navigate = useNavigate();
   return (
-    <Button onClick={() => navigate(`/play/${deckID}`, { replace: true })} type="button" title="Play" disabled={cardsCount == 0}>
+    <Button
+      onClick={() => navigate(`/play/${deckID}`, { replace: true })}
+      type="button"
+      title="Play"
+      disabled={cardsCount == 0}
+    >
       <Play />
       <span className="select-none">Play</span>
     </Button>
@@ -54,7 +60,15 @@ export function DeckPlayButton({ deckID, cardsCount }: { deckID: string, cardsCo
  * @param likes Number of Likes the Deck already has
  * @param isLiked Whether the Deck is liked by the User
  */
-export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, likes: number, isLiked: boolean }) {
+export function DeckLikeButton({
+  deckID,
+  likes,
+  isLiked
+}: {
+  deckID: string,
+  likes: number,
+  isLiked: boolean
+}) {
   const [userLiked, setUserLiked] = useState(isLiked);
   const handleDeckLike = async () => {
     if (userLiked) {
@@ -67,9 +81,16 @@ export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, lik
   }
 
   return (
-    <Button onClick={handleDeckLike} type="submit" title="Like Deck" variant="ghost">
+    <Button
+      onClick={handleDeckLike}
+      type="submit"
+      title="Like Deck"
+      variant="ghost"
+    >
       <Heart fill={userLiked ? "currentColor" : "none"} />
-      <span className="select-none">{likes + (userLiked ? 1 : 0)}</span>
+      <span className="select-none">
+        {likes + (userLiked ? 1 : 0)}
+      </span>
     </Button>
   );
 }
@@ -78,7 +99,11 @@ export function DeckLikeButton({ deckID, likes, isLiked }: { deckID: string, lik
  * A Dialog for creating a new Card in the Deck
  * @param deckID ID of the Deck
  */
-export function CardCreationDialog({ deckID }: { deckID: string }) {
+export function CardCreationDialog({
+  deckID
+}: {
+  deckID: string
+}) {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const cardForm = useForm<TCardFormSchema>({
@@ -104,7 +129,14 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button type="button" title="Create Card" variant="outline" size="icon"><Plus /></Button>
+        <Button
+          type="button"
+          title="Create Card"
+          variant="outline"
+          size="icon"
+        >
+          <Plus />
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -121,8 +153,8 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Question</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -134,8 +166,8 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Answer</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -147,16 +179,28 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Hint</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="button" title="Cancel" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" title="Create">Create</Button>
+              <Button
+                type="button"
+                title="Cancel"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                title="Create"
+              >
+                Create
+              </Button>
             </DialogFooter>
           </form>
         </Form>
@@ -171,13 +215,26 @@ export function CardCreationDialog({ deckID }: { deckID: string }) {
  * @param deck information about the Deck
  * @param owner Username of the Deck Owner
  */
-export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, deck: IMoreDeck, owner: string }) {
-  const { user } = useAuth();
+export function DeckOptionsDropdown({
+  deckID,
+  deck,
+  owner
+}: {
+  deckID: string,
+  deck: IMoreDeck,
+  owner: string
+}) {
+  const navigate = useNavigate();
+  const { user, limitedTill, setLimitedTill } = useAuth();
+  const isUserDeckOwner = user == owner;
+  const isUserRatelimited = limitedTill != null && limitedTill > new Date();
+
   const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [changeOwnerDialogOpen, setChangeOwnerDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [populatingDeck, setPopulatingDeck] = useState(false);
 
   const openEditDialog = () => {
     setEditDialogOpen(true);
@@ -200,37 +257,120 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
   useKeyPress(openShareDialog, { code: "Backslash", altKey: true });
   useKeyPress(openEditDialog, { code: "F2" });
 
+  const handleDeckPopulate = () => {
+    void (async () => {
+      toast.info("Populating Deck");
+      setPopulatingDeck(true);
+      try {
+        const res = await populateDeck(deckID);
+        if (res instanceof Date || typeof res == "string") {
+          setLimitedTill(
+            (res instanceof Date)
+            ? res
+            : (new Date(new Date().getTime() + 1800000)) // 30 Minutes
+          );
+          toast.warning("Rate Limited for a few Minutes");
+        } else {
+          toast.success("Deck Populated");
+          navigate(0);
+        }
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : "Failed to Populate the Deck");
+        toast.error("Failed to Populate the Deck");
+      }
+      setPopulatingDeck(false);
+    })();
+  }
+
+  const options = [
+    {
+      label: "Edit",
+      icon: Pencil,
+      onClick: openEditDialog,
+      disabled: !deck.isEditable
+    },
+    {
+      label: "Share",
+      icon: Share2,
+      onClick: openShareDialog,
+      disabled: !isUserDeckOwner
+    },
+    {
+      label: "Populate",
+      icon: populatingDeck ? LoadingIcon : Sparkles,
+      title: isUserRatelimited ? "Can only be done once in a few Minutes" : undefined,
+      onClick: handleDeckPopulate,
+      disabled: !deck.isEditable || isUserRatelimited || populatingDeck
+    },
+    {
+      label: "Change Owner",
+      icon: UserCog,
+      onClick: openChangeOwnerDialog,
+      disabled: !isUserDeckOwner
+    },
+    {
+      label: "Delete",
+      icon: Trash2,
+      onClick: openDeleteDialog,
+      disabled: !isUserDeckOwner
+    }
+  ];
+
   return (
     <>
-      <DropdownMenu open={dropdownMenuOpen} onOpenChange={setDropdownMenuOpen}>
+      <DropdownMenu
+        open={dropdownMenuOpen}
+        onOpenChange={setDropdownMenuOpen}
+      >
         <DropdownMenuTrigger asChild>
-          <Button type="button" title="Options" variant="outline" size="icon"><EllipsisVertical /></Button>
+          <Button
+            type="button"
+            title="Options"
+            variant="outline"
+            size="icon"
+          >
+            <EllipsisVertical />
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={openEditDialog}>
-            <Pencil />
-            <span>Edit</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={openShareDialog} disabled={user != owner}>
-            <Share2 />
-            <span>Share</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={openChangeOwnerDialog} disabled={user != owner}>
-            <UserCog />
-            <span>Change Owner</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={openDeleteDialog} disabled={user != owner}>
-            <Trash2 />
-            <span>Delete</span>
-          </DropdownMenuItem>
+          {options.map((option, idx) => (
+            <DropdownMenuItem
+              onClick={option.onClick}
+              title={option?.title}
+              disabled={option.disabled}
+              key={idx}
+            >
+              <option.icon />
+              <span>{option.label}</span>
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <DeckEditDialog deckID={deckID} deck={deck} dialogOpen={editDialogOpen} setDialogOpen={setEditDialogOpen} />
-      {user == owner && <>
-        <DeckShareDialog deckID={deckID} dialogOpen={shareDialogOpen} setDialogOpen={setShareDialogOpen} />
-        <DeckOwnerChangeDialog deckID={deckID} dialogOpen={changeOwnerDialogOpen} setDialogOpen={setChangeOwnerDialogOpen} />
-        <DeckDeleteDialog deckID={deckID} dialogOpen={deleteDialogOpen} setDialogOpen={setDeleteDialogOpen} />
+      {deck.isEditable && <>
+        <DeckEditDialog
+          deckID={deckID}
+          deck={deck}
+          dialogOpen={editDialogOpen}
+          setDialogOpen={setEditDialogOpen}
+        />
+        {isUserDeckOwner && <>
+          <DeckShareDialog
+            deckID={deckID}
+            dialogOpen={shareDialogOpen}
+            setDialogOpen={setShareDialogOpen}
+          />
+          <DeckOwnerChangeDialog
+            deckID={deckID}
+            dialogOpen={changeOwnerDialogOpen}
+            setDialogOpen={setChangeOwnerDialogOpen}
+            />
+          <DeckDeleteDialog
+            deckID={deckID}
+            dialogOpen={deleteDialogOpen}
+            setDialogOpen={setDeleteDialogOpen}
+            />
+        </>}
       </>}
     </>
   );
@@ -242,7 +382,11 @@ export function DeckOptionsDropdown({ deckID, deck, owner }: { deckID: string, d
  * @param dialogOpen Whether the dialog is Open or not
  * @param setDialogOpen Function to set the Dialog Open or Closed
  */
-function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
+function DeckDeleteDialog({
+  deckID,
+  dialogOpen,
+  setDialogOpen
+}: IDeckOptionsProps) {
   const navigate = useNavigate();
   function handleDeckDeletion() {
     void (async () => {
@@ -274,9 +418,19 @@ function DeckDeleteDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsPro
  * @param deck information about the Deck
  * @param dialogOpen Whether the dialog is Open or not
  * @param setDialogOpen Function to set the Dialog Open or Closed
- * @returns 
+ * @returns
  */
-function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: string, deck: IMoreDeck, dialogOpen: boolean, setDialogOpen: Dispatch<SetStateAction<boolean>> }) {
+function DeckEditDialog({
+  deckID,
+  deck,
+  dialogOpen,
+  setDialogOpen
+}: {
+  deckID: string,
+  deck: IMoreDeck,
+  dialogOpen: boolean,
+  setDialogOpen: Dispatch<SetStateAction<boolean>>
+}) {
   const navigate = useNavigate();
   const deckForm = useForm<TDeckFormSchema>({
     resolver: zodResolver(deckFormSchema),
@@ -317,8 +471,8 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Name</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -330,8 +484,8 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Description</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Textarea className="col-span-3" placeholder="My New Deck" {...field} />
+                  <FormControl>
+                    <Textarea className="!mt-0 col-span-3" placeholder="My New Deck" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -343,17 +497,40 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Private</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Switch className="col-span-3" checked={field.value} onCheckedChange={field.onChange} />
+                  <FormControl>
+                    <Switch
+                    className="!mt-0 col-span-3"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="reset" title="Reset" variant="ghost" onClick={() => deckForm.reset()}>Reset</Button>
-              <Button type="button" title="Cancel" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" title="Edit">Edit</Button>
+              <Button
+                type="reset"
+                title="Reset"
+                variant="ghost"
+                onClick={() => deckForm.reset()}
+              >
+                Reset
+              </Button>
+              <Button
+                type="button"
+                title="Cancel"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                title="Edit"
+              >
+                Edit
+              </Button>
             </DialogFooter>
           </form>
         </Form>
@@ -367,9 +544,13 @@ function DeckEditDialog({ deckID, deck, dialogOpen, setDialogOpen }: { deckID: s
  * @param deckID ID of the Deck
  * @param dialogOpen Whether the dialog is Open or not
  * @param setDialogOpen Function to set the Dialog Open or Closed
- * @returns 
+ * @returns
  */
-function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
+function DeckShareDialog({
+  deckID,
+  dialogOpen,
+  setDialogOpen
+}: IDeckOptionsProps) {
   const deckShareForm = useForm<TDeckShareFormSchema>({
     resolver: zodResolver(deckShareFormSchema),
     defaultValues: {
@@ -378,10 +559,13 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
     },
   });
 
+  const handleUserSelection = (user: IUserWithID) => {
+    deckShareForm.setValue("user", user._id);
+  };
   const handleLinkCopy = () => {
     void navigator.clipboard.writeText(`${import.meta.env.VITE_CLIENT_HOST}/deck/${deckID}`);
     toast.info("Link Copied");
-  }
+  };
   const handleShareCancel = () => setDialogOpen(false);
 
   async function handleDeckSharing(values: TDeckShareFormSchema) {
@@ -413,7 +597,7 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">User</FormLabel>
-                  <UserSearchField form={deckShareForm} value={field.value} />
+                  <UserSearchField value={field.value} onSelect={handleUserSelection} />
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
               )}
@@ -424,8 +608,12 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Can Edit?</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Switch className="col-span-3" checked={field.value} onCheckedChange={field.onChange} />
+                  <FormControl>
+                    <Switch
+                      className="!mt-0 col-span-3"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -437,17 +625,40 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Remove Sharing</FormLabel>
-                  <FormControl style={{ marginTop: 0 + 'px' }}>
-                    <Switch className="col-span-3" checked={field.value} onCheckedChange={field.onChange} />
+                  <FormControl>
+                    <Switch
+                      className="!mt-0 col-span-3"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
               )}
             />
             <DialogFooter>
-              <Button type="button" title="Link" variant="ghost" onClick={handleLinkCopy}><Link2 /></Button>
-              <Button type="button" title="Cancel" variant="outline" onClick={handleShareCancel}>Cancel</Button>
-              <Button type="submit" title="Edit">Edit</Button>
+              <Button
+                type="button"
+                title="Link"
+                variant="ghost"
+                onClick={handleLinkCopy}
+              >
+                <Link2 />
+              </Button>
+              <Button
+                type="button"
+                title="Cancel"
+                variant="outline"
+                onClick={handleShareCancel}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                title="Edit"
+              >
+                Edit
+              </Button>
             </DialogFooter>
           </form>
         </Form>
@@ -457,17 +668,24 @@ function DeckShareDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProp
 }
 
 /**
- * A Dialog for Sharing/Unsharing the Deck
+ * A Dialog for changing the Owner of the Deck
  * @param deckID ID of the Deck
  * @param dialogOpen Whether the dialog is Open or not
  * @param setDialogOpen Function to set the Dialog Open or Closed
- * @returns 
  */
-function DeckOwnerChangeDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptionsProps) {
+function DeckOwnerChangeDialog({
+  deckID,
+  dialogOpen,
+  setDialogOpen
+}: IDeckOptionsProps) {
   const navigate = useNavigate();
   const deckOwnerChangeForm = useForm<TDeckOwnerFormSchema>({
     resolver: zodResolver(deckOwnerFormSchema),
   });
+
+  const handleUserSelection = (user: IUserWithID) => {
+    deckOwnerChangeForm.setValue("user", user._id);
+  };
 
   async function handleDeckSharing(values: TDeckOwnerFormSchema) {
     setDialogOpen(false);
@@ -499,7 +717,7 @@ function DeckOwnerChangeDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptio
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">New Owner</FormLabel>
-                  <UserSearchField form={deckOwnerChangeForm} value={field.value} />
+                  <UserSearchField value={field.value} onSelect={handleUserSelection} />
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
               )}
@@ -512,131 +730,5 @@ function DeckOwnerChangeDialog({ deckID, dialogOpen, setDialogOpen }: IDeckOptio
         </Form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-/**
- * @returns Users stored in the Local Storage if any
- */
-function getInitialUsers() {
-  const localUsers = localStorage.getItem(SEARCH_USERS_STORAGE_KEY);
-  if (!localUsers || localUsers.length < 50)
-    return [];
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const storedUsers = JSON.parse(localUsers);
-  if (!Array.isArray(storedUsers)) {
-    localStorage.removeItem(SEARCH_USERS_STORAGE_KEY);
-    return [];
-  }
-  for (const user of storedUsers) {
-    if (user satisfies IUserWithID)
-      continue;
-    localStorage.removeItem(SEARCH_USERS_STORAGE_KEY);
-    return [];
-  }
-  return storedUsers as IUserWithID[];
-}
-
-// BUG: Drawer won't show newly added users on search, but when search item is cleared
-/**
- * A Search Field for searching Users
- * @param form `react-hook-form` Form to be used for setting value to
- * @param value User ID selected in the Form
- */
-function UserSearchField({ form, value }: { form: ReturnType<typeof useForm<TDeckShareFormSchema | TDeckOwnerFormSchema>>, value: string }) {
-  const [usersList, setUsersList] = useState<IUserWithID[]>(getInitialUsers());
-  const [searchTerm, setSearchTerm] = useState("");
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(async () => {
-      if (searchTerm.length < 2) return;
-      try {
-        const users = await getUserFromSubstring(searchTerm)
-        setUsersList(users);
-        localStorage.setItem(SEARCH_USERS_STORAGE_KEY, JSON.stringify(users));
-      } catch (err) {
-        console.error(err);
-        toast.error((err instanceof Error) ? err.message : "No such User found");
-      }
-    }, 2000);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
-
-  if (isDesktop)
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <FormControl style={{ marginTop: 0 + 'px' }}>
-            <Button type="button" title="Select User" variant="outline" role="combobox" className={cn(
-              "col-span-3 justify-between",
-              !value && "text-muted-foreground"
-            )}>
-              {value ? usersList.find((user) => user._id === value)?.username : "Select User"}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </FormControl>
-        </PopoverTrigger>
-        <PopoverContent className="p-0">
-          <Command>
-            <CommandInput placeholder="Search User..." onValueChange={(val) => setSearchTerm(val)} />
-            <CommandList>
-              <CommandEmpty>No User found.</CommandEmpty>
-              <CommandGroup>
-                {usersList.map((user) => (
-                  <CommandItem value={user.username} key={user._id} onSelect={() => {
-                    form.setValue("user", user._id)
-                  }}>
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        user._id === value ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {user.username}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    );
-
-  return (
-    <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-      <DrawerTrigger asChild>
-        <FormControl style={{ marginTop: 0 + 'px' }}>
-          <Button type="button" title="Select User" variant="outline" role="combobox" className={cn(
-            "col-span-3 justify-between",
-            !value && "text-muted-foreground"
-          )}>
-            {value ? usersList.find((user) => user._id === value)?.username : "Select User"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </FormControl>
-      </DrawerTrigger>
-      <DrawerContent>
-        <Command>
-          <CommandInput placeholder="Search User..." onValueChange={(val) => setSearchTerm(val)} />
-          <CommandList>
-            <CommandEmpty>No User found.</CommandEmpty>
-            <CommandGroup>
-              {usersList.map((user) => (
-                <CommandItem key={user._id} value={user._id} onSelect={() => {
-                  form.setValue("user", user._id);
-                  setDrawerOpen(false);
-                }}>
-                  {user.username}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </DrawerContent>
-    </Drawer>
   );
 }

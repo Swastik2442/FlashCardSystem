@@ -8,7 +8,7 @@ const ratelimit = new Ratelimit({
     url: env.KV_REST_API_URL,
     token: env.KV_REST_API_TOKEN,
   }),
-  limiter: Ratelimit.slidingWindow(1, "60 s"),
+  limiter: Ratelimit.slidingWindow(1, "120 s"),
 });
 
 async function Ratelimiter(req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
@@ -19,6 +19,7 @@ async function Ratelimiter(req: ExpressRequest, res: ExpressResponse, next: Next
         res.status(429).json({
             status: "error",
             message: "Rate limit exceeded",
+            data: new Date(new Date().getTime() + 120 * 1000),
         });
     }
 };

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { changeUsernameFormSchema, changeEmailFormSchema } from "@/types/forms";
 import type { TChangeUsernameFormSchema, TChangeEmailFormSchema } from "@/types/forms";
-import { getUserPrivate } from "@/api/user";
+import { getLoggedInUser } from "@/api/user";
 
 interface IAccountOptionsData {
     email: string;
@@ -19,7 +19,7 @@ interface IAccountOptionsData {
 }
 
 export async function AccountOptionsLoader() {
-    const data = await getUserPrivate();
+    const data = await getLoggedInUser();
     return data;
 }
 
@@ -179,7 +179,7 @@ function ChangeEmailForm({ email }: { email: string }) {
 function DeleteAccountOption() {
   const navigate = useNavigate();
   const { deleteUser } = useAuth();
-  
+
   const handleUserDeletion = async () => {
     await deleteUser();
     navigate("/");

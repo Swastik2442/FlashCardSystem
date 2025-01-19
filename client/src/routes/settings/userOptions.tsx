@@ -3,18 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/authProvider";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { userDetailsFormSchema } from "@/types/forms";
 import type { TUserDetailsFormSchema } from "@/types/forms";
-import { getUserPrivate } from "@/api/user";
+import { getLoggedInUser, updateUser } from "@/api/user";
 
 type IUserOptionsData = Omit<IUser, "email" | "username">
 
 export async function UserOptionsLoader(): Promise<IUserOptionsData> {
-  const userDetails = await getUserPrivate();
+  const userDetails = await getLoggedInUser();
   return userDetails;
 }
 
@@ -34,7 +33,6 @@ export function UserOptions({ data }: { data: IUserOptionsData }) {
 
 function UserUpdateForm({ userDetails }: { userDetails: IUserOptionsData }) {
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
   const userDetailsForm = useForm<TUserDetailsFormSchema>({
     resolver: zodResolver(userDetailsFormSchema),
     defaultValues: userDetails,

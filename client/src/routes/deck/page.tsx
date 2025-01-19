@@ -2,16 +2,16 @@ import { Link, useParams, useLoaderData, LoaderFunctionArgs, useNavigate } from 
 import { Lock, Plus } from "lucide-react";
 import ShowCards from "@/components/showCards";
 import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./options";
-import { isDeckUncategorized, getDeck, getDeckCards, getAllDecks } from "@/api/deck";
+import { isDeckUncategorised, getDeck, getDeckCards, getAllDecks } from "@/api/deck";
 import { getUser } from "@/api/user";
-import { DECKS_STORAGE_KEY, UNCATEGORISED_DECK_NAME } from "@/constants";
+import { DECKS_STORAGE_KEY, UNCATEGORISED_DECK_OBJ } from "@/constants";
 
 interface IDeckLoaderData {
   ownerInfo: IUser;
   deckInfo: IMoreDeck;
   cards: ICard[];
   allDecks: ILessDeck[];
-  uncategorizedDeck: ILessDeck;
+  uncategorisedDeck: ILessDeck;
 }
 
 /**
@@ -23,7 +23,7 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
   const deckID = params.did;
   if (!deckID)
     throw new Error("Deck ID not found");
-  
+
   // TODO: Possibly make it fetch during page rendering
   const deckInfo = await getDeck(deckID);
   const ownerInfo = await getUser(deckInfo.owner);
@@ -43,10 +43,16 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
     localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(allDecks));
   }
 
-  const decks = allDecks.filter((deck) => !isDeckUncategorized(deck));
-  const uncat = allDecks.find(isDeckUncategorized);
+  const decks = allDecks.filter((deck) => !isDeckUncategorised(deck));
+  const uncat = allDecks.find(isDeckUncategorised);
 
-  return { ownerInfo: ownerInfo, deckInfo: deckInfo, cards: cards, allDecks: decks, uncategorizedDeck: uncat ?? { _id: "", name: UNCATEGORISED_DECK_NAME, isPrivate: true, dateUpdated: "" } };
+  return {
+    ownerInfo: ownerInfo,
+    deckInfo: deckInfo,
+    cards: cards,
+    allDecks: decks,
+    uncategorisedDeck: uncat ?? UNCATEGORISED_DECK_OBJ
+  };
 }
 
 /**
@@ -54,7 +60,7 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
  */
 export function Deck() {
   const { did } = useParams();
-  const { ownerInfo, deckInfo, cards, allDecks, uncategorizedDeck } = useLoaderData() as IDeckLoaderData;
+  const { ownerInfo, deckInfo, cards, allDecks, uncategorisedDeck } = useLoaderData() as IDeckLoaderData;
   const navigate = useNavigate();
 
   return (
@@ -62,7 +68,9 @@ export function Deck() {
       <div className="flex justify-between ml-10 mr-4 mb-4">
         <h1 className="flex gap-1 items-center">
           {deckInfo.isPrivate && <Lock className="size-4" />}
-          <Link to={`/users/${ownerInfo.username}`} className="hidden sm:inline-block font-extralight hover:underline">{ownerInfo.username}</Link>
+          <Link to={`/users/${ownerInfo.username}`} className="hidden sm:inline-block font-extralight hover:underline">
+            {ownerInfo.username}
+          </Link>
           <span className="hidden sm:inline-block font-thin"> | </span>
           <span>{deckInfo.name}</span>
         </h1>
@@ -86,7 +94,12 @@ export function Deck() {
             <span>Icon in the Top-Right Corner.</span>
           </h2>
         </div>
-      ) : <ShowCards cards={cards} decks={allDecks} uncategorizedDeck={uncategorizedDeck} uponChange={() => navigate(`/deck/${did}`, { replace: true })} />}
+      ) : <ShowCards
+        cards={cards}
+        decks={allDecks}
+        uncategorisedDeck={uncategorisedDeck}
+        uponChange={() => navigate(`/deck/${did}`, { replace: true })}
+      />}
     </div>
   );
 }

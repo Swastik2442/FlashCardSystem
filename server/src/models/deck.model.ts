@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Card from "./card.model";
 
-interface IDeck {
+export interface IDeck {
     owner: mongoose.Schema.Types.ObjectId;
     name: string;
     description: string;
@@ -16,12 +16,12 @@ interface IDeck {
     likedBy: mongoose.Schema.Types.ObjectId[];
 }
 
-interface IDeckAccessible {
-    readable: boolean;
-    writable: boolean;
+export interface IDeckAccessible {
+    readonly readable: boolean;
+    readonly writable: boolean;
 }
 
-interface IDeckMethods {
+export interface IDeckMethods {
     isAccessibleBy(userID: mongoose.Schema.Types.ObjectId | mongoose.Types.ObjectId): IDeckAccessible;
 }
 

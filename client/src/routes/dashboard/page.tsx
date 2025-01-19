@@ -5,13 +5,13 @@ import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import ShowCards from "@/components/showCards";
 import { getFormattedDate } from "@/utils/time";
 import { CreationMenu } from "./options";
-import { isDeckUncategorized, getAllDecks, getDeckCards } from "@/api/deck";
-import { DECKS_STORAGE_KEY, UNCATEGORIZED_CARDS_STORAGE_KEY, UNCATEGORISED_DECK_NAME } from "@/constants";
+import { isDeckUncategorised, getAllDecks, getDeckCards } from "@/api/deck";
+import { DECKS_STORAGE_KEY, UNCATEGORISED_CARDS_STORAGE_KEY, UNCATEGORISED_DECK_OBJ } from "@/constants";
 
 interface IDashboardLoaderData {
   decks: ILessDeck[];
   cards: ICard[];
-  uncategorizedDeck: ILessDeck;
+  uncategorisedDeck: ILessDeck;
 }
 
 /**
@@ -20,24 +20,28 @@ interface IDashboardLoaderData {
  */
 export async function DashboardLoader(): Promise<IDashboardLoaderData> {
   const allDecks = await getAllDecks();
-  const decks = allDecks.filter((deck) => !isDeckUncategorized(deck));
+  const decks = allDecks.filter((deck) => !isDeckUncategorised(deck));
   decks.sort((a, b) => (a.dateUpdated > b.dateUpdated || a.name < b.name) ? -1 : 1);
 
-  const uncat = allDecks.find(isDeckUncategorized);
+  const uncat = allDecks.find(isDeckUncategorised);
   const cards = uncat ? await getDeckCards(uncat._id) : [];
   cards.sort((a, b) => a.question > b.question ? 1 : -1);
 
   localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(allDecks));
-  localStorage.setItem(UNCATEGORIZED_CARDS_STORAGE_KEY, JSON.stringify(cards));
+  localStorage.setItem(UNCATEGORISED_CARDS_STORAGE_KEY, JSON.stringify(cards));
 
-  return { decks: decks, cards: cards, uncategorizedDeck: uncat ?? { _id: "", name: UNCATEGORISED_DECK_NAME, isPrivate: true, dateUpdated: "" } };
+  return {
+    decks: decks,
+    cards: cards,
+    uncategorisedDeck: uncat ?? UNCATEGORISED_DECK_OBJ
+  };
 }
 
 /**
  * Component for the Dashboard page
  */
 export function Dashboard() {
-  const { decks, cards, uncategorizedDeck } = useLoaderData() as IDashboardLoaderData;
+  const { decks, cards, uncategorisedDeck } = useLoaderData() as IDashboardLoaderData;
   const navigate = useNavigate();
 
   return (
@@ -77,7 +81,12 @@ export function Dashboard() {
           </Card>
         ))}
         </motion.div>
-        <ShowCards cards={cards} decks={decks} uncategorizedDeck={uncategorizedDeck} uponChange={() => navigate("/dashboard", { replace: true })} />
+        <ShowCards
+          cards={cards}
+          decks={decks}
+          uncategorisedDeck={uncategorisedDeck}
+          uponChange={() => navigate("/dashboard", { replace: true })}
+        />
     </div>
   );
 }

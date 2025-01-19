@@ -1,31 +1,41 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useContext, createContext, useState, useEffect } from "react";
-import { registerUser, loginUser, logoutUser, refreshTokens, updateUser, changeUsername, changeEmail, changePassword, deleteUser } from "@/api/auth";
-import type { TLoginFormSchema, TRegisterFormSchema, TUserDetailsFormSchema, TChangeUsernameFormSchema, TChangeEmailFormSchema, TChangePasswordFormSchema } from "@/types/forms";
+import { useContext, createContext, useState, useEffect, Dispatch, SetStateAction } from "react";
+import { registerUser, loginUser, logoutUser, refreshTokens, changeUsername, changeEmail, changePassword, deleteUser } from "@/api/auth";
+import type { TLoginFormSchema, TRegisterFormSchema, TChangeUsernameFormSchema, TChangeEmailFormSchema, TChangePasswordFormSchema } from "@/types/forms";
 import { USER_STORAGE_KEY } from "@/constants";
 
 type AuthFunctionReturns = Promise<void> | void;
 
 interface AuthProviderState {
+  /** Username of the User */
   user: string | null;
+  /** Date till the User is Rate Limited */
+  limitedTill: Date | null;
+  /** Function to set the Date till the User is Rate Limited */
+  setLimitedTill: Dispatch<SetStateAction<Date | null>>;
+  /** Function to Register a User */
   registerUser: (data: TRegisterFormSchema) => AuthFunctionReturns;
+  /** Function to Login a User */
   loginUser: (data: TLoginFormSchema) => AuthFunctionReturns;
-  refreshTokens: () => AuthFunctionReturns;
+  /** Function to Logout the User */
   logoutUser: () => AuthFunctionReturns;
-  updateUser: (data: TUserDetailsFormSchema) => AuthFunctionReturns;
+  /** Function to Change the Username */
   changeUsername: (data: TChangeUsernameFormSchema) => AuthFunctionReturns;
+  /** Function to Change the Account Email */
   changeEmail: (data: TChangeEmailFormSchema) => AuthFunctionReturns;
+  /** Function to Change the Account Password */
   changePassword: (data: TChangePasswordFormSchema) => AuthFunctionReturns;
+  /** Function to Delete the User Account */
   deleteUser: () => AuthFunctionReturns;
 }
 
 const initialState: AuthProviderState = {
   user: null,
+  limitedTill: null,
+  setLimitedTill: () => console.error("setLimitedTill not implemented"),
   registerUser: () => console.error("registerUser not implemented"),
   loginUser: () => console.error("loginUser not implemented"),
-  refreshTokens: () => console.error("refreshTokens not implemented"),
   logoutUser: () => console.error("logoutUser not implemented"),
-  updateUser: () => console.error("updateUser not implemented"),
   changeUsername: () => console.error("changeUsername not implemented"),
   changeEmail: () => console.error("changeEmail not implemented"),
   changePassword: () => console.error("changePassword not implemented"),
@@ -43,6 +53,7 @@ const AuthProviderContext = createContext<AuthProviderState>(initialState);
  */
 export function AuthProvider({ children, ...props }: { children: React.ReactNode }) {
   const [user, setUser] = useState<string | null>(localStorage.getItem(USER_STORAGE_KEY));
+  const [limitedTill, setLimitedTill] = useState<Date | null>(null);
 
   const handleRegister = async (data: TRegisterFormSchema) => {
     await registerUser(data);
@@ -58,16 +69,6 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
     setUser(null);
     localStorage.removeItem(USER_STORAGE_KEY);
     await logoutUser();
-  };
-
-  const handleRefreshingTokens = async () => {
-    const username = await refreshTokens();
-    setUser(username);
-    localStorage.setItem(USER_STORAGE_KEY, username);
-  };
-
-  const handleUserUpdate = async (data: TUserDetailsFormSchema) => {
-    await updateUser(data);
   };
 
   const handleUsernameChange = async (data: TChangeUsernameFormSchema) => {
@@ -90,16 +91,25 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
     await deleteUser();
   };
 
+
+  const handleRefreshingTokens = async () => {
+    const username = await refreshTokens();
+    setUser(username);
+    if (username)
+      localStorage.setItem(USER_STORAGE_KEY, username);
+    else
+      localStorage.removeItem(USER_STORAGE_KEY);
+  };
   useEffect(() => {
     if (!user)
       return;
 
     if (!didInit) {
       didInit = true;
-      void refreshTokens();
+      void handleRefreshingTokens();
     } else {
       const interval  = setInterval(() => {
-        void refreshTokens();
+        void handleRefreshingTokens();
       }, 1500000); // 25 minutes
       return () => clearInterval(interval);
     }
@@ -107,11 +117,11 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
 
   const value: AuthProviderState = {
     user: user,
+    limitedTill: limitedTill,
+    setLimitedTill: setLimitedTill,
     registerUser: handleRegister,
     loginUser: handleLogin,
-    refreshTokens: handleRefreshingTokens,
     logoutUser: handleLogout,
-    updateUser: handleUserUpdate,
     changeUsername: handleUsernameChange,
     changeEmail: handleEmailChange,
     changePassword: handlePasswordChange,
@@ -125,9 +135,6 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
   );
 }
 
-/**
- * A Hook to access the AuthProvider properties
- */
 export const useAuth = () => {
   const context = useContext(AuthProviderContext);
   if (context === undefined)

@@ -1,4 +1,4 @@
-import { getCSRFToken } from "@/api/auth";
+import makeRequest from "@/api/common";
 import fetchWithCredentials from "@/utils/fetch";
 import type { TCardFormSchema } from "@/types/forms";
 
@@ -7,22 +7,14 @@ import type { TCardFormSchema } from "@/types/forms";
  * @param data information of the card
  * @returns ID of the created card
  */
-export async function createCard(data: TCardFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/card/new`,
+export const createCard = async (data: TCardFormSchema) => {
+  const response = await makeRequest<string | null>(
+    "/card/new",
     "post",
-    JSON.stringify(data),
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Create a Card");
-  });
-
-  const cardData = await res.json() as ICustomResponse<ICard>;
-  if (!res?.ok)
-    throw new Error(cardData.message || "Failed to Create a Card");
-
-  return cardData.data;
+    data,
+    "Failed to Create a Card"
+  );
+  return response.data;
 }
 
 /**
@@ -31,22 +23,45 @@ export async function createCard(data: TCardFormSchema) {
  * @param data information to be updated
  * @returns Message from the Server
  */
-export async function updateCard(cardID: string, data: TCardFormSchema) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
+export const updateCard = async (cardID: string, data: TCardFormSchema) => {
+  const response = await makeRequest<undefined>(
+    `/card/${cardID}`,
     "PATCH",
-    JSON.stringify(data),
-    csrfToken
+    data,
+    "Failed to Edit the Card"
+  );
+  return response.message;
+}
+
+/**
+ * Makes a GET request to populate the card with the given ID with AI-generated content
+ * @param cardID ID of the card
+ * @returns Data for the Populated Card
+ */
+export const populateCard = async (cardID: string) => {
+  const res = await fetchWithCredentials(
+    `${import.meta.env.VITE_SERVER_HOST}/card/populate/${cardID}`, "get"
   ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Edut the Card");
+    throw new Error(err?.message || "Failed to Populate the Card");
   });
 
-  const cardUpdateData = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(cardUpdateData.message || "Failed to Edit the Card");
+  const data = await res.json() as ICustomResponse<string | Omit<ICard, "_id" | "deck">>;
+  let returnData: Date | string | Omit<ICard, "_id" | "deck"> = data?.data;
+  if (res.status == 429) {
+    if (typeof returnData == "string") {
+      try {
+        const rlDate = new Date(returnData);
+        returnData = rlDate;
+      } catch {
+        returnData = "RATELIMITED";
+      }
+    } else
+      returnData = returnData ?? "RATELIMITED";
+  }
+  else if (!res.ok)
+    throw new Error(data.message || "Failed to Populate the Card");
 
-  return cardUpdateData.message;
+  return returnData;
 }
 
 /**
@@ -54,20 +69,12 @@ export async function updateCard(cardID: string, data: TCardFormSchema) {
  * @param cardID ID of the card
  * @returns Message from the Server
  */
-export async function removeCard(cardID: string) {
-  const csrfToken = await getCSRFToken();
-  const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/card/${cardID}`,
+export const removeCard = async (cardID: string) => {
+  const response = await makeRequest<undefined>(
+    `/card/${cardID}`,
     "delete",
     null,
-    csrfToken
-  ).catch((err: Error) => {
-    throw new Error(err?.message || "Failed to Delete the Card");
-  });
-
-  const cardDeleteData = await res.json() as ICustomResponse<undefined>;
-  if (!res?.ok)
-    throw new Error(cardDeleteData.message || "Failed to Delete the Card");
-
-  return cardDeleteData.message;
+    "Failed to Delete the Card"
+  );
+  return response.message;
 }
