@@ -90,7 +90,7 @@ describe("User Routes", () => {
 
     it("should get the users available with the matching substring", async () => {
         const res = await request(app)
-            .get("/user/getsub/stus")
+            .get("/user/substr/stus")
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -111,7 +111,7 @@ describe("User Routes", () => {
         const updatedUser = { fullName: "Updated User" };
         const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
-            .patch("/user/edit")
+            .patch("/user")
             .set("x-csrf-token", tokenRes.body.data)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token};${getCookie(tokenRes)}`)
             .send(updatedUser);
@@ -168,6 +168,19 @@ describe("Card Routes", () => {
 
         const card = await Card.findById(cardId);
         expect(card!.question).toBe(updatedCard.question);
+    });
+
+    it("should get AI-generated content for the card", async () => {
+        const res = await request(app)
+            .get(`/card/populate/${cardId}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Card Content Generated");
+        expect(res.body.data).toBeDefined();
+        expect(res.body.data.question).toBeDefined();
+        expect(res.body.data.answer).toBeDefined();
+        expect(res.body.data.hint).toBeDefined();
     });
 
     it("should delete the card by ID", async () => {
@@ -281,6 +294,20 @@ describe("Deck Routes", () => {
         expect(deck?.name).toBe(updatedDeck.name);
     });
 
+    it("should add AI-generated cards to the deck", async () => {
+        const cardsBefore = await Card.countDocuments({ deck: deckId });
+
+        const res = await request(app)
+            .get(`/deck/populate/${deckId}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Deck Content Generated");
+
+        const cardsAfter = await Card.countDocuments({ deck: deckId });
+        expect(cardsAfter).toBe(cardsBefore + 5);
+    });
+
     it("should like the deck", async () => {
         const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
@@ -341,7 +368,7 @@ describe("Deck Routes", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Deck sharing updated");
-        
+
         const deck = await Deck.findById(deckId);
         const accessible = deck?.isAccessibleBy(user!.id);
 
@@ -361,7 +388,7 @@ describe("Deck Routes", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Deck sharing updated");
-        
+
         const deck = await Deck.findById(deckId);
         const accessible = deck?.isAccessibleBy(user!.id);
 
