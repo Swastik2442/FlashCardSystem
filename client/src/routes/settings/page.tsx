@@ -9,6 +9,12 @@ import { AccountOptions, AccountOptionsLoader } from "./accountOptions";
 import { SecurityOptions } from "./securityOptions";
 import { useMediaQuery } from "@/hooks/mediaQuery";
 
+interface ISettingsData {
+  name: string,
+  Component: ({ data }: { data?: unknown }) => JSX.Element,
+  data: unknown
+}
+
 const settingsOptions = [
   {
     label: null,
@@ -66,11 +72,7 @@ export async function SettingsLoader({ params }: LoaderFunctionArgs) {
 }
 
 export function Settings() {
-  const { name, Component, data } = useLoaderData() as {
-    name: string,
-    Component: ({ data }: { data?: unknown }) => JSX.Element,
-    data: unknown
-  };
+  const { name, Component, data } = useLoaderData<ISettingsData>();
   const { user } = useAuth();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 

@@ -31,17 +31,20 @@ const defaultCard: ICard = {
  * @param decks - Decks owned or editable by the User
  * @param cards - Cards to be displayed
  * @param uncategorisedDeck - Deck to be used when a Card is not assigned to any Deck
+ * @param editable - Whether the Cards are Editable or Not
  * @param uponChange - Function to be called when a Card is Edited or Deleted
  */
 function ShowCards({
   decks,
   cards,
   uncategorisedDeck,
+  editable = false,
   uponChange
 }: {
   decks: ILessDeck[],
   cards: ICard[],
   uncategorisedDeck: ILessDeck,
+  editable?: boolean,
   uponChange: () => void
 }) {
   const [cardToEdit, setCardToEdit] = useState<ICard | null>(null);
@@ -100,7 +103,7 @@ function ShowCards({
   }
 
   return (
-    <>
+    <div>
       <motion.div
         initial={{ opacity: 0.0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -108,37 +111,39 @@ function ShowCards({
         className="flex flex-wrap gap-4 mx-8"
       >
         {cards.map((card, idx) => (
-          <Card className="min-w-72 flex-1" key={idx}>
-            <CardHeader>
-              <CardTitle>{card.question}</CardTitle>
+          <Card className="min-w-72 flex-1 flex flex-col justify-between group" key={idx}>
+            <CardHeader className="cursor-pointer" onClick={() => editable && selectCardToEdit(card)}>
+              <CardTitle className="font-normal">{card.question}</CardTitle>
             </CardHeader>
-            <CardFooter className="flex justify-end gap-2">
+            {editable && <CardFooter className="flex justify-end gap-2 invisible group-hover:visible">
               <button className="text-accent-foreground" type="button" title="Delete Card" onClick={() => selectCardToDelete(card._id)}>
                 <Trash2 className="size-4" />
               </button>
               <button className="text-accent-foreground" type="button" title="Edit Card" onClick={() => selectCardToEdit(card)}>
                 <Pencil className="size-4" />
               </button>
-            </CardFooter>
+            </CardFooter>}
           </Card>
         ))}
       </motion.div>
-      <ConfirmationDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleCardDeletion}
-        confirmButtonTitle="Delete"
-        dialogMessage="This action cannot be undone. This will permanently delete the card from the servers."
-      />
-      <CardEditDialog
-        dialogOpen={editDialogOpen}
-        setDialogOpen={setEditDialogOpen}
-        cardForm={cardForm}
-        handleCardEditing={handleCardEditing}
-        decks={decks}
-        uncategorisedDeck={uncategorisedDeck}
-      />
-    </>
+      {editable && <>
+        <ConfirmationDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleCardDeletion}
+          confirmButtonTitle="Delete"
+          dialogMessage="This action cannot be undone. This will permanently delete the card from the servers."
+        />
+        <CardEditDialog
+          dialogOpen={editDialogOpen}
+          setDialogOpen={setEditDialogOpen}
+          cardForm={cardForm}
+          handleCardEditing={handleCardEditing}
+          decks={decks}
+          uncategorisedDeck={uncategorisedDeck}
+        />
+      </>}
+    </div>
   )
 }
 

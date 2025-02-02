@@ -25,7 +25,7 @@ export default function Login() {
     try {
       await auth.loginUser(values);
       toast.success("Logged in Successfully");
-      navigate("/dashboard");
+      await navigate("/dashboard");
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Login");

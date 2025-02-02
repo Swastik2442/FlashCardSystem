@@ -60,7 +60,7 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
  */
 export function Deck() {
   const { did } = useParams();
-  const { ownerInfo, deckInfo, cards, allDecks, uncategorisedDeck } = useLoaderData() as IDeckLoaderData;
+  const { ownerInfo, deckInfo, cards, allDecks, uncategorisedDeck } = useLoaderData<IDeckLoaderData>();
   const navigate = useNavigate();
 
   return (
@@ -98,7 +98,8 @@ export function Deck() {
         cards={cards}
         decks={allDecks}
         uncategorisedDeck={uncategorisedDeck}
-        uponChange={() => navigate(`/deck/${did}`, { replace: true })}
+        editable={deckInfo.isEditable}
+        uponChange={() => { void navigate(`/deck/${did}`, { replace: true }); }}
       />}
     </div>
   );

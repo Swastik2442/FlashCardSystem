@@ -41,7 +41,7 @@ export async function DashboardLoader(): Promise<IDashboardLoaderData> {
  * Component for the Dashboard page
  */
 export function Dashboard() {
-  const { decks, cards, uncategorisedDeck } = useLoaderData() as IDashboardLoaderData;
+  const { decks, cards, uncategorisedDeck } = useLoaderData<IDashboardLoaderData>();
   const navigate = useNavigate();
 
   return (
@@ -68,7 +68,7 @@ export function Dashboard() {
         </div>
         )}
         {decks.map((deck, idx) => (
-          <Card className="min-w-72 flex-1" key={idx}>
+          <Card className="min-w-72 flex-1 flex flex-col justify-between" key={idx}>
             <Link to={`/deck/${deck._id}`}>
               <CardHeader>
                 <CardTitle>{deck.name}</CardTitle>
@@ -85,7 +85,8 @@ export function Dashboard() {
           cards={cards}
           decks={decks}
           uncategorisedDeck={uncategorisedDeck}
-          uponChange={() => navigate("/dashboard", { replace: true })}
+          editable={true}
+          uponChange={() => { void navigate("/dashboard", { replace: true }); }}
         />
     </div>
   );

@@ -45,7 +45,7 @@ export default function Home() {
         <div className="font-extralight text-base md:text-xl dark:text-neutral-200 py-4">
           Maybe, even Learn 🙂
         </div>
-        <Button type="button" title="Get ready to see some mediocre UI" onClick={() => navigate("/dashboard")} className="rounded-full">
+        <Button type="button" title="Get ready to see some mediocre UI" onClick={() => { void navigate("/dashboard"); }} className="rounded-full">
           Try Now
         </Button>
         <div className="text-[0.5rem] text-foreground/30">

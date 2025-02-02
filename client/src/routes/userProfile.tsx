@@ -38,7 +38,7 @@ export async function UserProfileLoader({
  * A Component that renders the User Profile
  */
 export function UserProfile() {
-  const { userInfo, userDecks, likedDecks } = useLoaderData() as IUserProfileLoaderData;
+  const { userInfo, userDecks, likedDecks } = useLoaderData<IUserProfileLoaderData>();
 
   return (
     <div className="my-4">

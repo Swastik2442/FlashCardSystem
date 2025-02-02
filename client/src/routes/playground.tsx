@@ -61,7 +61,7 @@ function nextCard(playedCards: number[], totalCards: number) {
  * A Component that renders the Playground
  */
 export function Playground() {
-  const { deckID, deck, cards } = useLoaderData() as IPlaygroundLoaderData;
+  const { deckID, deck, cards } = useLoaderData<IPlaygroundLoaderData>();
   const [playedCards, setPlayedCards] = useState(useMemo(() => [nextCard([], cards.length)], [cards.length]));
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -121,7 +121,7 @@ export function Playground() {
     {
       title: `Back to ${isDeckUncategorised(deck) ? "Dashboard" : "Deck"}`,
       icon: <Home />,
-      onClick: () => navigate(isDeckUncategorised(deck) ? "/dashboard" : `/deck/${deckID}`),
+      onClick: () => { void navigate(isDeckUncategorised(deck) ? "/dashboard" : `/deck/${deckID}`); },
     },
     {
       title: "Next",

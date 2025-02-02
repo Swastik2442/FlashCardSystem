@@ -182,7 +182,7 @@ function DeleteAccountOption() {
 
   const handleUserDeletion = async () => {
     await deleteUser();
-    navigate("/");
+    await navigate("/");
   }
 
   return (

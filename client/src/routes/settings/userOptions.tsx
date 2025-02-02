@@ -43,7 +43,7 @@ function UserUpdateForm({ userDetails }: { userDetails: IUserOptionsData }) {
       await updateUser(values);
       toast.success("User updated successfully");
       userDetailsForm.reset({}, { keepDirtyValues: true });
-      navigate(0);
+      await navigate(0);
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Update User");
