@@ -11,10 +11,8 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "docker:up": "cd server && docker-compose up -d",
-    "docker:down": "cd server && docker-compose down",
-    "docker:logs": "cd server && docker-compose logs -f",
-    "dev:with-db": "pnpm docker:up && pnpm dev:client",
-    "test:server": "pnpm docker:up && pnpm --filter server test"
+    "db:start": "pnpm --filter server db:start",
+    "db:stop": "pnpm --filter server db:stop",
+    "test:server": "pnpm --filter server test:with-db"
   }
 }
