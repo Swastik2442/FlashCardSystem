@@ -12,6 +12,14 @@ export const isDeckUncategorised = (deck: ILessDeck | IMoreDeck) => {
 }
 
 /**
+ * @param deck Deck to be checked
+ * @returns Whether the Deck is Editable by the User
+ */
+export const isDeckEditable = (deck: ILessDeck | IMoreDeck) => {
+  return isDeckUncategorised(deck) || ("isEditable" in deck && deck.isEditable);
+}
+
+/**
  * Makes a GET request to fetch the Deck with the given ID
  * @param deckID ID of the Deck
  * @returns Information about the Deck
