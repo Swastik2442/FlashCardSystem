@@ -1,0 +1,20 @@
+{
+  "name": "flashcardsystem",
+  "version": "1.2.0",
+  "private": true,
+  "author": "Swastik Kulshreshtha",
+  "license": "MIT",
+  "description": "The Full-Stack Project of a Flash Card Learning System.",
+  "scripts": {
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "docker:up": "cd server && docker-compose up -d",
+    "docker:down": "cd server && docker-compose down",
+    "docker:logs": "cd server && docker-compose logs -f",
+    "dev:with-db": "pnpm docker:up && pnpm dev:client",
+    "test:server": "pnpm docker:up && pnpm --filter server test"
+  }
+}

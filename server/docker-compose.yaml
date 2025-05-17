@@ -1,0 +1,43 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: db
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=fcs
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server
+    restart: unless-stopped
+    environment:
+      - MONGODB_CONNECTION_URI=mongodb://root:password@db:27017/
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - KV_REST_API_TOKEN=${KV_REST_API_TOKEN}
+      - KV_REST_API_URL=${KV_REST_API_URL}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - ACCESS_TOKEN_EXPIRY=${ACCESS_TOKEN_EXPIRY}
+      - REFRESH_TOKEN_EXPIRY=${REFRESH_TOKEN_EXPIRY}
+      - CLIENT_HOST=${CLIENT_HOST}
+      - COOKIE_SIGN_SECRET=${COOKIE_SIGN_SECRET}
+      - CSRF_TOKEN_SECRET=${CSRF_TOKEN_SECRET}
+      - NODE_ENV=${NODE_ENV}
+    ports:
+      - "2442:2442"
+    depends_on:
+      - db
+    volumes:
+      - ./:/app
+      - /app/node_modules
+
+volumes:
+  mongodb_data:

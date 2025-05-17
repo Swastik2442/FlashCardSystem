@@ -1,4 +1,4 @@
-# FlashCardSystem ![Client Version](https://img.shields.io/github/package-json/v/Swastik2442/FlashCardSystem?filename=client%2Fpackage.json) ![Server Version](https://img.shields.io/github/package-json/v/Swastik2442/FlashCardSystem?filename=server%2Fpackage.json)
+# FlashCardSystem ![Version](https://img.shields.io/github/package-json/v/Swastik2442/FlashCardSystem)
 
 A Learning System using Flash Cards
 

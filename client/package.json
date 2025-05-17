@@ -1,8 +1,8 @@
 {
-  "name": "flashcardsystem",
-  "private": true,
+  "name": "client",
   "version": "1.1.0",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "author": "Swastik Kulshreshtha, Sourabh Yadav and Saurabh Saini",
-  "license": "ISC",
+  "license": "MIT",
   "description": "The Frontend for the Full-Stack Project of FlashCardSystem.",
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

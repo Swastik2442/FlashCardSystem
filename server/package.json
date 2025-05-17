@@ -6,10 +6,15 @@
     "start": "ts-node --files api/index.ts",
     "dev": "nodemon --files api/index.ts",
     "test": "cross-env NODE_ENV=testing jest --testTimeout=15000",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "dev:docker": "docker-compose up -d mongodb && pnpm run dev",
+    "test:docker": "docker-compose up -d mongodb && pnpm run test"
   },
   "author": "Swastik Kulshreshtha, Sourabh Yadav and Saurabh Saini",
-  "license": "ISC",
+  "license": "MIT",
   "description": "The Backend for the Full-Stack Project of FlashCardSystem.",
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
