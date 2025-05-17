@@ -166,7 +166,7 @@ function CardEditDialog({
 }: {
   dialogOpen: boolean,
   setDialogOpen: (open: boolean) => void,
-  cardForm: UseFormReturn<ICard, unknown, undefined>,
+  cardForm: UseFormReturn<ICard, unknown, ICard>,
   handleCardEditing: (values: ICard) => Promise<void>,
   decks: ILessDeck[], uncategorisedDeck: ILessDeck
 }) {
