@@ -1,8 +1,8 @@
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import jwt from "jsonwebtoken"
 import User from "../models/user.model";
-import { canUseFeature } from "../utils/featureFlags";
-import type { FeatureFlagName } from "../utils/featureFlags";
+import { canUseFeature } from "../featureFlags";
+import type { FeatureFlagName } from "../featureFlags";
 import { ACCESS_TOKEN_COOKIE_NAME } from "../constants";
 import env from "../env";
 

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import type { IUser, UserRole } from "../models/user.model"
-import { murmurHash } from "./murmurHash"
+import type { IUser, UserRole } from "./models/user.model"
+import { murmurHash } from "./utils/murmurHash"
 
 type UserWithID = Pick<IUser, "roles"> & { _id: mongoose.Types.ObjectId };
 
@@ -18,6 +18,10 @@ export const FEATURE_FLAGS = {
     IS_USER_ALLOWED: [{ userRoles: ["user"] }],
     GEN_AI: [{ userRoles: ["admin", "tester_genAI"] }],
 } as const satisfies Record<string, FeatureFlagRule[] | boolean>;
+
+export const UserAccessibleRoles = [
+    "tester_genAI"
+] as const satisfies UserRole[];
 
 export function canUseFeature(featureName: FeatureFlagName, user: UserWithID) {
     const rules = FEATURE_FLAGS[featureName];

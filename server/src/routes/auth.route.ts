@@ -1,8 +1,9 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
-import { Register, Login, Logout, RefreshAccessToken, ChangeUsername, ChangeEmail, ChangePassword, DeleteUser } from "../controllers/auth.controller";
+import { Register, Login, Logout, RefreshAccessToken, ChangeUsername, ChangeEmail, ChangePassword, DeleteUser, GetUserAccessibleRoles, GetUserRoles, SetUserRoles } from "../controllers/auth.controller";
 import Validate from "../middlewares/validate.middleware";
 import { VerifyJWT } from "../middlewares/auth.middleware";
+import { UserAccessibleRoles } from "../featureFlags";
 
 const router = express.Router();
 
@@ -127,6 +128,28 @@ router.patch(
         .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangePassword
+);
+
+router.get("/roles/all", VerifyJWT, GetUserAccessibleRoles);
+router.get("/roles", VerifyJWT, GetUserRoles);
+
+router.patch(
+    "/roles",
+    VerifyJWT,
+    check("roles")
+        .custom((obj) => {
+            if (typeof obj !== "object" || Array.isArray(obj) || obj === null)
+                throw new Error("Roles must be an object");
+            for (const key of Object.keys(obj)) {
+                if (typeof obj[key] !== "boolean")
+                    throw new Error(`Role value for '${key}' must be boolean`);
+                if (!UserAccessibleRoles.includes(key as typeof UserAccessibleRoles[number]))
+                    throw new Error(`Invalid role: ${key}`);
+            }
+            return true;
+        }),
+    Validate,
+    SetUserRoles
 );
 
 export default router;
