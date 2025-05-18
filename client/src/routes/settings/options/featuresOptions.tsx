@@ -1,58 +1,44 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { roles2features, features2roleChanges } from "@/featureFlags";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { featuresEditFormSchema } from "@/types/forms";
 import type { TFeaturesEditFormSchema } from "@/types/forms";
-import { getPossibleUserRoles, getUserRoles, setUserRoles } from "@/api/user";
+import { useFeatures } from "@/contexts/featuresProvider";
+import type { FeatureProviderState } from "@/contexts/featuresProvider";
 
-interface IFeaturesOptionsData {
-    readonly possibleRoles: string[],
-    currentRoles: string[]
-}
-
-export async function FeaturesOptionsLoader(): Promise<IFeaturesOptionsData> {
-  const possibleRoles = await getPossibleUserRoles();
-  const currentRoles = await getUserRoles();
-  return { possibleRoles, currentRoles };
-}
-
-export function FeaturesOptions({ data }: { data: IFeaturesOptionsData }) {
+export function FeaturesOptions() {
+  const { features, setFeatures } = useFeatures();
   return (
       <>
     <div>
       <div className="p-2">
-        {data.possibleRoles.length == 0 ? <>
+        {Object.keys(features).length === 0 ? <>
           No Features are currently available to modify
-        </> : <FeaturesEditForm data={data} />}
+        </> : <FeaturesEditForm features={features} setFeatures={setFeatures} />}
       </div>
     </div>
   </>
   )
 }
 
-function FeaturesEditForm({ data }: { data: IFeaturesOptionsData }) {
-  const navigate = useNavigate();
+function FeaturesEditForm({
+  features,
+  setFeatures
+}: Pick<FeatureProviderState, "features" | "setFeatures">) {
   const featuresEditForm = useForm<TFeaturesEditFormSchema>({
     resolver: zodResolver(featuresEditFormSchema),
-    defaultValues: useMemo(
-      () => roles2features(data.currentRoles, data.possibleRoles),
-      [data.currentRoles, data.possibleRoles]
-    ),
+    defaultValues: features,
   });
 
   async function handleFeaturesUpdate(values: TFeaturesEditFormSchema) {
     try {
-      await setUserRoles(features2roleChanges(values, data.possibleRoles));
+      await setFeatures(values);
       toast.success("User updated successfully");
-      featuresEditForm.reset({}, { keepDirtyValues: true });
-      await navigate(0);
+      featuresEditForm.reset(values);
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Update User");
@@ -64,7 +50,7 @@ function FeaturesEditForm({ data }: { data: IFeaturesOptionsData }) {
       <form className="grid gap-2" onSubmit={featuresEditForm.handleSubmit(handleFeaturesUpdate)}>
         <FormField
           control={featuresEditForm.control}
-          name="genAI"
+          name="GEN_AI"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Generative AI</FormLabel>

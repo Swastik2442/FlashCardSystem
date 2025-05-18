@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// Schema for the User Login Form
 export const loginFormSchema = z.object({
   email: z.string().email("Invalid email address."),
   password: z.string()
@@ -8,6 +9,7 @@ export const loginFormSchema = z.object({
 });
 export type TLoginFormSchema = z.infer<typeof loginFormSchema>;
 
+// Schema for the User Registration Form
 export const registerFormSchema = z.object({
   fullName: z.string()
     .min(3, { message: "Name must be at least 3 characters." })
@@ -23,6 +25,7 @@ export const registerFormSchema = z.object({
 });
 export type TRegisterFormSchema = z.infer<typeof registerFormSchema>;
 
+// Schema for the User Public Details Editing Form
 export const userDetailsFormSchema = z.object({
   fullName: z.string()
     .min(3, { message: "Name must be at least 3 characters." })
@@ -30,6 +33,7 @@ export const userDetailsFormSchema = z.object({
 });
 export type TUserDetailsFormSchema = z.infer<typeof userDetailsFormSchema>;
 
+// Schema for Username Changing Form
 export const changeUsernameFormSchema = z.object({
   username: z.string().toLowerCase()
     .regex(/^[a-z0-9_]+$/, { message: "Username can only contain lowercase letters, numbers, and underscores." })
@@ -41,9 +45,11 @@ export const changeUsernameFormSchema = z.object({
 });
 export type TChangeUsernameFormSchema = z.infer<typeof changeUsernameFormSchema>;
 
+// Schema for Email Changing Form
 export const changeEmailFormSchema = loginFormSchema;
 export type TChangeEmailFormSchema = z.infer<typeof changeEmailFormSchema>;
 
+// Schema for Password Changing Form
 export const changePasswordFormSchema = z.object({
   oldPassword: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
@@ -54,6 +60,7 @@ export const changePasswordFormSchema = z.object({
 });
 export type TChangePasswordFormSchema = z.infer<typeof changePasswordFormSchema>;
 
+// Schema for Deck Details Editing Form
 export const deckFormSchema = z.object({
   name: z.string()
     .min(3, { message: "Name must be at least 3 characters." })
@@ -64,6 +71,7 @@ export const deckFormSchema = z.object({
 });
 export type TDeckFormSchema = z.infer<typeof deckFormSchema>;
 
+// Schema for Card Details Editing Form
 export const cardFormSchema = z.object({
   question: z.string()
     .min(3, { message: "Question must be at least 3 characters." })
@@ -77,6 +85,7 @@ export const cardFormSchema = z.object({
 });
 export type TCardFormSchema = z.infer<typeof cardFormSchema>;
 
+// Schema for Deck Sharing Settings Form
 export const deckShareFormSchema = z.object({
   user: z.string().min(1, { message: "User cannot be empty." }),
   isEditable: z.boolean().default(false).optional(),
@@ -84,12 +93,14 @@ export const deckShareFormSchema = z.object({
 });
 export type TDeckShareFormSchema = z.infer<typeof deckShareFormSchema>;
 
+// Schema for Deck Owner Changing Form
 export const deckOwnerFormSchema = z.object({
   user: z.string().min(1, { message: "User cannot be empty." }),
 });
 export type TDeckOwnerFormSchema = z.infer<typeof deckOwnerFormSchema>;
 
+// Schema for Feature Flag Changing Form
 export const featuresEditFormSchema = z.object({
-  genAI: z.boolean().default(false),
+  GEN_AI: z.boolean().default(false),
 }).partial();
 export type TFeaturesEditFormSchema = z.infer<typeof featuresEditFormSchema>;

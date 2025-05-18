@@ -121,7 +121,7 @@ export async function getUserRoles() {
  * Makes a PATCH request to set the User Roles
  * @returns Message from the Server
  */
-export async function setUserRoles(roles: Record<string, boolean>) {
+export async function updateUserRoles(roles: Record<string, boolean>) {
   const response = await makeRequest<undefined>(
     "/user/roles",
     "PATCH",

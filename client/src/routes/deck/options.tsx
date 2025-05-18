@@ -21,6 +21,7 @@ import type { TDeckFormSchema, TDeckShareFormSchema, TDeckOwnerFormSchema, TCard
 import { likeDeck, unlikeDeck, removeDeck, shareDeck, changeDeckOwner, updateDeck, populateDeck } from "@/api/deck";
 import { createCard } from "@/api/card";
 import { LoadingIcon } from "@/components/icons";
+import { useFeatures } from "@/contexts/featuresProvider";
 
 interface IDeckOptionsProps {
   deckID: string;
@@ -226,6 +227,7 @@ export function DeckOptionsDropdown({
 }) {
   const navigate = useNavigate();
   const { user, limitedTill, setLimitedTill } = useAuth();
+  const { features } = useFeatures();
   const isUserDeckOwner = user == owner;
   const isUserRatelimited = limitedTill != null && limitedTill > new Date();
 
@@ -295,13 +297,13 @@ export function DeckOptionsDropdown({
       onClick: openShareDialog,
       disabled: !isUserDeckOwner
     },
-    {
+    ...(features.GEN_AI ? [{
       label: "Populate",
       icon: populatingDeck ? LoadingIcon : Sparkles,
       title: isUserRatelimited ? "Can only be done once in a few Minutes" : undefined,
       onClick: handleDeckPopulate,
       disabled: !deck.isEditable || isUserRatelimited || populatingDeck
-    },
+    }] : []),
     {
       label: "Change Owner",
       icon: UserCog,

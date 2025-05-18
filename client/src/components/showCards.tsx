@@ -16,6 +16,7 @@ import { updateCard, removeCard, populateCard } from "@/api/card";
 import { cardFormSchema } from "@/types/forms";
 import type { TCardFormSchema } from "@/types/forms";
 import { useAuth } from "@/contexts/authProvider";
+import { useFeatures } from "@/contexts/featuresProvider";
 import { LoadingIcon } from "./icons";
 
 const defaultCard: ICard = {
@@ -171,6 +172,7 @@ function CardEditDialog({
   decks: ILessDeck[], uncategorisedDeck: ILessDeck
 }) {
   const { limitedTill, setLimitedTill } = useAuth();
+  const { features } = useFeatures();
   const [populatingCard, setPopulatingCard] = useState(false);
   const isUserRatelimited = limitedTill instanceof Date && new Date() < limitedTill;
 
@@ -277,7 +279,7 @@ function CardEditDialog({
               )}
             />
             <DialogFooter>
-              <Button
+              {features.GEN_AI && <Button
                 type="button"
                 title={isUserRatelimited ? "Can only be done once in a few Minutes" : "Populate Card"}
                 variant="ghost"
@@ -289,7 +291,7 @@ function CardEditDialog({
                   <SparklesIcon className="size-4 group-hover:hidden" />
                   <SparkleIcon className="size-4 hidden group-hover:block" />
                 </>}
-              </Button>
+              </Button>}
               <Button
                 type="button"
                 title="Cancel"

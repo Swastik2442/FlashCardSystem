@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { UserOptions, UserOptionsLoader } from "./options/userOptions";
 import { AccountOptions, AccountOptionsLoader } from "./options/accountOptions";
 import { SecurityOptions } from "./options/securityOptions";
-import { FeaturesOptions, FeaturesOptionsLoader } from "./options/featuresOptions";
+import { FeaturesOptions } from "./options/featuresOptions";
 import { useMediaQuery } from "@/hooks/mediaQuery";
 
 interface ISettingsData {
@@ -66,7 +66,6 @@ export async function SettingsLoader({ params }: LoaderFunctionArgs) {
       break;
     case "features":
       Component = FeaturesOptions;
-      data = await FeaturesOptionsLoader();
     break;
     default:
       name = "user";

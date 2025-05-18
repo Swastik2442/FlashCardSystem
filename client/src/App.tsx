@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/themeProvider";
 import { AuthProvider } from "@/contexts/authProvider";
+import { FeaturesProvider } from "@/contexts/featuresProvider";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/errorBoundary";
 import Header from "@/components/header";
@@ -108,7 +109,9 @@ function App() {
     <>
     <ThemeProvider>
     <AuthProvider>
+    <FeaturesProvider>
       <RouterProvider router={Router} />
+    </FeaturesProvider>
     </AuthProvider>
     </ThemeProvider>
     <Toaster richColors toastOptions={{}} />
