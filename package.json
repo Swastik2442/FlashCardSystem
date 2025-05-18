@@ -13,6 +13,7 @@
     "lint": "pnpm -r lint",
     "db:start": "pnpm --filter server db:start",
     "db:stop": "pnpm --filter server db:stop",
+    "dev:with-db": "pnpm db:start && pnpm dev",
     "test:server": "pnpm --filter server test:with-db"
   }
 }

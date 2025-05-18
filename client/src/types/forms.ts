@@ -88,3 +88,8 @@ export const deckOwnerFormSchema = z.object({
   user: z.string().min(1, { message: "User cannot be empty." }),
 });
 export type TDeckOwnerFormSchema = z.infer<typeof deckOwnerFormSchema>;
+
+export const featuresEditFormSchema = z.object({
+  genAI: z.boolean().default(false),
+}).partial();
+export type TFeaturesEditFormSchema = z.infer<typeof featuresEditFormSchema>;

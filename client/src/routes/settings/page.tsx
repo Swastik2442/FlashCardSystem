@@ -1,12 +1,13 @@
 import { JSX } from "react";
 import { useLoaderData, Link, LoaderFunctionArgs } from "react-router-dom";
-import { SettingsIcon, ShieldCheck, User } from "lucide-react";
+import { ListTodo, SettingsIcon, ShieldCheck, User } from "lucide-react";
 import { useAuth } from "@/contexts/authProvider";
 import { SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { UserOptions, UserOptionsLoader } from "./userOptions";
-import { AccountOptions, AccountOptionsLoader } from "./accountOptions";
-import { SecurityOptions } from "./securityOptions";
+import { UserOptions, UserOptionsLoader } from "./options/userOptions";
+import { AccountOptions, AccountOptionsLoader } from "./options/accountOptions";
+import { SecurityOptions } from "./options/securityOptions";
+import { FeaturesOptions, FeaturesOptionsLoader } from "./options/featuresOptions";
 import { useMediaQuery } from "@/hooks/mediaQuery";
 
 interface ISettingsData {
@@ -39,6 +40,11 @@ const settingsOptions = [
         url: "/settings/security",
         icon: ShieldCheck,
       },
+      {
+        title: "Features",
+        url: "/settings/features",
+        icon: ListTodo,
+      },
     ]
   },
 ] as const;
@@ -58,6 +64,10 @@ export async function SettingsLoader({ params }: LoaderFunctionArgs) {
     case "security":
       Component = SecurityOptions;
       break;
+    case "features":
+      Component = FeaturesOptions;
+      data = await FeaturesOptionsLoader();
+    break;
     default:
       name = "user";
       Component = UserOptions;
@@ -106,8 +116,8 @@ function SettingsSidebar({ collapsible }: { collapsible: boolean }) {
   return (
     <Sidebar collapsible={collapsible ? "offcanvas" : "none"}>
       <SidebarContent>
-        {settingsOptions.map((group) => (
-          <SidebarGroup>
+        {settingsOptions.map((group, groupID) => (
+          <SidebarGroup key={groupID}>
             {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>

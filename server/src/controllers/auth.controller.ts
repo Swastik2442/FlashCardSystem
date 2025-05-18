@@ -3,11 +3,8 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import ms from "ms";
 import User from "../models/user.model";
-import type { UserRole } from "../models/user.model";
 import env from "../env";
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, CSRF_COOKIE_NAME } from "../constants";
-import { UserAccessibleRoles } from "../featureFlags";
-import tryCatch from "../utils/wrappers";
 
 const cookieOptions = {
     httpOnly: true,
@@ -411,63 +408,3 @@ export async function DeleteUser(req: ExpressRequest, res: ExpressResponse) {
     }
     res.end();
 }
-
-/**
- * @route GET auth/roles/all
- * @desc Get all Possible User Roles
- * @access private
- */
-export const GetUserAccessibleRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
-    res.status(200).json({
-        status: "success",
-        message: "Possible User Roles",
-        data: UserAccessibleRoles
-    });
-});
-
-/**
- * @route GET auth/roles
- * @desc Get current User Roles
- * @access private
- */
-export const GetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
-    if (!req.user)
-        throw new Error("User not found");
-    res.status(200).json({
-        status: "success",
-        message: "Successfully get User Roles",
-        data: req.user.roles
-    });
-});
-
-/**
- * @route PATCH auth/roles
- * @desc Set current User Roles
- * @access private
- */
-export const SetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
-    const { roles } = req.body;
-    if (!req.user)
-        throw new Error("User not found");
-
-    // Add roles where value is true and not already present
-    Object.entries(roles)
-        .filter(([, value]) => value === true)
-        .forEach(([key]) => {
-            if (!req.user!.roles.includes(key as UserRole))
-                req.user!.roles.push(key as UserRole);
-        });
-
-    // Remove roles where value is false and currently present
-    Object.entries(roles)
-        .filter(([, value]) => value === false)
-        .forEach(([key]) => {
-            req.user!.roles = req.user!.roles.filter((role: string) => role !== key);
-        });
-
-    await req.user.save();
-    res.status(200).json({
-        status: "success",
-        message: "User Roles set",
-    });
-});

@@ -88,3 +88,45 @@ export async function updateUser(data: TUserDetailsFormSchema) {
   );
   return response.message;
 }
+
+/**
+ * Makes a GET request to get all Possible User Roles
+ * @returns Roles that can be given to the User
+ */
+export async function getPossibleUserRoles() {
+  const response = await makeRequest<string[]>(
+    "/user/roles/all",
+    "get",
+    null,
+    "Failed to retrieve Possible User Roles"
+  );
+  return response.data;
+}
+
+/**
+ * Makes a GET request to get the User Roles
+ * @returns Roles given to the User
+ */
+export async function getUserRoles() {
+  const response = await makeRequest<string[]>(
+    "/user/roles",
+    "get",
+    null,
+    "Failed to retrieve User Roles"
+  );
+  return response.data;
+}
+
+/**
+ * Makes a PATCH request to set the User Roles
+ * @returns Message from the Server
+ */
+export async function setUserRoles(roles: Record<string, boolean>) {
+  const response = await makeRequest<undefined>(
+    "/user/roles",
+    "PATCH",
+    { roles: roles },
+    "Failed to set User Roles"
+  );
+  return response.message;
+}

@@ -1,13 +1,16 @@
 import { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import User from "../models/user.model";
+import type { UserRole } from "../models/user.model";
 import Deck from "../models/deck.model";
 import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
+import { UserAccessibleRoles } from "../featureFlags";
+import tryCatch from "../utils/wrappers";
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
 /**
  * @route GET user/
- * @desc Gets the logged in User's Private Details
+ * @desc Gets the logged in User's Full Name, Username, Email
  * @access private
  */
 export async function GetUserPrivate(req: ExpressRequest, res: ExpressResponse) {
@@ -34,7 +37,7 @@ export async function GetUserPrivate(req: ExpressRequest, res: ExpressResponse) 
 
 /**
  * @route GET user/get/:username
- * @desc Gets the User with the given Username/ID
+ * @desc Gets the User Full Name and Username with the given Username/ID
  * @access public
  */
 export async function GetUser(req: ExpressRequest, res: ExpressResponse) {
@@ -223,3 +226,63 @@ export async function UpdateUser(req: ExpressRequest, res: ExpressResponse) {
     }
     res.end();
 }
+
+/**
+ * @route GET auth/roles/all
+ * @desc Get all Possible User Roles
+ * @access private
+ */
+export const GetUserAccessibleRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+    res.status(200).json({
+        status: "success",
+        message: "Possible User Roles",
+        data: UserAccessibleRoles
+    });
+});
+
+/**
+ * @route GET auth/roles
+ * @desc Get current User Roles
+ * @access private
+ */
+export const GetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+    if (!req.user)
+        throw new Error("User not found");
+    res.status(200).json({
+        status: "success",
+        message: "Successfully get User Roles",
+        data: req.user.roles
+    });
+});
+
+/**
+ * @route PATCH auth/roles
+ * @desc Set current User Roles
+ * @access private
+ */
+export const SetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+    const { roles } = req.body;
+    if (!req.user)
+        throw new Error("User not found");
+
+    // Add roles where value is true and not already present
+    Object.entries(roles)
+        .filter(([, value]) => value === true)
+        .forEach(([key]) => {
+            if (!req.user!.roles.includes(key as UserRole))
+                req.user!.roles.push(key as UserRole);
+        });
+
+    // Remove roles where value is false and currently present
+    Object.entries(roles)
+        .filter(([, value]) => value === false)
+        .forEach(([key]) => {
+            req.user!.roles = req.user!.roles.filter((role: string) => role !== key);
+        });
+
+    await req.user.save();
+    res.status(200).json({
+        status: "success",
+        message: "User Roles set",
+    });
+});

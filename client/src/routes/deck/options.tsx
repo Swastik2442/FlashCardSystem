@@ -119,7 +119,7 @@ export function CardCreationDialog({
       await createCard({ ...values, deck: deckID });
       toast.success("Card Created", { description: values.question });
       cardForm.reset();
-      navigate(`/deck/${deckID}`, { replace: true });
+      await navigate(`/deck/${deckID}`, { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck");
@@ -272,7 +272,7 @@ export function DeckOptionsDropdown({
           toast.warning("Rate Limited for a few Minutes");
         } else {
           toast.success("Deck Populated");
-          navigate(0);
+          await navigate(0);
         }
       } catch (err) {
         console.error(err instanceof Error ? err.message : "Failed to Populate the Deck");
@@ -393,7 +393,7 @@ function DeckDeleteDialog({
       try {
         await removeDeck(deckID);
         toast.info("Deck Deleted");
-        navigate("/dashboard", { replace: true });
+        await navigate("/dashboard", { replace: true });
       } catch (err) {
         console.error(err instanceof Error ? err.message : "Failed to Delete Deck");
         toast.error("Failed to Delete Deck");
@@ -447,7 +447,7 @@ function DeckEditDialog({
       await updateDeck(deckID, values);
       toast.success("Deck Edited");
       deckForm.reset();
-      navigate(`/deck/${deckID}`, { replace: true });
+      await navigate(`/deck/${deckID}`, { replace: true });
     } catch (err) {
       console.error(err instanceof Error ? err.message : "Failed to Edit the Deck");
       toast.error("Failed to Edit the Deck");
@@ -693,7 +693,7 @@ function DeckOwnerChangeDialog({
       await changeDeckOwner(deckID, values);
       toast.success("Deck Owner Changed");
       deckOwnerChangeForm.reset();
-      navigate("/dashboard", { replace: true });
+      await navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Change the Deck's Owner");

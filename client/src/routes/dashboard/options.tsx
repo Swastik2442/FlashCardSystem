@@ -82,7 +82,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
       await createDeck(values);
       toast.success("Deck Created", { description: values.name });
       deckForm.reset();
-      navigate("/dashboard", { replace: true });
+      await navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck");
@@ -171,7 +171,7 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
       await createCard(values);
       toast.success("Card Created", { description: values.question });
       cardForm.reset();
-      navigate("/dashboard", { replace: true });
+      await navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Card");

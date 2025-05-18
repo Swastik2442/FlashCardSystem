@@ -15,7 +15,6 @@ const tryCatch = (fn: RequestHandler): RequestHandler => (
         });
     }
   );
-  res.end();
 };
 
 export default tryCatch;
