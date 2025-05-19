@@ -11,8 +11,8 @@ import PrivateRoutes from "@/components/privateRoutes"
 import Home from "@/routes/home"
 import Register from "@/routes/auth/register"
 import Login from "@/routes/auth/login"
-import { Dashboard, DashboardLoader } from "@/routes/dashboard/page"
-import { Deck, DeckLoader } from "@/routes/deck/page"
+import { Dashboard } from "@/routes/dashboard/page"
+import { Deck } from "@/routes/deck/page"
 import { UserProfile, UserProfileLoader } from "@/routes/userProfile"
 import { Playground, PlaygroundLoader } from "@/routes/playground"
 import { Settings, SettingsLoader } from "@/routes/settings/page"
@@ -74,13 +74,11 @@ const Router = createBrowserRouter([
           {
             path: "/dashboard",
             element: <Dashboard />,
-            loader: DashboardLoader,
             errorElement: <ErrorBoundary />
           },
           {
             path: "/deck/:did",
             element: <Deck />,
-            loader: DeckLoader,
             errorElement: <ErrorBoundary />
           },
           {

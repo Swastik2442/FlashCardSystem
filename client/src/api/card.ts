@@ -45,8 +45,8 @@ export const populateCard = async (cardID: string) => {
     throw new Error(err?.message || "Failed to Populate the Card");
   });
 
-  const data = await res.json() as ICustomResponse<string | Omit<ICard, "_id" | "deck">>;
-  let returnData: Date | string | Omit<ICard, "_id" | "deck"> = data?.data;
+  const data = await res.json() as ICustomResponse<string | Omit<ILessCard, "_id">>;
+  let returnData: Date | string | Omit<ILessCard, "_id"> = data?.data;
   if (res.status == 429) {
     if (typeof returnData == "string") {
       try {

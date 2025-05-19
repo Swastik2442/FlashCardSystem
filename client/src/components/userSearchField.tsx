@@ -14,10 +14,9 @@ import { SEARCH_USERS_STORAGE_KEY } from "@/constants";
 /**
  * @returns Users stored in the Local Storage if any
  */
-function getInitialUsers() {
+function getStoredUsers() {
   const localUsers = localStorage.getItem(SEARCH_USERS_STORAGE_KEY);
-  if (!localUsers || localUsers.length < 50)
-    return [];
+  if (!localUsers) return [];
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const storedUsers = JSON.parse(localUsers);
@@ -26,8 +25,7 @@ function getInitialUsers() {
     return [];
   }
   for (const user of storedUsers) {
-    if (user satisfies IUserWithID)
-      continue;
+    if (user satisfies IUserWithID) continue;
     localStorage.removeItem(SEARCH_USERS_STORAGE_KEY);
     return [];
   }
@@ -47,7 +45,7 @@ export function UserSearchField({
   value: string,
   onSelect: (user: IUserWithID) => void,
 }) {
-  const [usersList, setUsersList] = useState<IUserWithID[]>(getInitialUsers());
+  const [usersList, setUsersList] = useState<IUserWithID[]>(getStoredUsers());
   const [searchTerm, setSearchTerm] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -56,9 +54,14 @@ export function UserSearchField({
     const delayDebounceFn = setTimeout(() => {void (async () => {
       if (searchTerm.length < 2) return;
       try {
-        const users = await getUserFromSubstring(searchTerm)
-        setUsersList(users);
-        localStorage.setItem(SEARCH_USERS_STORAGE_KEY, JSON.stringify(users));
+        const newUsers = await getUserFromSubstring(searchTerm);
+        setUsersList((prevUsersList) => {
+          const allUsers = [...newUsers, ...prevUsersList.filter(
+            (prevUser) => !newUsers.some((newUser) => newUser._id === prevUser._id)
+          )].slice(0, 10);
+          localStorage.setItem(SEARCH_USERS_STORAGE_KEY, JSON.stringify(allUsers));
+          return allUsers;
+        });
       } catch (err) {
         console.error(err);
         toast.error((err instanceof Error) ? err.message : "No such User found");

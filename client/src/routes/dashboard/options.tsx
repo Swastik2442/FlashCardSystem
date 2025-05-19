@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { deckFormSchema, cardFormSchema } from "@/types/forms";
 import type { TDeckFormSchema, TCardFormSchema } from "@/types/forms";
-import { createDeck } from "@/api/deck";
+import { createDeck, isDeckUncategorised } from "@/api/deck";
 import { createCard } from "@/api/card";
 
 // TODO: Implement a way to add newly created decks/cards to page without full reload
@@ -241,7 +241,7 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {decks.map((deck, idx) => (
+                      {decks.map((deck, idx) => isDeckUncategorised(deck) ? "" : (
                         <SelectItem key={idx} value={deck._id}>
                           {deck.name}
                         </SelectItem>

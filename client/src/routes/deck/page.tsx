@@ -1,93 +1,69 @@
-import { Link, useParams, useLoaderData, LoaderFunctionArgs, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Lock, Plus } from "lucide-react";
 import ShowCards from "@/components/showCards";
-import { DeckLikeButton, DeckPlayButton, CardCreationDialog, DeckOptionsDropdown } from "./options";
-import { isDeckUncategorised, getDeck, getDeckCards, getAllDecks } from "@/api/deck";
+import {
+  DeckLikeButton,
+  DeckPlayButton,
+  CardCreationDialog,
+  DeckOptionsDropdown
+} from "./options";
+import { DECK_QUERY_KEY, USER_QUERY_KEY } from "@/constants";
+import { useDeckCardsQuery, useDeckQuery } from "@/queries/decks";
 import { getUser } from "@/api/user";
-import { DECKS_STORAGE_KEY, UNCATEGORISED_DECK_OBJ } from "@/constants";
-
-interface IDeckLoaderData {
-  ownerInfo: IUser;
-  deckInfo: IMoreDeck;
-  cards: ICard[];
-  allDecks: ILessDeck[];
-  uncategorisedDeck: ILessDeck;
-}
-
-/**
- * Loader function for the `/deck/:did` Route
- * @param params Parameters passed to the Route
- * @returns information about the Deck, Owner, Cards and other Decks
- */
-export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckLoaderData> {
-  const deckID = params.did;
-  if (!deckID)
-    throw new Error("Deck ID not found");
-
-  // TODO: Possibly make it fetch during page rendering
-  const [deckInfo, ownerInfo, cards] = await Promise.all([
-    getDeck(deckID),
-    getDeck(deckID).then(deck => getUser(deck.owner)),
-    getDeckCards(deckID)
-  ]);
-  cards.sort((a, b) => a.question > b.question ? 1 : -1);
-
-  // Corrects Like Count logic in UI
-  if (deckInfo.isLiked)
-    deckInfo.likes -= 1;
-
-  // Get all Decks owned by or shared to the User
-  const allDecksString = localStorage.getItem(DECKS_STORAGE_KEY);
-  const allDecks = allDecksString ? JSON.parse(allDecksString) as ILessDeck[] : [];
-  if (allDecks.length === 0) {
-    const allDecks = await getAllDecks();
-    allDecks.sort((a, b) => (a.dateUpdated > b.dateUpdated || a.name < b.name) ? -1 : 1);
-    localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(allDecks));
-  }
-
-  const decks = allDecks.filter((deck) => !isDeckUncategorised(deck));
-  const uncat = allDecks.find(isDeckUncategorised);
-
-  return {
-    ownerInfo: ownerInfo,
-    deckInfo: deckInfo,
-    cards: cards,
-    allDecks: decks,
-    uncategorisedDeck: uncat ?? UNCATEGORISED_DECK_OBJ
-  };
-}
 
 /**
  * Component for the Deck page
  */
 export function Deck() {
-  const { did } = useParams();
-  const { ownerInfo, deckInfo, cards, allDecks, uncategorisedDeck } = useLoaderData<IDeckLoaderData>();
-  const navigate = useNavigate();
+  const { did } = useParams()
+  const deckQuery = useDeckQuery(did!)
+  const cardsQuery = useDeckCardsQuery(did!)
+  const ownerQuery = useQuery({
+    queryKey: [DECK_QUERY_KEY, did, USER_QUERY_KEY],
+    queryFn: () => deckQuery.data?.owner ? getUser(deckQuery.data?.owner) : null,
+    enabled: !!deckQuery.data?.owner
+  })
 
   return (
     <div className="my-4">
       <div className="flex justify-between ml-10 mr-4 mb-4">
         <h1 className="flex gap-1 items-center">
-          {deckInfo.isPrivate && <Lock className="size-4" />}
-          <Link to={`/users/${ownerInfo.username}`} className="hidden sm:inline-block font-extralight hover:underline">
-            {ownerInfo.username}
-          </Link>
+          {deckQuery.data?.isPrivate && <Lock className="size-4" />}
+          {ownerQuery.data && <Link
+            to={`/users/${ownerQuery.data.username}`}
+            className="hidden sm:inline-block font-extralight hover:underline"
+          >
+            {ownerQuery.data.username}
+          </Link>}
           <span className="hidden sm:inline-block font-thin"> | </span>
-          <span>{deckInfo.name}</span>
+          <span>{deckQuery.data?.name}</span>
         </h1>
         <div className="flex gap-1">
-          <DeckLikeButton deckID={did!} likes={deckInfo.likes} isLiked={deckInfo.isLiked} />
-          <DeckPlayButton deckID={did!} cardsCount={cards.length} />
-          {deckInfo.isEditable && <>
+          {deckQuery.data && <DeckLikeButton
+            deckID={did!}
+            likes={deckQuery.data.likes}
+            isLiked={deckQuery.data.isLiked}
+          />}
+          <DeckPlayButton
+            deckID={did!}
+            disabled={cardsQuery.data?.length == 0}
+          />
+          {deckQuery.data?.isEditable && <>
             <CardCreationDialog deckID={did!} />
-            <DeckOptionsDropdown deckID={did!} deck={deckInfo} owner={ownerInfo.username} />
+            {ownerQuery.data && <DeckOptionsDropdown
+              deckID={did!}
+              deck={deckQuery.data}
+              owner={ownerQuery.data.username}
+            />}
           </>}
         </div>
       </div>
-      <p className="ml-10 mr-4 text-sm font-extralight">{deckInfo.description}</p>
+      <p className="ml-10 mr-4 text-sm font-extralight">
+        {deckQuery.data?.description}
+      </p>
       <hr className="my-4" />
-      {cards.length === 0 ? (
+      {cardsQuery.data?.length === 0 ? (
         <div className="text-center w-full h-full">
           <span className="font-thin">No Cards found</span>
           <h2>
@@ -96,13 +72,10 @@ export function Deck() {
             <span>Icon in the Top-Right Corner.</span>
           </h2>
         </div>
-      ) : <ShowCards
-        cards={cards}
-        decks={allDecks}
-        uncategorisedDeck={uncategorisedDeck}
-        editable={deckInfo.isEditable}
-        uponChange={() => { void navigate(`/deck/${did}`, { replace: true }); }}
-      />}
+      ) : <>{deckQuery.data && <ShowCards
+        deckID={did!}
+        editable={deckQuery.data.isEditable}
+      />}</>}
     </div>
   );
 }

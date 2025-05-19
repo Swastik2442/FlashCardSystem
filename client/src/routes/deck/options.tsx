@@ -32,14 +32,14 @@ interface IDeckOptionsProps {
 /**
  * A Button to Play the Deck (navigate to its corresponding Play Page)
  * @param deckID ID of the Deck
- * @param cardsCount Number of Cards in the Deck
+ * @param disabled Whether the Button is Disabled or Not
  */
 export function DeckPlayButton({
   deckID,
-  cardsCount
+  disabled
 }: {
   deckID: string,
-  cardsCount: number
+  disabled: boolean
 }) {
   const navigate = useNavigate();
   return (
@@ -47,7 +47,7 @@ export function DeckPlayButton({
       onClick={() => navigate(`/play/${deckID}`, { replace: true })}
       type="button"
       title="Play"
-      disabled={cardsCount == 0}
+      disabled={disabled}
     >
       <Play />
       <span className="select-none">Play</span>

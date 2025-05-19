@@ -7,7 +7,7 @@ import { UNCATEGORISED_DECK_NAME } from "@/constants";
  * @param deck Deck to be checked
  * @returns Whether the Deck contains Uncategorised Cards
  */
-export const isDeckUncategorised = (deck: ILessDeck | IMoreDeck) => {
+export function isDeckUncategorised<T extends Pick<ILessDeck, "name">>(deck: T) {
   return deck.name === UNCATEGORISED_DECK_NAME;
 }
 
@@ -15,8 +15,33 @@ export const isDeckUncategorised = (deck: ILessDeck | IMoreDeck) => {
  * @param deck Deck to be checked
  * @returns Whether the Deck is Editable by the User
  */
-export const isDeckEditable = (deck: ILessDeck | IMoreDeck) => {
+export function isDeckEditable<T extends Pick<ILessDeck, "name"> | Pick<IMoreDeck, "name" | "isEditable">>(deck: T) {
   return isDeckUncategorised(deck) || ("isEditable" in deck && deck.isEditable);
+}
+
+/**
+ * @param decks Decks to be checked
+ * @returns Deck which contains Uncategorised Cards
+ */
+export function getUncategorisedDeck<T extends Pick<ILessDeck, "name">>(decks?: T[]): Nullable<T> {
+  const uncat = decks?.find(isDeckUncategorised);
+  if (!uncat) return null;
+  return uncat;
+}
+
+export function sortDecks<T extends Pick<ILessDeck, "name" | "dateUpdated">>(decks: T[]): T[] {
+  return decks.sort((a, b) => (
+    (a.dateUpdated > b.dateUpdated) ||
+    (a.dateUpdated === b.dateUpdated && a.name < b.name)
+  ) ? -1 : 1);
+}
+
+export function sortCards<T extends Omit<ILessCard, "_id">>(cards: T[]): T[] {
+  return cards.sort((a, b) => (
+    (a.question > b.question) ||
+    (a.question === b.question && a.answer > b.answer) ||
+    (a.question === b.question && a.answer === b.answer && a.hint > b.hint)
+  ) ? 1 : -1);
 }
 
 /**
@@ -49,18 +74,35 @@ export const getAllDecks = async () => {
 }
 
 /**
+ * Makes a GET request to fetch all Decks owned by or shared to the User
+ * @returns Sorted Decks owned by or shared to the User
+ */
+export const getAllDecksSorted = async () => {
+  return sortDecks(await getAllDecks());
+}
+
+/**
  * Makes a GET request to fetch all Cards in the Deck with the given ID
  * @param deckID ID of the Deck
  * @returns Cards in the Deck
  */
 export const getDeckCards = async (deckID: string) => {
-  const response = await makeRequest<ICard[]>(
+  const response = await makeRequest<ILessCard[]>(
     `/deck/cards/${deckID}`,
     "get",
     null,
     "Failed to fetch Deck's cards"
   );
-  return response.data;
+  return response.data.map((v) => ({ ...v, deck: deckID } as ICard));
+}
+
+/**
+ * Makes a GET request to fetch all Cards in the Deck with the given ID
+ * @param deckID ID of the Deck
+ * @returns Sorted Cards in the Deck
+ */
+export const getDeckCardsSorted = async (deckID: string) => {
+  return sortCards(await getDeckCards(deckID));
 }
 
 /**
