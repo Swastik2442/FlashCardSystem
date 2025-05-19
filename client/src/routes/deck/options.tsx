@@ -265,6 +265,7 @@ export function DeckOptionsDropdown({
       setPopulatingDeck(true);
       try {
         const res = await populateDeck(deckID);
+        // TODO: Make a robust system of detecting such things
         if (res instanceof Date || typeof res == "string") {
           setLimitedTill(
             (res instanceof Date)

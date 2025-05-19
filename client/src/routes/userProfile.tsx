@@ -10,6 +10,7 @@ interface IUserProfileLoaderData {
   userDecks: ILessDeck[];
   likedDecks: ILessDeck[] | null;
 }
+// TODO: Move likedDecks to another page/tab
 
 /**
  * Loader function for the `/user/:username` Route
@@ -23,10 +24,13 @@ export async function UserProfileLoader({
   if (!username)
     throw new Error("username not found");
 
-  const userInfo = await getUser(username);
-  const userDecks = await getUserDecks(username);
+  const [userInfo, userDecks] = await Promise.all([
+    getUser(username),
+    getUserDecks(username)
+  ]);
 
   let likedDecks = null;
+  // Checks if User is Logged in, because the function cannot use useAuth here
   if (username == localStorage.getItem(USER_STORAGE_KEY)) {
     likedDecks = await getUserLikedDecks();
   }

@@ -25,9 +25,11 @@ export async function DeckLoader({ params }: LoaderFunctionArgs): Promise<IDeckL
     throw new Error("Deck ID not found");
 
   // TODO: Possibly make it fetch during page rendering
-  const deckInfo = await getDeck(deckID);
-  const ownerInfo = await getUser(deckInfo.owner);
-  const cards = await getDeckCards(deckID);
+  const [deckInfo, ownerInfo, cards] = await Promise.all([
+    getDeck(deckID),
+    getDeck(deckID).then(deck => getUser(deck.owner)),
+    getDeckCards(deckID)
+  ]);
   cards.sort((a, b) => a.question > b.question ? 1 : -1);
 
   // Corrects Like Count logic in UI
