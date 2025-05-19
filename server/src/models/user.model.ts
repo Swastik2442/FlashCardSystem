@@ -2,8 +2,10 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Deck from "./deck.model";
-import {  UNCATEGORISED_DECK_NAME } from "../constants";
+import { UNCATEGORISED_DECK_NAME } from "../constants";
 import env from "../env";
+
+export type UserRole = "user" | "admin" | `tester_${string}`;
 
 export interface IUser {
     fullName: string;
@@ -11,6 +13,7 @@ export interface IUser {
     username: string;
     password: string;
     refreshToken: string;
+    roles: UserRole[];
 }
 
 export interface IUserMethods {
@@ -43,6 +46,10 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
         type: String,
         default: undefined
     },
+    roles: {
+        type: [String],
+        default: ["user"] as UserRole[]
+    }
 });
 
 userSchema.pre("save", async function (next) {

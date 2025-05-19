@@ -31,9 +31,9 @@ export default function Footer() {
           <span className="text-foreground/40">Made with</span>
           {tech.map((item, idx) => (
             <a href={item.url} target="_blank" key={idx}>
-              <item.icon className="size-6" />
+              <item.icon className="size-6 hover:fill-foreground/40" />
               <span className="sr-only">{item.name}</span>
-            </a>  
+            </a>
           ))}
         </nav>
       </div>

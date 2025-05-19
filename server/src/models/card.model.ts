@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 import Deck from "./deck.model";
 
-interface ICard {
+export interface ICard {
     question: string;
     answer: string;
-    hint: string;
+    hint?: string;
     deck: mongoose.Schema.Types.ObjectId;
 }
 
-interface ICardMethods {
+export interface ICardMethods {
     isAccessibleBy(user: mongoose.Schema.Types.ObjectId): boolean;
     isEditableBy(user: mongoose.Schema.Types.ObjectId): boolean;
 }

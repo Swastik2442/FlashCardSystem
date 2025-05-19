@@ -1,0 +1,19 @@
+{
+  "name": "flashcardsystem",
+  "version": "1.2.1",
+  "private": true,
+  "author": "Swastik Kulshreshtha",
+  "license": "MIT",
+  "description": "The Full-Stack Project of a Flash Card Learning System.",
+  "scripts": {
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "db:start": "pnpm --filter server db:start",
+    "db:stop": "pnpm --filter server db:stop",
+    "dev:with-db": "pnpm db:start && pnpm dev",
+    "test:server": "pnpm --filter server test:with-db"
+  }
+}

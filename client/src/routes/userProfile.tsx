@@ -16,7 +16,9 @@ interface IUserProfileLoaderData {
  * @param params Parameters passed to the Route
  * @returns information about the User
  */
-export async function UserProfileLoader({ params }: LoaderFunctionArgs): Promise<IUserProfileLoaderData> {
+export async function UserProfileLoader({
+  params
+}: LoaderFunctionArgs): Promise<IUserProfileLoaderData> {
   const username = params.username;
   if (!username)
     throw new Error("username not found");
@@ -29,14 +31,14 @@ export async function UserProfileLoader({ params }: LoaderFunctionArgs): Promise
     likedDecks = await getUserLikedDecks();
   }
 
-  return { userInfo: userInfo, userDecks: userDecks, likedDecks: likedDecks };
+  return { userInfo, userDecks, likedDecks };
 }
 
 /**
  * A Component that renders the User Profile
  */
 export function UserProfile() {
-  const { userInfo, userDecks, likedDecks } = useLoaderData() as IUserProfileLoaderData;
+  const { userInfo, userDecks, likedDecks } = useLoaderData<IUserProfileLoaderData>();
 
   return (
     <div className="my-4">
@@ -48,7 +50,7 @@ export function UserProfile() {
         </h1>
       </div>
       <hr className="my-4" />
-      {userDecks.length > 0 ?  (
+      {userDecks.length > 0 ? (
         <div className="flex flex-wrap gap-4 mx-8">
         {userDecks.map((deck, idx) => (
             <Card className="min-w-72 flex-1" key={idx}>
@@ -69,25 +71,31 @@ export function UserProfile() {
           <span className="font-thin">No Decks found</span>
         </div>
       )}
-      {likedDecks ? <>
+      {likedDecks && <>
         <hr className="my-4" />
         <h2 className="ml-10 select-none mb-4">Liked Decks</h2>
-        <div className="flex flex-wrap gap-4 mx-8">
-        {likedDecks.map((deck, idx) => (
-            <Card className="min-w-72 flex-1" key={idx}>
-              <Link to={`/deck/${deck._id}`}>
-                <CardHeader>
-                  <CardTitle>{deck.name}</CardTitle>
-                </CardHeader>
-              </Link>
-              <CardFooter className="flex justify-between">
-                <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
-                <span>{deck.isPrivate ? <Lock className="size-4" /> : ""}</span>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      </> : <></>}
+        {likedDecks.length > 0 ? (
+          <div className="flex flex-wrap gap-4 mx-8">
+            {likedDecks.map((deck, idx) => (
+              <Card className="min-w-72 flex-1" key={idx}>
+                <Link to={`/deck/${deck._id}`}>
+                  <CardHeader>
+                    <CardTitle>{deck.name}</CardTitle>
+                  </CardHeader>
+                </Link>
+                <CardFooter className="flex justify-between">
+                  <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
+                  {deck.isPrivate && <Lock className="size-4" />}
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center w-full h-full">
+            <span className="font-thin">You have not liked any Decks yet</span>
+          </div>
+        )}
+      </>}
     </div>
   );
 }

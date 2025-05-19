@@ -14,7 +14,7 @@ function Validate(req: ExpressRequest, res: ExpressResponse, next: NextFunction)
         });
         res.status(422).json({
             status: "error",
-            message: (errorCount > 1 ? `${errorCount} Errors` : "An Error") + " occured while processing the request",
+            message: (errorCount > 1 ? `${errorCount} Errors` : "An Error") + " occurred while processing the request",
             data: error
         });
     }

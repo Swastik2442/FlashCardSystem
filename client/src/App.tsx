@@ -1,6 +1,7 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/themeProvider";
 import { AuthProvider } from "@/contexts/authProvider";
+import { FeaturesProvider } from "@/contexts/featuresProvider";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/errorBoundary";
 import Header from "@/components/header";
@@ -14,6 +15,14 @@ import { Deck, DeckLoader } from "@/routes/deck/page";
 import { UserProfile, UserProfileLoader } from "@/routes/userProfile";
 import { Playground, PlaygroundLoader } from "@/routes/playground";
 import { Settings, SettingsLoader } from "@/routes/settings/page";
+
+const RoutesWithHeaderFooter = () => (
+  <>
+    <Header />
+    <Outlet />
+    <Footer />
+  </>
+);
 
 const Router = createBrowserRouter([
   {
@@ -34,30 +43,6 @@ const Router = createBrowserRouter([
   {
     element: <PrivateRoutes />,
     children: [
-      {
-        path: "/dashboard",
-        element: (
-          <>
-            <Header />
-            <Dashboard />
-            <Footer />
-          </>
-        ),
-        loader: DashboardLoader,
-        errorElement: <ErrorBoundary />,
-      },
-      {
-        path: "/deck/:did",
-        element: (
-          <>
-            <Header />
-            <Deck />
-            <Footer />
-          </>
-        ),
-        loader: DeckLoader,
-        errorElement: <ErrorBoundary />,
-      },
       {
         path: "/play",
         element: (
@@ -81,40 +66,39 @@ const Router = createBrowserRouter([
         errorElement: <ErrorBoundary />,
       },
       {
-        path: "/users/:username",
-        element: (
-          <>
-            <Header />
-            <UserProfile />
-            <Footer />
-          </>
-        ),
-        loader: UserProfileLoader,
-        errorElement: <ErrorBoundary />,
-      },
-      {
-        path: "/settings",
-        element: (
-          <>
-            <Header />
-            <Settings />
-            <Footer />
-          </>
-        ),
-        loader: SettingsLoader,
-        errorElement: <ErrorBoundary />,
-      },
-      {
-        path: "/settings/:name",
-        element: (
-          <>
-            <Header />
-            <Settings />
-            <Footer />
-          </>
-        ),
-        loader: SettingsLoader,
-        errorElement: <ErrorBoundary />,
+        element: <RoutesWithHeaderFooter />,
+        children: [
+          {
+            path: "/dashboard",
+            element: <Dashboard />,
+            loader: DashboardLoader,
+            errorElement: <ErrorBoundary />,
+          },
+          {
+            path: "/deck/:did",
+            element: <Deck />,
+            loader: DeckLoader,
+            errorElement: <ErrorBoundary />,
+          },
+          {
+            path: "/users/:username",
+            element: <UserProfile />,
+            loader: UserProfileLoader,
+            errorElement: <ErrorBoundary />,
+          },
+          {
+            path: "/settings",
+            element: <Settings />,
+            loader: SettingsLoader,
+            errorElement: <ErrorBoundary />,
+          },
+          {
+            path: "/settings/:name",
+            element: <Settings />,
+            loader: SettingsLoader,
+            errorElement: <ErrorBoundary />,
+          },
+        ]
       },
     ]
   }
@@ -125,7 +109,9 @@ function App() {
     <>
     <ThemeProvider>
     <AuthProvider>
+    <FeaturesProvider>
       <RouterProvider router={Router} />
+    </FeaturesProvider>
     </AuthProvider>
     </ThemeProvider>
     <Toaster richColors toastOptions={{}} />

@@ -64,7 +64,7 @@ export default function ErrorBoundary() {
           transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
           className="bg-gradient-to-br from-slate-300 to-slate-500 py-4 bg-clip-text text-center text-lg font-medium tracking-tight text-transparent md:text-lg"
         >
-          <p>An Error occured while rendering this page</p>
+          <p>An Error occurred while rendering this page</p>
           {import.meta.env.DEV && err instanceof Error && <>
             <p>{err.message}</p>
           </>}

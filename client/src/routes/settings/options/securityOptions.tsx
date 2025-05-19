@@ -75,8 +75,8 @@ function ChangePasswordOption() {
                 render={({ field }) => (
                   <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                     <FormLabel className="text-right">Old Password</FormLabel>
-                    <FormControl style={{marginTop: 0 + 'px'}}>
-                      <Input className="col-span-3" type="password" {...field} />
+                    <FormControl>
+                      <Input className="!mt-0 col-span-3" type="password" {...field} />
                     </FormControl>
                     <FormMessage className="col-span-4 text-right" />
                   </FormItem>
@@ -88,8 +88,8 @@ function ChangePasswordOption() {
                 render={({ field }) => (
                   <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                     <FormLabel className="text-right">New Password</FormLabel>
-                    <FormControl style={{marginTop: 0 + 'px'}}>
-                      <Input className="col-span-3" type="password" {...field} />
+                    <FormControl>
+                      <Input className="!mt-0 col-span-3" type="password" {...field} />
                     </FormControl>
                     <FormMessage className="col-span-4 text-right" />
                   </FormItem>

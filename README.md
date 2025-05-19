@@ -1,4 +1,4 @@
-# FlashCardSystem
+# FlashCardSystem ![Version](https://img.shields.io/github/package-json/v/Swastik2442/FlashCardSystem)
 
 A Learning System using Flash Cards
 
@@ -11,6 +11,7 @@ A Learning System using Flash Cards
 * express-validator
 * jsonwebtoken
 * Jest
+* Gemini API
 * Tailwind CSS
 * shadcn/ui
 * Aceternity UI

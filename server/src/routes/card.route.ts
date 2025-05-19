@@ -1,11 +1,13 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
+import Ratelimiter from "../middlewares/ratelimit.middleware";
 import Validate from "../middlewares/validate.middleware";
-import { VerifyJWT } from "../middlewares/auth.middleware";
-import { CreateCard, GetCard, DeleteCard, UpdateCard } from "../controllers/card.controller";
+import { VerifyJWT, AllowUser, AllowUserFor } from "../middlewares/auth.middleware";
+import { CreateCard, GetCard, PopulateCard, DeleteCard, UpdateCard } from "../controllers/card.controller";
 
 const router = express.Router();
 router.use(VerifyJWT);
+router.use(AllowUser);
 
 router.post(
     "/new",
@@ -33,6 +35,19 @@ router.post(
         .escape(),
     Validate,
     CreateCard
+);
+
+router.get(
+    "/populate/:cid",
+    (...params) => AllowUserFor("GEN_AI", ...params),
+    check("cid")
+        .notEmpty()
+        .withMessage("Card ID is required")
+        .trim()
+        .escape(),
+    Validate,
+    Ratelimiter,
+    PopulateCard
 );
 
 router.get(

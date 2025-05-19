@@ -25,7 +25,7 @@ export default function Register() {
     try {
       await auth.registerUser(values);
       toast.success("Registration Successful");
-      navigate("/auth/login");
+      await navigate("/auth/login");
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Register");

@@ -1,6 +1,8 @@
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import jwt from "jsonwebtoken"
 import User from "../models/user.model";
+import { canUseFeature } from "../featureFlags";
+import type { FeatureFlagName } from "../featureFlags";
 import { ACCESS_TOKEN_COOKIE_NAME } from "../constants";
 import env from "../env";
 
@@ -31,4 +33,33 @@ export async function VerifyJWT(req: ExpressRequest, res: ExpressResponse, next:
         });
         res.end();
     }
+}
+
+/**
+ * @desc Checks whether the User is Allowed as per a Feature Flag
+ * @access public
+ */
+export function AllowUserFor(feature: FeatureFlagName, req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
+    try {
+        if (!(req.user))
+            throw new Error("Unknown User");
+        if (!canUseFeature(feature, req.user))
+            throw new Error("Feature not Allowed");
+        next();
+    } catch (err: unknown) {
+        res.status(401).json({
+            status: "error",
+            message: err instanceof Error ? err.message : "Internal Server Error",
+            data: null,
+        });
+        res.end();
+    }
+}
+
+/**
+ * @desc Checks whether the User is Allowed to use the Application
+ * @access public
+ */
+export function AllowUser(req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
+    return AllowUserFor("IS_USER_ALLOWED", req, res, next);
 }

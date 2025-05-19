@@ -82,7 +82,7 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
       await createDeck(values);
       toast.success("Deck Created", { description: values.name });
       deckForm.reset();
-      navigate("/dashboard", { replace: true });
+      await navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck");
@@ -106,8 +106,8 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Name</FormLabel>
-                  <FormControl style={{marginTop: 0 + 'px'}}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -119,8 +119,8 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Description</FormLabel>
-                  <FormControl style={{marginTop: 0 + 'px'}}>
-                    <Textarea className="col-span-3" placeholder="My New Deck" {...field} />
+                  <FormControl>
+                    <Textarea className="!mt-0 col-span-3" placeholder="My New Deck" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -132,8 +132,8 @@ function DeckCreationDialog({ dialogOpen, setDialogOpen }: { dialogOpen: boolean
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Private</FormLabel>
-                  <FormControl style={{marginTop: 0 + 'px'}}>
-                    <Switch className="col-span-3" checked={field.value} onCheckedChange={field.onChange} />
+                  <FormControl>
+                    <Switch className="!mt-0 col-span-3" checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -171,7 +171,7 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
       await createCard(values);
       toast.success("Card Created", { description: values.question });
       cardForm.reset();
-      navigate("/dashboard", { replace: true });
+      await navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(err);
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Card");
@@ -195,8 +195,8 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Question</FormLabel>
-                  <FormControl style={{marginTop: 0 + 'px'}}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -208,8 +208,8 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Answer</FormLabel>
-                  <FormControl style={{marginTop: 0 + 'px'}}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -221,8 +221,8 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Hint</FormLabel>
-                  <FormControl style={{marginTop: 0 + 'px'}}>
-                    <Input className="col-span-3" {...field} />
+                  <FormControl>
+                    <Input className="!mt-0 col-span-3" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -235,8 +235,8 @@ function CardCreationDialog({ dialogOpen, setDialogOpen, decks }: { dialogOpen: 
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Deck</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl style={{marginTop: 0 + 'px'}}>
-                      <SelectTrigger className="col-span-3">
+                    <FormControl>
+                      <SelectTrigger className="!mt-0 col-span-3">
                         <SelectValue placeholder="None" />
                       </SelectTrigger>
                     </FormControl>

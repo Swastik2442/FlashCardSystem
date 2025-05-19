@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post(
     "/register",
-        check("fullName")
+    check("fullName")
         .notEmpty()
         .withMessage("Full Name is required")
         .trim()
@@ -32,8 +32,8 @@ router.post(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     Register,
 );
@@ -51,7 +51,7 @@ router.post(
         check("email")
             .isEmail()
             .normalizeEmail(),
-    ], "Any one of username or email is required"),
+    ], "Either username or email is required"),
     check("password")
         .notEmpty()
         .withMessage("Password is required"),
@@ -59,24 +59,24 @@ router.post(
     Login,
 );
 
-router.get("/logout", VerifyJWT, Logout);
 router.get("/refresh-token", RefreshAccessToken);
+
+router.use(VerifyJWT);
+router.get("/logout", Logout);
 
 router.delete(
     "/delete",
-    VerifyJWT,
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     DeleteUser
 );
 
 router.patch(
     "/edit/username",
-    VerifyJWT,
     check("username")
         .notEmpty()
         .withMessage("Username is required")
@@ -90,15 +90,14 @@ router.patch(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangeUsername
 );
 
 router.patch(
     "/edit/email",
-    VerifyJWT,
     check("email")
         .isEmail()
         .withMessage("Invalid Email Address")
@@ -106,25 +105,24 @@ router.patch(
     check("password")
         .notEmpty()
         .withMessage("Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangeEmail
 );
 
 router.patch(
     "/edit/password",
-    VerifyJWT,
     check("oldPassword")
         .notEmpty()
         .withMessage("Old Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     check("newPassword")
         .notEmpty()
         .withMessage("New Password is required")
-        .isLength({ min: 8, max: 128 })
-        .withMessage("Must be at least 8 Characters and at most 128 Characters long"),
+        .isLength({ min: 8, max: 64 })
+        .withMessage("Must be at least 8 Characters and at most 64 Characters long"),
     Validate,
     ChangePassword
 );

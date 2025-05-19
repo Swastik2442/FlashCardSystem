@@ -1,11 +1,13 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
+import Ratelimiter from "../middlewares/ratelimit.middleware";
 import Validate from "../middlewares/validate.middleware";
-import { VerifyJWT } from "../middlewares/auth.middleware";
-import { CreateDeck, GetDeck, DeleteDeck, UpdateDeck, GetAllDecks, ShareDeck, GetDeckLikes, LikeDeck, UnlikeDeck, GetDeckCards, ChangeDeckOwner } from "../controllers/deck.controller";
+import { VerifyJWT, AllowUser, AllowUserFor } from "../middlewares/auth.middleware";
+import { CreateDeck, GetDeck, DeleteDeck, UpdateDeck, PopulateDeck, GetAllDecks, ShareDeck, GetDeckLikes, LikeDeck, UnlikeDeck, GetDeckCards, ChangeDeckOwner } from "../controllers/deck.controller";
 
 const router = express.Router();
 router.use(VerifyJWT);
+router.use(AllowUser);
 
 router.get("/all", GetAllDecks);
 
@@ -28,6 +30,19 @@ router.post(
         .withMessage("Private must be a boolean"),
     Validate,
     CreateDeck
+);
+
+router.get(
+    "/populate/:did",
+    (...params) => AllowUserFor("GEN_AI", ...params),
+    check("did")
+        .notEmpty()
+        .withMessage("Deck ID is required")
+        .trim()
+        .escape(),
+    Validate,
+    Ratelimiter,
+    PopulateDeck
 );
 
 router.get(
@@ -170,7 +185,8 @@ router.post(
         .trim()
         .escape(),
     Validate,
-    LikeDeck);
+    LikeDeck
+);
 
 router.post(
     "/likes/remove/:did",
