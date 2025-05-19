@@ -7,9 +7,20 @@ import User from "../src/models/user.model";
 import Deck from "../src/models/deck.model";
 import Card from "../src/models/card.model";
 import { sampleUser1, sampleUser2, sampleDeck, sampleCard, getCookie } from "./utils";
+import { UserAccessibleRoles } from "../src/featureFlags";
 
 let authTokens1 = { access_token: "", refresh_token: "" };
 let authTokens2 = { access_token: "", refresh_token: "" };
+
+export const setRoles = async (roles: Record<string, boolean>) => {
+    const tokenRes = await request(app).get("/csrf-token");
+    const res = await request(app)
+        .patch("/user/roles")
+        .set("x-csrf-token", tokenRes.body.data)
+        .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token};${getCookie(tokenRes)}`)
+        .send({ roles: roles });
+    return res;
+}
 
 beforeAll(async () => {
     // Connect to Database
@@ -122,6 +133,45 @@ describe("User Routes", () => {
         const user = await User.findOne({ username: sampleUser1.username.toLowerCase() });
         expect(user!.fullName).toBe(updatedUser.fullName);
     });
+
+    it("should get the user's possible roles", async () => {
+        const res = await request(app)
+            .get("/user/roles/all")
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.data).toHaveLength(UserAccessibleRoles.length);
+        expect(res.body.data).toEqual(expect.arrayContaining(UserAccessibleRoles));
+    });
+
+    it("should get the user's current roles", async () => {
+        const res = await request(app)
+            .get("/user/roles")
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+
+        const user = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        expect(res.body.data).toHaveLength(user!.roles.length);
+        expect(res.body.data).toEqual(expect.arrayContaining(user!.roles));
+    });
+
+    it("should edit one of the roles of the user", async () => {
+        // @ts-expect-error: UserAccessibleRoles may be empty, which is intentional for this test
+        if (UserAccessibleRoles.length == 0) return;
+
+        const userBefore = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        const randomRole = UserAccessibleRoles[Math.floor(Math.random() * UserAccessibleRoles.length)];
+        const rolePresentBefore = userBefore!.roles.includes(randomRole);
+
+        const res = await setRoles({ [randomRole]: !rolePresentBefore });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+
+        const userAfter = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        const rolePresentAfter = userAfter!.roles.includes(randomRole)
+        expect(rolePresentBefore ? !rolePresentAfter : rolePresentAfter).toBe(true);
+    });
 });
 
 describe("Card Routes", () => {
@@ -170,7 +220,27 @@ describe("Card Routes", () => {
         expect(card!.question).toBe(updatedCard.question);
     });
 
+    it("should get not AI-generated content for the card", async () => {
+        const user = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        const canUseAI = user!.roles.includes("tester_genAI");
+        if (canUseAI) await setRoles({ "tester_genAI": false });
+
+        const res = await request(app)
+            .get(`/card/populate/${cardId}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}}`);
+        expect(res.statusCode).toBe(401);
+        expect(res.body.status).toBe("error");
+        expect(res.body.message).toBe("Feature not Allowed");
+        expect(res.body.data).toBeNull();
+
+        if (canUseAI) await setRoles({ "tester_genAI": true });
+    });
+
     it("should get AI-generated content for the card", async () => {
+        const user = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        const cantUseAI = !(user!.roles.includes("tester_genAI"));
+        if (cantUseAI) await setRoles({ "tester_genAI": true });
+
         const res = await request(app)
             .get(`/card/populate/${cardId}`)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}}`);
@@ -181,6 +251,8 @@ describe("Card Routes", () => {
         expect(res.body.data.question).toBeDefined();
         expect(res.body.data.answer).toBeDefined();
         expect(res.body.data.hint).toBeDefined();
+
+        if (cantUseAI) await setRoles({ "tester_genAI": false });
     });
 
     it("should delete the card by ID", async () => {
@@ -294,7 +366,27 @@ describe("Deck Routes", () => {
         expect(deck?.name).toBe(updatedDeck.name);
     });
 
+    it("should add not AI-generated cards to the deck", async () => {
+        const user = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        const canUseAI = user!.roles.includes("tester_genAI");
+        if (canUseAI) await setRoles({ "tester_genAI": false });
+
+        const res = await request(app)
+            .get(`/deck/populate/${deckId}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+        expect(res.statusCode).toBe(401);
+        expect(res.body.status).toBe("error");
+        expect(res.body.message).toBe("Feature not Allowed");
+        expect(res.body.data).toBeNull();
+
+        if (canUseAI) await setRoles({ "tester_genAI": true });
+    });
+
     it("should add AI-generated cards to the deck", async () => {
+        const user = await User.findOne({ username: sampleUser1.username.toLowerCase() });
+        const cantUseAI = !(user!.roles.includes("tester_genAI"));
+        if (cantUseAI) await setRoles({ "tester_genAI": true });
+
         const cardsBefore = await Card.countDocuments({ deck: deckId });
 
         const res = await request(app)
@@ -306,6 +398,8 @@ describe("Deck Routes", () => {
 
         const cardsAfter = await Card.countDocuments({ deck: deckId });
         expect(cardsAfter).toBe(cardsBefore + 5);
+
+        if (cantUseAI) await setRoles({ "tester_genAI": false });
     });
 
     it("should like the deck", async () => {

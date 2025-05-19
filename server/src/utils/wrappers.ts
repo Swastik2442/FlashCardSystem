@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 
-const tryCatch = (fn: RequestHandler): RequestHandler => (
+export const tryCatch = (fn: RequestHandler): RequestHandler => (
   req: Request,
   res: Response,
   next: NextFunction
@@ -16,5 +16,3 @@ const tryCatch = (fn: RequestHandler): RequestHandler => (
     }
   );
 };
-
-export default tryCatch;

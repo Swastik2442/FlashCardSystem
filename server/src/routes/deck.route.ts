@@ -185,7 +185,8 @@ router.post(
         .trim()
         .escape(),
     Validate,
-    LikeDeck);
+    LikeDeck
+);
 
 router.post(
     "/likes/remove/:did",

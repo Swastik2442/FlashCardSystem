@@ -59,12 +59,13 @@ router.post(
     Login,
 );
 
-router.get("/logout", VerifyJWT, Logout);
 router.get("/refresh-token", RefreshAccessToken);
+
+router.use(VerifyJWT);
+router.get("/logout", Logout);
 
 router.delete(
     "/delete",
-    VerifyJWT,
     check("password")
         .notEmpty()
         .withMessage("Password is required")
@@ -76,7 +77,6 @@ router.delete(
 
 router.patch(
     "/edit/username",
-    VerifyJWT,
     check("username")
         .notEmpty()
         .withMessage("Username is required")
@@ -98,7 +98,6 @@ router.patch(
 
 router.patch(
     "/edit/email",
-    VerifyJWT,
     check("email")
         .isEmail()
         .withMessage("Invalid Email Address")
@@ -114,7 +113,6 @@ router.patch(
 
 router.patch(
     "/edit/password",
-    VerifyJWT,
     check("oldPassword")
         .notEmpty()
         .withMessage("Old Password is required")

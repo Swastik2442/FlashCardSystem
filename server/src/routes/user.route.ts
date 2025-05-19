@@ -1,7 +1,7 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
 import Validate from "../middlewares/validate.middleware";
-import { VerifyJWT } from "../middlewares/auth.middleware";
+import { AllowUser, VerifyJWT } from "../middlewares/auth.middleware";
 import { GetUserPrivate, GetUser, GetUserSub, GetLikedDecks, GetUserDecks, UpdateUser, GetUserAccessibleRoles, GetUserRoles, SetUserRoles } from "../controllers/user.controller";
 import { UserAccessibleRoles } from "../featureFlags";
 
@@ -9,6 +9,8 @@ const router = express.Router();
 router.use(VerifyJWT);
 
 router.get("/", GetUserPrivate);
+
+router.use(AllowUser);
 
 router.patch(
     "/",
