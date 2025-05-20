@@ -15,7 +15,7 @@ import {
   useAllDecksQuery,
   useDeckCardsQuery,
   useUncatDeckQuery
-} from "@/queries/decks"
+} from "@/hooks/decksQueries"
 
 /**
  * Component for the Dashboard page

@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { ThemeProvider } from "@/contexts/themeProvider"
 import { AuthProvider } from "@/contexts/authProvider"
 import { FeaturesProvider } from "@/contexts/featuresProvider"
@@ -116,6 +117,7 @@ function App() {
     </FeaturesProvider>
     </AuthProvider>
     </ThemeProvider>
+    <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
     <Toaster richColors toastOptions={{}} />
     </>

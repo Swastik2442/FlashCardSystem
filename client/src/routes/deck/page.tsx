@@ -1,5 +1,4 @@
 import { Link, useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
 import { Lock, Plus } from "lucide-react"
 import ShowCards from "@/components/showCards"
 import {
@@ -8,9 +7,11 @@ import {
   CardCreationDialog,
   DeckOptionsDropdown
 } from "./options"
-import { DECK_QUERY_KEY, USER_QUERY_KEY } from "@/constants"
-import { getUser } from "@/api/user"
-import { useDeckCardsQuery, useDeckQuery } from "@/queries/decks"
+import {
+  useDeckOwnerQuery,
+  useDeckCardsQuery,
+  useDeckQuery
+} from "@/hooks/decksQueries"
 
 /**
  * Component for the Deck page
@@ -19,11 +20,7 @@ export function Deck() {
   const { did } = useParams()
   const deckQuery = useDeckQuery(did)
   const cardsQuery = useDeckCardsQuery(did)
-  const ownerQuery = useQuery({
-    queryKey: [DECK_QUERY_KEY, did, USER_QUERY_KEY],
-    queryFn: () => deckQuery.data?.owner ? getUser(deckQuery.data?.owner) : null,
-    enabled: !!deckQuery.data?.owner
-  })
+  const ownerQuery = useDeckOwnerQuery(did, (data) => data.username)
 
   return (
     <div className="my-4">
@@ -31,10 +28,10 @@ export function Deck() {
         <h1 className="flex gap-1 items-center">
           {deckQuery.data?.isPrivate && <Lock className="size-4" />}
           {ownerQuery.data && <Link
-            to={`/users/${ownerQuery.data.username}`}
+            to={`/users/${ownerQuery.data}`}
             className="hidden sm:inline-block font-extralight hover:underline"
           >
-            {ownerQuery.data.username}
+            {ownerQuery.data}
           </Link>}
           <span className="hidden sm:inline-block font-thin"> | </span>
           <span>{deckQuery.data?.name}</span>
@@ -54,7 +51,7 @@ export function Deck() {
             {ownerQuery.data && <DeckOptionsDropdown
               deckID={did!}
               deck={deckQuery.data}
-              owner={ownerQuery.data.username}
+              owner={ownerQuery.data}
             />}
           </>}
         </div>

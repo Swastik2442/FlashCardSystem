@@ -45,10 +45,10 @@ import { useAuth } from "@/contexts/authProvider"
 import { useFeatures } from "@/contexts/featuresProvider"
 import { isDeckUncategorised, sortCards } from "@/api/deck"
 import {
-  getDeckCardsQueryKey,
   useAllDecksQuery,
   useDeckCardsQuery
-} from "@/queries/decks"
+} from "@/hooks/decksQueries"
+import { getDeckCardsQueryKey } from "@/constants"
 
 const defaultCard: ICard = {
   _id: "",
@@ -72,6 +72,8 @@ function ShowCards({
 }) {
   const queryClient = useQueryClient()
   const cardsQuery = useDeckCardsQuery(deckID)
+
+  const { setLimitedTill } = useAuth()
 
   const [cardToEdit, setCardToEdit] = useState<ICard | null>(null)
   const [cardToDelete, setCardToDelete] = useState<string | null>(null)
@@ -116,12 +118,12 @@ function ShowCards({
       cardForm.reset()
     },
     onError: (err, _, ctx) => {
-      if (ctx)
-        queryClient.setQueryData(queryKey, ctx.cardsPreviously)
-      console.error(err)
+      if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while editing the card", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Edit the Card")
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKey }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
   const cardDeleteMutation = useMutation({
     mutationFn: (cardID: string) => removeCard(cardID),
@@ -139,12 +141,50 @@ function ShowCards({
       toast.info("Card Deleted")
     },
     onError: (err, _, ctx) => {
-      if (ctx)
-        queryClient.setQueryData(queryKey, ctx.cardsPreviously)
-      console.error(err)
+      if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while deleting the card", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Delete the Card")
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKey }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  })
+  const cardPopulationMutation = useMutation({
+    mutationFn: (cardID: string) => populateCard(cardID),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey })
+      const cardsPreviously = queryClient.getQueryData(queryKey)
+      return { cardsPreviously }
+    },
+    onSuccess: (data, cardID) => {
+      if (data instanceof Date || typeof data == "string") {
+        setLimitedTill(
+          (data instanceof Date)
+          ? data
+          : (new Date(new Date().getTime() + 1800000)) // 30 Minutes
+        )
+        toast.warning("Rate Limited for a few Minutes")
+      } else {
+        cardForm.setValue("question", data.question, { shouldDirty: true })
+        cardForm.setValue("answer", data.answer, { shouldDirty: true })
+        cardForm.setValue("hint", data.hint, { shouldDirty: true })
+        toast.success("Card Populated")
+
+        queryClient.setQueryData(
+          queryKey,
+          (old: ICard[]) => sortCards([
+            ...(old.filter(v => v._id != cardID)),
+            data
+          ])
+        )
+      }
+    },
+    onError: (err, _, ctx) => {
+      if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while populating the card", err)
+      toast.error("Failed to Populate the Card")
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
   function handleCardEditing(values: TCardFormSchema) {
@@ -156,6 +196,10 @@ function ShowCards({
     setDeleteDialogOpen(false)
     if (!cardToDelete) return
     cardDeleteMutation.mutate(cardToDelete)
+  }
+  function handleCardPopulation() {
+    if (!cardToEdit) return
+    cardPopulationMutation.mutate(cardToEdit._id)
   }
 
   return (
@@ -213,6 +257,7 @@ function ShowCards({
           setDialogOpen={setEditDialogOpen}
           cardForm={cardForm}
           handleCardEditing={handleCardEditing}
+          handleCardPopulation={handleCardPopulation}
         />
       </>}
     </div>
@@ -225,50 +270,33 @@ function ShowCards({
  * @param setDialogOpen - Function to set the Dialog Open or Closed
  * @param cardForm - `react-hook-form` Form to be used for Editing the Card
  * @param handleCardEditing - Function to be called when the Card is Edited
+ * @param handleCardPopulation - Function to be called when the Card is to be Populated
  */
 function CardEditDialog({
   dialogOpen,
   setDialogOpen,
   cardForm,
-  handleCardEditing
+  handleCardEditing,
+  handleCardPopulation
 }: {
   dialogOpen: boolean,
   setDialogOpen: (open: boolean) => void,
   cardForm: UseFormReturn<ICard, unknown, ICard>,
   handleCardEditing: (values: ICard) => void
+  handleCardPopulation: () => void
 }) {
-  const { limitedTill, setLimitedTill } = useAuth()
+  const { limitedTill } = useAuth()
+  const isUserRatelimited = limitedTill instanceof Date && new Date() < limitedTill
+
   const { features } = useFeatures()
   const decksQuery = useAllDecksQuery()
 
   const [populatingCard, setPopulatingCard] = useState(false)
-  const isUserRatelimited = limitedTill instanceof Date && new Date() < limitedTill
-
-  function handleCardPopulation() {
-    void (async () => {
-      toast.info("Populating Card")
-      setPopulatingCard(true)
-      try {
-        const res = await populateCard(cardForm.getValues("_id"))
-        if (res instanceof Date || typeof res == "string") {
-          setLimitedTill(
-            (res instanceof Date)
-            ? res
-            : (new Date(new Date().getTime() + 1800000)) // 30 Minutes
-          )
-          toast.warning("Rate Limited for a few Minutes")
-        } else {
-          cardForm.setValue("question", res.question, { shouldDirty: true })
-          cardForm.setValue("answer", res.answer, { shouldDirty: true })
-          cardForm.setValue("hint", res.hint, { shouldDirty: true })
-          toast.success("Card Populated")
-        }
-      } catch (err) {
-        console.error(err instanceof Error ? err.message : "Failed to Populate the Card")
-        toast.error("Failed to Populate the Card")
-      }
-      setPopulatingCard(false)
-    })()
+  function onCardPopulation() {
+    toast.info("Populating Card")
+    setPopulatingCard(true)
+    handleCardPopulation()
+    setPopulatingCard(false)
   }
 
   return (
@@ -293,7 +321,7 @@ function CardEditDialog({
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Question</FormLabel>
                   <FormControl>
-                    <Input className="!mt-0 col-span-3" {...field} />
+                    <Input className="!mt-0 col-span-3" {...field} disabled={populatingCard} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -306,7 +334,7 @@ function CardEditDialog({
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Answer</FormLabel>
                   <FormControl>
-                    <Input className="!mt-0 col-span-3" {...field} />
+                    <Input className="!mt-0 col-span-3" {...field} disabled={populatingCard} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -319,7 +347,7 @@ function CardEditDialog({
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Hint</FormLabel>
                   <FormControl>
-                    <Input className="!mt-0 col-span-3" {...field} />
+                    <Input className="!mt-0 col-span-3" {...field} disabled={populatingCard} />
                   </FormControl>
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
@@ -331,7 +359,7 @@ function CardEditDialog({
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Deck</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={populatingCard}>
                     <FormControl>
                       <SelectTrigger className ="!mt-0 col-span-3">
                         <SelectValue placeholder="None" />
@@ -340,7 +368,7 @@ function CardEditDialog({
                     <SelectContent>
                       {decksQuery.data?.map((deck, idx) => (
                         <SelectItem key={idx} value={deck._id}>
-                          {isDeckUncategorised(deck) ? "&nbsp" : deck.name}
+                          {isDeckUncategorised(deck) ? <>&nbsp;</> : deck.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -359,7 +387,7 @@ function CardEditDialog({
                 }
                 variant="ghost"
                 className="group sm:mr-auto"
-                onClick={handleCardPopulation}
+                onClick={onCardPopulation}
                 disabled={populatingCard || isUserRatelimited}
               >
                 {populatingCard ? <LoadingIcon /> : <>
@@ -380,12 +408,14 @@ function CardEditDialog({
                 title="Reset"
                 variant="secondary"
                 onClick={() => cardForm.reset()}
+                disabled={populatingCard}
               >
                 Reset
               </Button>
               <Button
                 type="submit"
                 title={cardForm.formState.isDirty ? "Save" : "Edit"}
+                disabled={populatingCard}
               >
                 {cardForm.formState.isDirty ? "Save" : "Edit"}
               </Button>

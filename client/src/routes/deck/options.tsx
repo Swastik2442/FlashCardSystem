@@ -1,32 +1,87 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, SetStateAction, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Heart, Play, Plus, EllipsisVertical, Pencil, Share2, Trash2, Link2, UserCog, Sparkles } from "lucide-react";
-import { useAuth } from "@/contexts/authProvider";
-import { useKeyPress } from "@/hooks/keyPress";
-import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import ConfirmationDialog from "@/components/confirmationDialog";
-import UserSearchField from "@/components/userSearchField";
-import { deckFormSchema, deckShareFormSchema, deckOwnerFormSchema, cardFormSchema } from "@/types/forms";
-import type { TDeckFormSchema, TDeckShareFormSchema, TDeckOwnerFormSchema, TCardFormSchema } from "@/types/forms";
-import { likeDeck, unlikeDeck, removeDeck, shareDeck, changeDeckOwner, updateDeck, populateDeck } from "@/api/deck";
-import { createCard } from "@/api/card";
-import { LoadingIcon } from "@/components/icons";
-import { useFeatures } from "@/contexts/featuresProvider";
+import { Dispatch, SetStateAction, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
+import {
+  Heart,
+  Play,
+  Plus,
+  EllipsisVertical,
+  Pencil,
+  Share2,
+  Trash2,
+  Link2,
+  UserCog,
+  Sparkles
+} from "lucide-react"
+import { useAuth } from "@/contexts/authProvider"
+import { useKeyPress } from "@/hooks/keyPress"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import ConfirmationDialog from "@/components/confirmationDialog"
+import UserSearchField from "@/components/userSearchField"
+import {
+  deckFormSchema,
+  deckShareFormSchema,
+  deckOwnerFormSchema,
+  cardFormSchema
+} from "@/types/forms"
+import type {
+  TDeckFormSchema,
+  TDeckShareFormSchema,
+  TDeckOwnerFormSchema,
+  TCardFormSchema
+} from "@/types/forms"
+import {
+  likeDeck,
+  unlikeDeck,
+  removeDeck,
+  shareDeck,
+  changeDeckOwner,
+  updateDeck,
+  populateDeck,
+  sortCards
+} from "@/api/deck"
+import { createCard } from "@/api/card"
+import { LoadingIcon } from "@/components/icons"
+import { useFeatures } from "@/contexts/featuresProvider"
+import {
+  getDeckCardsQueryKey,
+  getDeckQueryKey
+} from "@/constants"
 
 interface IDeckOptionsProps {
-  deckID: string;
-  dialogOpen: boolean;
-  setDialogOpen: Dispatch<SetStateAction<boolean>>;
+  deckID: string
+  dialogOpen: boolean
+  setDialogOpen: Dispatch<SetStateAction<boolean>>
 }
 
 /**
@@ -41,7 +96,7 @@ export function DeckPlayButton({
   deckID: string,
   disabled: boolean
 }) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   return (
     <Button
       onClick={() => navigate(`/play/${deckID}`, { replace: true })}
@@ -52,7 +107,7 @@ export function DeckPlayButton({
       <Play />
       <span className="select-none">Play</span>
     </Button>
-  );
+  )
 }
 
 /**
@@ -70,14 +125,14 @@ export function DeckLikeButton({
   likes: number,
   isLiked: boolean
 }) {
-  const [userLiked, setUserLiked] = useState(isLiked);
+  const [userLiked, setUserLiked] = useState(isLiked)
   const handleDeckLike = async () => {
     if (userLiked) {
-      await unlikeDeck(deckID);
-      setUserLiked(false);
+      await unlikeDeck(deckID)
+      setUserLiked(false)
     } else {
-      await likeDeck(deckID);
-      setUserLiked(true);
+      await likeDeck(deckID)
+      setUserLiked(true)
     }
   }
 
@@ -93,7 +148,7 @@ export function DeckLikeButton({
         {likes + (userLiked ? 1 : 0)}
       </span>
     </Button>
-  );
+  )
 }
 
 /**
@@ -105,26 +160,43 @@ export function CardCreationDialog({
 }: {
   deckID: string
 }) {
-  const navigate = useNavigate();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
   const cardForm = useForm<TCardFormSchema>({
     resolver: zodResolver(cardFormSchema),
-    defaultValues: { hint: "" },
-  });
+    defaultValues: { hint: "" }
+  })
 
-  useKeyPress(() => setDialogOpen(true), { code: "KeyN", altKey: true });
+  useKeyPress(() => setDialogOpen(true), { code: "KeyN", altKey: true })
 
-  async function handleCardCreation(values: TCardFormSchema) {
-    setDialogOpen(false);
-    try {
-      await createCard({ ...values, deck: deckID });
-      toast.success("Card Created", { description: values.question });
-      cardForm.reset();
-      await navigate(`/deck/${deckID}`, { replace: true });
-    } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck");
-    }
+  const queryKey = getDeckCardsQueryKey(deckID)
+  const cardCreationMutation = useMutation({
+    mutationFn: (data: TCardFormSchema) => createCard(data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey })
+      const cardsPreviously = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(
+        queryKey,
+        (old: ICard[]) => sortCards([...old, data])
+      )
+      return { cardsPreviously }
+    },
+    onSuccess: (_, data) => {
+      toast.success("Card Created", { description: data.question })
+      cardForm.reset()
+    },
+    onError: (err, _, ctx) => {
+      if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while creating a deck", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck")
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKey }),
+  })
+
+  function handleCardCreation(values: TCardFormSchema) {
+    setDialogOpen(false)
+    cardCreationMutation.mutate({ ...values, deck: deckID })
   }
 
   return (
@@ -147,7 +219,10 @@ export function CardCreationDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...cardForm}>
-          <form className="grid gap-2 py-2" onSubmit={cardForm.handleSubmit(handleCardCreation)}>
+          <form
+            className="grid gap-2 py-2"
+            onSubmit={cardForm.handleSubmit(handleCardCreation)}
+          >
             <FormField
               control={cardForm.control}
               name="question"
@@ -207,7 +282,7 @@ export function CardCreationDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -225,64 +300,66 @@ export function DeckOptionsDropdown({
   deck: IMoreDeck,
   owner: string
 }) {
-  const navigate = useNavigate();
-  const { user, limitedTill, setLimitedTill } = useAuth();
-  const { features } = useFeatures();
-  const isUserDeckOwner = user == owner;
-  const isUserRatelimited = limitedTill != null && limitedTill > new Date();
+  const navigate = useNavigate()
+  const { user, limitedTill, setLimitedTill } = useAuth()
+  const { features } = useFeatures()
+  const isUserDeckOwner = user == owner
+  const isUserRatelimited = limitedTill != null && limitedTill > new Date()
 
-  const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [changeOwnerDialogOpen, setChangeOwnerDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [populatingDeck, setPopulatingDeck] = useState(false);
+  const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [changeOwnerDialogOpen, setChangeOwnerDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [populatingDeck, setPopulatingDeck] = useState(false)
 
   const openEditDialog = () => {
-    setEditDialogOpen(true);
-    setDropdownMenuOpen(false);
-  };
+    setEditDialogOpen(true)
+    setDropdownMenuOpen(false)
+  }
   const openShareDialog = () => {
-    setShareDialogOpen(true);
-    setDropdownMenuOpen(false);
-  };
+    setShareDialogOpen(true)
+    setDropdownMenuOpen(false)
+  }
   const openChangeOwnerDialog = () => {
-    setChangeOwnerDialogOpen(true);
-    setDropdownMenuOpen(false);
-  };
+    setChangeOwnerDialogOpen(true)
+    setDropdownMenuOpen(false)
+  }
   const openDeleteDialog = () => {
-    setDeleteDialogOpen(true);
-    setDropdownMenuOpen(false);
-  };
+    setDeleteDialogOpen(true)
+    setDropdownMenuOpen(false)
+  }
 
-  useKeyPress(() => setDropdownMenuOpen(true), { code: "Period", altKey: true });
-  useKeyPress(openShareDialog, { code: "Backslash", altKey: true });
-  useKeyPress(openEditDialog, { code: "F2" });
+  useKeyPress(() => setDropdownMenuOpen(true), { code: "Period", altKey: true })
+  useKeyPress(openShareDialog, { code: "Backslash", altKey: true })
+  useKeyPress(openEditDialog, { code: "F2" })
 
+  // TODO: Try to replace with useMutation
   const handleDeckPopulate = () => {
     void (async () => {
-      toast.info("Populating Deck");
-      setPopulatingDeck(true);
+      toast.info("Populating Deck")
+      setPopulatingDeck(true)
       try {
-        const res = await populateDeck(deckID);
+        const res = await populateDeck(deckID)
         // TODO: Make a robust system of detecting such things
         if (res instanceof Date || typeof res == "string") {
           setLimitedTill(
             (res instanceof Date)
             ? res
             : (new Date(new Date().getTime() + 1800000)) // 30 Minutes
-          );
-          toast.warning("Rate Limited for a few Minutes");
+          )
+          toast.warning("Rate Limited for a few Minutes")
         } else {
-          toast.success("Deck Populated");
-          await navigate(0);
+          toast.success("Deck Populated")
+          await navigate(0)
         }
       } catch (err) {
-        console.error(err instanceof Error ? err.message : "Failed to Populate the Deck");
-        toast.error("Failed to Populate the Deck");
+        if (import.meta.env.NODE_ENV == "development")
+          console.error("An error occurred while populating the deck", err)
+        toast.error("Failed to Populate the Deck")
       }
-      setPopulatingDeck(false);
-    })();
+      setPopulatingDeck(false)
+    })()
   }
 
   const options = [
@@ -317,7 +394,7 @@ export function DeckOptionsDropdown({
       onClick: openDeleteDialog,
       disabled: !isUserDeckOwner
     }
-  ];
+  ]
 
   return (
     <>
@@ -376,7 +453,7 @@ export function DeckOptionsDropdown({
         </>}
       </>}
     </>
-  );
+  )
 }
 
 /**
@@ -390,18 +467,19 @@ function DeckDeleteDialog({
   dialogOpen,
   setDialogOpen
 }: IDeckOptionsProps) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   function handleDeckDeletion() {
     void (async () => {
       try {
-        await removeDeck(deckID);
-        toast.info("Deck Deleted");
-        await navigate("/dashboard", { replace: true });
+        await removeDeck(deckID)
+        toast.info("Deck Deleted")
+        await navigate("/dashboard", { replace: true })
       } catch (err) {
-        console.error(err instanceof Error ? err.message : "Failed to Delete Deck");
-        toast.error("Failed to Delete Deck");
+        if (import.meta.env.NODE_ENV == "development")
+          console.error("An error occurred while deleting the deck", err)
+        toast.error("Failed to Delete Deck")
       }
-    })();
+    })()
   }
 
   return (
@@ -412,7 +490,7 @@ function DeckDeleteDialog({
       dialogMessage="This action cannot be undone. This will permanently delete the deck and remove all the cards present in it."
       confirmButtonTitle="Delete"
     />
-  );
+  )
 }
 
 /**
@@ -434,7 +512,7 @@ function DeckEditDialog({
   dialogOpen: boolean,
   setDialogOpen: Dispatch<SetStateAction<boolean>>
 }) {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient()
   const deckForm = useForm<TDeckFormSchema>({
     resolver: zodResolver(deckFormSchema),
     defaultValues: {
@@ -442,19 +520,35 @@ function DeckEditDialog({
       description: deck.description,
       isPrivate: deck.isPrivate,
     },
-  });
+  })
 
-  async function handleDeckEditing(values: TDeckFormSchema) {
-    setDialogOpen(false);
-    try {
-      await updateDeck(deckID, values);
-      toast.success("Deck Edited");
-      deckForm.reset();
-      await navigate(`/deck/${deckID}`, { replace: true });
-    } catch (err) {
-      console.error(err instanceof Error ? err.message : "Failed to Edit the Deck");
-      toast.error("Failed to Edit the Deck");
-    }
+  const queryKey = getDeckQueryKey(deckID)
+  const deckEditingMutation = useMutation({
+    mutationFn: ({ deckID, values }: {
+      deckID: string, values: TDeckFormSchema
+    }) => updateDeck(deckID, values),
+    onMutate: async ({ values }) => {
+      await queryClient.cancelQueries({ queryKey })
+      const deckPreviously = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(queryKey, values)
+      return { deckPreviously }
+    },
+    onSuccess: () => {
+      toast.success("Deck Edited")
+      deckForm.reset()
+    },
+    onError: (err, _, ctx) => {
+      if (ctx) queryClient.setQueryData(queryKey, ctx.deckPreviously)
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while editing the deck", err)
+      toast.error("Failed to Edit the Deck")
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  })
+
+  function handleDeckEditing(values: TDeckFormSchema) {
+    setDialogOpen(false)
+    deckEditingMutation.mutate({ deckID, values })
   }
 
   return (
@@ -539,7 +633,7 @@ function DeckEditDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -560,26 +654,27 @@ function DeckShareDialog({
       isEditable: false,
       unshare: false,
     },
-  });
+  })
 
   const handleUserSelection = (user: IUserWithID) => {
-    deckShareForm.setValue("user", user._id);
-  };
+    deckShareForm.setValue("user", user._id)
+  }
   const handleLinkCopy = () => {
-    void navigator.clipboard.writeText(`${import.meta.env.VITE_CLIENT_HOST}/deck/${deckID}`);
-    toast.info("Link Copied");
-  };
-  const handleShareCancel = () => setDialogOpen(false);
+    void navigator.clipboard.writeText(`${import.meta.env.VITE_CLIENT_HOST}/deck/${deckID}`)
+    toast.info("Link Copied")
+  }
+  const handleShareCancel = () => setDialogOpen(false)
 
   async function handleDeckSharing(values: TDeckShareFormSchema) {
-    setDialogOpen(false);
+    setDialogOpen(false)
     try {
-      await shareDeck(deckID, values);
-      toast.success("Deck Shared");
-      deckShareForm.reset();
+      await shareDeck(deckID, values)
+      toast.success("Deck Shared")
+      deckShareForm.reset()
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Share the Deck");
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while sharing the deck", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Share the Deck")
     }
   }
 
@@ -667,7 +762,7 @@ function DeckShareDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 /**
@@ -681,25 +776,26 @@ function DeckOwnerChangeDialog({
   dialogOpen,
   setDialogOpen
 }: IDeckOptionsProps) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const deckOwnerChangeForm = useForm<TDeckOwnerFormSchema>({
     resolver: zodResolver(deckOwnerFormSchema),
-  });
+  })
 
   const handleUserSelection = (user: IUserWithID) => {
-    deckOwnerChangeForm.setValue("user", user._id);
-  };
+    deckOwnerChangeForm.setValue("user", user._id)
+  }
 
   async function handleDeckSharing(values: TDeckOwnerFormSchema) {
-    setDialogOpen(false);
+    setDialogOpen(false)
     try {
-      await changeDeckOwner(deckID, values);
-      toast.success("Deck Owner Changed");
-      deckOwnerChangeForm.reset();
-      await navigate("/dashboard", { replace: true });
+      await changeDeckOwner(deckID, values)
+      toast.success("Deck Owner Changed")
+      deckOwnerChangeForm.reset()
+      await navigate("/dashboard", { replace: true })
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Change the Deck's Owner");
+      if (import.meta.env.NODE_ENV == "development")
+        console.error("An error occurred while changing the deck's owner", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Change the Deck's Owner")
     }
   }
 
@@ -733,5 +829,5 @@ function DeckOwnerChangeDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
