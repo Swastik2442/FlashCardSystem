@@ -188,8 +188,8 @@ export function CardCreationDialog({
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
       if (import.meta.env.NODE_ENV == "development")
-        console.error("An error occurred while creating a deck", err)
-      toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck")
+        console.error("An error occurred while creating a Card", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Create a Card")
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: queryKey }),
   })

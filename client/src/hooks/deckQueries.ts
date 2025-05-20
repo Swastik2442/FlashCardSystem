@@ -7,11 +7,12 @@ import {
 } from "@/api/deck"
 import {
   getAllDecksQueryKey,
-  getUncatDeckQueryKey,
   getDeckQueryKey,
   getDeckCardsQueryKey,
+  UNCATEGORISED_DECK_NAME,
 } from "@/constants"
 import { useUserQuery } from "./userQueries"
+import { useMemo } from "react"
 
 export function useAllDecksQuery<TSelected = ILessDeck[]>(
   select?: (data: ILessDeck[]) => TSelected
@@ -27,8 +28,15 @@ export function useUncatDeckQuery<TSelected = Nullable<ILessDeck>>(
   select?: (data: Nullable<ILessDeck>) => TSelected
 ) {
   const decksQuery = useAllDecksQuery()
+  const uncatDeckID = useMemo(() => {
+    if (!decksQuery.data) return null
+
+    const uncatDeck = getUncategorisedDeck(decksQuery.data)
+    return uncatDeck?._id ?? UNCATEGORISED_DECK_NAME
+  }, [decksQuery.data])
+
   return useQuery({
-    queryKey: getUncatDeckQueryKey(),
+    queryKey: getDeckQueryKey(uncatDeckID!),
     queryFn: () => getUncategorisedDeck(decksQuery.data),
     enabled: !!decksQuery.data,
     select
