@@ -5,14 +5,13 @@ import {
   getDeckCardsSorted,
   getUncategorisedDeck
 } from "@/api/deck"
-import { getUser } from "@/api/user"
 import {
   getAllDecksQueryKey,
   getUncatDeckQueryKey,
   getDeckQueryKey,
   getDeckCardsQueryKey,
-  getDeckOwnerQueryKey
 } from "@/constants"
+import { useUserQuery } from "./userQueries"
 
 export function useAllDecksQuery<TSelected = ILessDeck[]>(
   select?: (data: ILessDeck[]) => TSelected
@@ -65,10 +64,5 @@ export function useDeckOwnerQuery<TSelected = IUser>(
   select?: (data: IUser) => TSelected
 ) {
   const deckQuery = useDeckQuery(deckID)
-  return useQuery({
-    queryKey: getDeckOwnerQueryKey(deckID!),
-    queryFn: () => getUser(deckQuery.data!.owner),
-    enabled: !!deckQuery.data?.owner,
-    select
-  })
+  return useUserQuery(deckQuery.data?.owner, select)
 }

@@ -14,8 +14,8 @@ import Register from "@/routes/auth/register"
 import Login from "@/routes/auth/login"
 import { Dashboard } from "@/routes/dashboard/page"
 import { Deck } from "@/routes/deck/page"
-import { UserProfile, UserProfileLoader } from "@/routes/userProfile"
-import { Playground, PlaygroundLoader } from "@/routes/playground"
+import { UserProfile } from "@/routes/userProfile"
+import { Playground } from "@/routes/playground"
 import { Settings, SettingsLoader } from "@/routes/settings/page"
 
 const queryClient = new QueryClient()
@@ -55,7 +55,6 @@ const Router = createBrowserRouter([
             <Playground />
           </>
         ),
-        loader: PlaygroundLoader,
         errorElement: <ErrorBoundary />
       },
       {
@@ -66,7 +65,6 @@ const Router = createBrowserRouter([
             <Playground />
           </>
         ),
-        loader: PlaygroundLoader,
         errorElement: <ErrorBoundary />
       },
       {
@@ -85,7 +83,6 @@ const Router = createBrowserRouter([
           {
             path: "/users/:username",
             element: <UserProfile />,
-            loader: UserProfileLoader,
             errorElement: <ErrorBoundary />
           },
           {

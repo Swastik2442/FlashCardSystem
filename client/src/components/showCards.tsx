@@ -47,7 +47,7 @@ import { isDeckUncategorised, sortCards } from "@/api/deck"
 import {
   useAllDecksQuery,
   useDeckCardsQuery
-} from "@/hooks/decksQueries"
+} from "@/hooks/deckQueries"
 import { getDeckCardsQueryKey } from "@/constants"
 
 const defaultCard: ICard = {
@@ -95,7 +95,7 @@ function ShowCards({
     setDeleteDialogOpen(true)
   }
 
-  const queryKey = getDeckCardsQueryKey(deckID);
+  const queryKey = useMemo(() => getDeckCardsQueryKey(deckID), [deckID]);
   const cardEditMutation = useMutation({
     mutationFn: ({ cardID, values }: {
       cardID: string, values: TCardFormSchema

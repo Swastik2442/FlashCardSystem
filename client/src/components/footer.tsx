@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ReactLogo, ExpressLogo, MongoDBLogo } from "./icons";
 
 const tech = [
@@ -26,7 +27,12 @@ export default function Footer() {
     <footer className="w-full px-4">
       <hr className="w-3/4 mx-auto" />
       <div className="flex items-center h-14">
-        <p>&copy; Swastik Kulshreshtha<span className="hidden sm:inline-block">, Sourabh Yadav &amp; Saurabh Saini</span></p>
+        <p>
+          &copy; <Link to="https://swastik2442.vercel.app">Swastik Kulshreshtha</Link>
+          <span className="hidden sm:inline-block">
+            , Sourabh Yadav &amp; Saurabh Saini
+          </span>
+        </p>
         <nav className="flex flex-1 items-center gap-2 justify-end">
           <span className="text-foreground/40">Made with</span>
           {tech.map((item, idx) => (

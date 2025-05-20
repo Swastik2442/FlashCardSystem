@@ -1,21 +1,13 @@
-import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
-import { Lock, Plus } from "lucide-react"
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Plus } from "lucide-react"
 import ShowCards from "@/components/showCards"
 import { CreationMenu } from "./options"
 import { isDeckUncategorised } from "@/api/deck"
-import { getFormattedDate } from "@/utils/time"
 import {
   useAllDecksQuery,
   useDeckCardsQuery,
   useUncatDeckQuery
-} from "@/hooks/decksQueries"
+} from "@/hooks/deckQueries"
+import ShowDecks from "@/components/showDecks"
 
 /**
  * Component for the Dashboard page
@@ -35,13 +27,8 @@ export function Dashboard() {
         {decksQuery.data && <CreationMenu decks={decksQuery.data} />}
       </div>
       <hr className="my-4" />
-      <motion.div
-        initial={{ opacity: 0.0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
-        className="flex flex-wrap gap-4 mx-8 mb-4"
-      >
-        {decksQuery.data?.length === 0 && cardsLenQuery.data === 0 && (
+      <ShowDecks decks={decksQuery.data?.filter(v => !isDeckUncategorised(v)) ?? []} className="mx-8 mb-4">
+        {decksQuery.data?.length === 1 && cardsLenQuery.data === 0 && (
         <div className="text-center w-full h-full">
           <span className="font-thin">No Decks or Cards found</span>
           <h2>
@@ -51,21 +38,8 @@ export function Dashboard() {
           </h2>
         </div>
         )}
-        {decksQuery.data?.map((deck, idx) => isDeckUncategorised(deck) ? "" : (
-          <Card className="min-w-72 flex-1 flex flex-col justify-between" key={idx}>
-            <Link to={`/deck/${deck._id}`}>
-              <CardHeader>
-                <CardTitle>{deck.name}</CardTitle>
-              </CardHeader>
-            </Link>
-            <CardFooter className="flex justify-between">
-              <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
-              <span>{deck.isPrivate ? <Lock className="size-4" /> : ""}</span>
-            </CardFooter>
-          </Card>
-        ))}
-        </motion.div>
-        {uncatIDQuery.data && <ShowCards deckID={uncatIDQuery.data} editable={true} />}
+      </ShowDecks>
+      {uncatIDQuery.data && <ShowCards deckID={uncatIDQuery.data} editable={true} />}
     </div>
   )
 }

@@ -1,107 +1,48 @@
-import { Link, useLoaderData, LoaderFunctionArgs } from "react-router-dom";
-import { Lock } from "lucide-react";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { getFormattedDate } from "@/utils/time";
-import { getUser, getUserDecks, getUserLikedDecks } from "@/api/user";
-import { USER_STORAGE_KEY } from "@/constants";
-
-interface IUserProfileLoaderData {
-  userInfo: IUser;
-  userDecks: ILessDeck[];
-  likedDecks: ILessDeck[] | null;
-}
-// TODO: Move likedDecks to another page/tab
-
-/**
- * Loader function for the `/user/:username` Route
- * @param params Parameters passed to the Route
- * @returns information about the User
- */
-export async function UserProfileLoader({
-  params
-}: LoaderFunctionArgs): Promise<IUserProfileLoaderData> {
-  const username = params.username;
-  if (!username)
-    throw new Error("username not found");
-
-  const [userInfo, userDecks] = await Promise.all([
-    getUser(username),
-    getUserDecks(username)
-  ]);
-
-  let likedDecks = null;
-  // Checks if User is Logged in, because the function cannot use useAuth here
-  if (username == localStorage.getItem(USER_STORAGE_KEY)) {
-    likedDecks = await getUserLikedDecks();
-  }
-
-  return { userInfo, userDecks, likedDecks };
-}
+import { useParams } from "react-router-dom"
+import { useUserDecksQuery, useUserLikedDecksQuery, useUserQuery } from "@/hooks/userQueries"
+import ShowDecks from "@/components/showDecks"
 
 /**
  * A Component that renders the User Profile
  */
 export function UserProfile() {
-  const { userInfo, userDecks, likedDecks } = useLoaderData<IUserProfileLoaderData>();
+  const { username } = useParams()
+  if (!username) throw new Error("username not found")
+
+  const userQuery = useUserQuery(username)
+  const decksQuery = useUserDecksQuery(username)
+  const likedDecksQuery = useUserLikedDecksQuery(username)
 
   return (
     <div className="my-4">
       <div className="flex justify-between ml-10 mr-4 mb-4">
         <h1 className="flex gap-1 items-center">
-          <span className="font-extralight">{userInfo.username}</span>
+          <span className="font-extralight">{userQuery.data?.username ?? ""}</span>
           <span className="hidden sm:inline-block font-thin"> | </span>
-          <span className="hidden sm:inline-block">{userInfo.fullName}</span>
+          <span className="hidden sm:inline-block">{userQuery.data?.fullName ?? ""}</span>
         </h1>
       </div>
       <hr className="my-4" />
-      {userDecks.length > 0 ? (
-        <div className="flex flex-wrap gap-4 mx-8">
-        {userDecks.map((deck, idx) => (
-            <Card className="min-w-72 flex-1" key={idx}>
-              <Link to={`/deck/${deck._id}`}>
-                <CardHeader>
-                  <CardTitle>{deck.name}</CardTitle>
-                </CardHeader>
-              </Link>
-              <CardFooter className="flex justify-between">
-                <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
-                <span>{deck.isPrivate ? <Lock className="size-4" /> : ""}</span>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+      {decksQuery.data && <>{decksQuery.data.length > 0 ? (
+        <ShowDecks decks={decksQuery.data} className="mx-8" />
       ) : (
         <div className="text-center w-full h-full">
           <span className="font-thin">No Decks found</span>
         </div>
-      )}
-      {likedDecks && <>
+      )}</>}
+      {likedDecksQuery.data && <>
         <hr className="my-4" />
         <h2 className="ml-10 select-none mb-4">Liked Decks</h2>
-        {likedDecks.length > 0 ? (
-          <div className="flex flex-wrap gap-4 mx-8">
-            {likedDecks.map((deck, idx) => (
-              <Card className="min-w-72 flex-1" key={idx}>
-                <Link to={`/deck/${deck._id}`}>
-                  <CardHeader>
-                    <CardTitle>{deck.name}</CardTitle>
-                  </CardHeader>
-                </Link>
-                <CardFooter className="flex justify-between">
-                  <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
-                  {deck.isPrivate && <Lock className="size-4" />}
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+        {likedDecksQuery.data.length > 0 ? (
+          <ShowDecks decks={likedDecksQuery.data} className="mx-8" />
         ) : (
           <div className="text-center w-full h-full">
-            <span className="font-thin">You have not liked any Decks yet</span>
+            <span className="font-thin">No Liked Decks yet</span>
           </div>
         )}
       </>}
     </div>
-  );
+  )
 }
 
-export default UserProfile;
+export default UserProfile

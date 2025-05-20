@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, SetStateAction, useState } from "react"
+import { Dispatch, SetStateAction, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
@@ -169,7 +169,7 @@ export function CardCreationDialog({
 
   useKeyPress(() => setDialogOpen(true), { code: "KeyN", altKey: true })
 
-  const queryKey = getDeckCardsQueryKey(deckID)
+  const queryKey = useMemo(() => getDeckCardsQueryKey(deckID), [deckID])
   const cardCreationMutation = useMutation({
     mutationFn: (data: TCardFormSchema) => createCard(data),
     onMutate: async (data) => {

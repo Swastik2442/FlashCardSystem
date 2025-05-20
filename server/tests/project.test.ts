@@ -111,7 +111,7 @@ describe("User Routes", () => {
 
     it("should get the user's liked decks", async () => {
         const res = await request(app)
-            .get("/user/liked")
+            .get(`/user/liked/decks/${sampleUser1.username}`)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");

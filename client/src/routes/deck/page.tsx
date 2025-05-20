@@ -11,7 +11,7 @@ import {
   useDeckOwnerQuery,
   useDeckCardsQuery,
   useDeckQuery
-} from "@/hooks/decksQueries"
+} from "@/hooks/deckQueries"
 
 /**
  * Component for the Deck page
