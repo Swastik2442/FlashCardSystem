@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import { useState, useMemo } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm, UseFormReturn } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -38,14 +37,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import ConfirmationDialog from "@/components/confirmationDialog"
+import { LoadingIcon } from "@/components/icons"
 import { updateCard, removeCard, populateCard } from "@/api/card"
 import { cardFormSchema } from "@/types/forms"
 import type { TCardFormSchema } from "@/types/forms"
 import { useAuth } from "@/contexts/authProvider"
 import { useFeatures } from "@/contexts/featuresProvider"
-import { LoadingIcon } from "./icons"
-import { isDeckUncategorised } from "@/api/deck"
-import { useAllDecksQuery, useDeckCardsQuery } from "@/queries/decks"
+import { isDeckUncategorised, sortCards } from "@/api/deck"
+import {
+  getDeckCardsQueryKey,
+  useAllDecksQuery,
+  useDeckCardsQuery
+} from "@/queries/decks"
 
 const defaultCard: ICard = {
   _id: "",
@@ -90,38 +93,69 @@ function ShowCards({
     setDeleteDialogOpen(true)
   }
 
-  async function handleCardEditing(values: TCardFormSchema) {
-    setEditDialogOpen(false)
-    if (!cardToEdit)
-      return
-
-    try {
-      await updateCard(cardToEdit._id, values)
+  const queryKey = getDeckCardsQueryKey(deckID);
+  const cardEditMutation = useMutation({
+    mutationFn: ({ cardID, values }: {
+      cardID: string, values: TCardFormSchema
+    }) => updateCard(cardID, values),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey })
+      const cardsPreviously = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(
+        queryKey,
+        (old: ICard[]) => sortCards([
+          ...(old.filter(v => v._id != data.cardID)),
+          data.values
+        ])
+      )
+      return { cardsPreviously }
+    },
+    onSuccess: (_, data) => {
       setCardToEdit(null)
-      toast.success("Card Edited", { description: values.question })
+      toast.success("Card Edited", { description: data.values.question })
       cardForm.reset()
-      uponChange()
-    } catch (err) {
+    },
+    onError: (err, _, ctx) => {
+      if (ctx)
+        queryClient.setQueryData(queryKey, ctx.cardsPreviously)
       console.error(err)
       toast.error((err instanceof Error) ? err.message : "Failed to Edit the Card")
-    }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKey }),
+  })
+  const cardDeleteMutation = useMutation({
+    mutationFn: (cardID: string) => removeCard(cardID),
+    onMutate: async (cardID) => {
+      await queryClient.cancelQueries({ queryKey })
+      const cardsPreviously = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(
+        queryKey,
+        (old: ICard[]) => old.filter(v => v._id != cardID)
+      )
+      return { cardsPreviously }
+    },
+    onSuccess: () => {
+      setCardToDelete(null)
+      toast.info("Card Deleted")
+    },
+    onError: (err, _, ctx) => {
+      if (ctx)
+        queryClient.setQueryData(queryKey, ctx.cardsPreviously)
+      console.error(err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Delete the Card")
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKey }),
+  })
+
+  function handleCardEditing(values: TCardFormSchema) {
+    setEditDialogOpen(false)
+    if (!cardToEdit) return
+    cardEditMutation.mutate({ cardID: cardToEdit._id, values })
   }
   function handleCardDeletion() {
     setDeleteDialogOpen(false)
-    if (!cardToDelete)
-      return
-
-    void (async () => {
-      try {
-        await removeCard(cardToDelete)
-        setCardToDelete(null)
-        toast.info("Card Deleted")
-        uponChange()
-      } catch (err) {
-        console.error(err)
-        toast.error((err instanceof Error) ? err.message : "Failed to Delete the Card")
-      }
-    })()
+    if (!cardToDelete) return
+    cardDeleteMutation.mutate(cardToDelete)
   }
 
   return (
@@ -201,7 +235,7 @@ function CardEditDialog({
   dialogOpen: boolean,
   setDialogOpen: (open: boolean) => void,
   cardForm: UseFormReturn<ICard, unknown, ICard>,
-  handleCardEditing: (values: ICard) => Promise<void>
+  handleCardEditing: (values: ICard) => void
 }) {
   const { limitedTill, setLimitedTill } = useAuth()
   const { features } = useFeatures()
@@ -249,6 +283,7 @@ function CardEditDialog({
         <Form {...cardForm}>
           <form
             className="grid gap-2 py-2"
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onSubmit={cardForm.handleSubmit(handleCardEditing)}
           >
             <FormField

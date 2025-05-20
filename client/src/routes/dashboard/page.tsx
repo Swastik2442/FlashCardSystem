@@ -22,8 +22,11 @@ import {
  */
 export function Dashboard() {
   const decksQuery = useAllDecksQuery()
-  const uncatQuery = useUncatDeckQuery()
-  const cardsQuery = useDeckCardsQuery(uncatQuery.data?._id)
+  const uncatIDQuery = useUncatDeckQuery((data) => data?._id)
+  const cardsLenQuery = useDeckCardsQuery(
+    uncatIDQuery.data,
+    (data) => data.length
+  )
 
   return (
     <div className="my-4">
@@ -38,7 +41,7 @@ export function Dashboard() {
         transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
         className="flex flex-wrap gap-4 mx-8 mb-4"
       >
-        {decksQuery.data?.length === 0 && cardsQuery.data?.length === 0 && (
+        {decksQuery.data?.length === 0 && cardsLenQuery.data === 0 && (
         <div className="text-center w-full h-full">
           <span className="font-thin">No Decks or Cards found</span>
           <h2>
@@ -62,7 +65,7 @@ export function Dashboard() {
           </Card>
         ))}
         </motion.div>
-        {uncatQuery.data && <ShowCards deckID={uncatQuery.data?._id} editable={true} />}
+        {uncatIDQuery.data && <ShowCards deckID={uncatIDQuery.data} editable={true} />}
     </div>
   )
 }

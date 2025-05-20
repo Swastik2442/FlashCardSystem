@@ -1,24 +1,24 @@
-import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Lock, Plus } from "lucide-react";
-import ShowCards from "@/components/showCards";
+import { Link, useParams } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
+import { Lock, Plus } from "lucide-react"
+import ShowCards from "@/components/showCards"
 import {
   DeckLikeButton,
   DeckPlayButton,
   CardCreationDialog,
   DeckOptionsDropdown
-} from "./options";
-import { DECK_QUERY_KEY, USER_QUERY_KEY } from "@/constants";
-import { useDeckCardsQuery, useDeckQuery } from "@/queries/decks";
-import { getUser } from "@/api/user";
+} from "./options"
+import { DECK_QUERY_KEY, USER_QUERY_KEY } from "@/constants"
+import { getUser } from "@/api/user"
+import { useDeckCardsQuery, useDeckQuery } from "@/queries/decks"
 
 /**
  * Component for the Deck page
  */
 export function Deck() {
   const { did } = useParams()
-  const deckQuery = useDeckQuery(did!)
-  const cardsQuery = useDeckCardsQuery(did!)
+  const deckQuery = useDeckQuery(did)
+  const cardsQuery = useDeckCardsQuery(did)
   const ownerQuery = useQuery({
     queryKey: [DECK_QUERY_KEY, did, USER_QUERY_KEY],
     queryFn: () => deckQuery.data?.owner ? getUser(deckQuery.data?.owner) : null,
@@ -77,7 +77,7 @@ export function Deck() {
         editable={deckQuery.data.isEditable}
       />}</>}
     </div>
-  );
+  )
 }
 
-export default Deck;
+export default Deck
