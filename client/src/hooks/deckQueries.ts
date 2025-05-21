@@ -10,7 +10,7 @@ import {
   getAllDecksQueryKey,
   getDeckQueryKey,
   getDeckCardsQueryKey,
-  UNCATEGORISED_DECK_NAME,
+  UNCATEGORISED_DECK_NAME
 } from "@/constants"
 import { useUserQuery } from "./userQueries"
 
@@ -24,7 +24,6 @@ export function useAllDecksQuery<TSelected = ILessDeck[]>(
   })
 }
 
-// Make the uncatDeckID as not null (Context/Cache thing?)
 export function useUncatDeckQuery<TSelected = Nullable<ILessDeck>>(
   select?: (data: Nullable<ILessDeck>) => TSelected
 ) {

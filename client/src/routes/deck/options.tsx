@@ -334,7 +334,6 @@ export function DeckOptionsDropdown({
   useKeyPress(openShareDialog, { code: "Backslash", altKey: true })
   useKeyPress(openEditDialog, { code: "F2" })
 
-  // TODO: Try to replace with useMutation
   const handleDeckPopulate = () => {
     void (async () => {
       toast.info("Populating Deck")

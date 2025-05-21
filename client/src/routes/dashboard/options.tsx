@@ -226,7 +226,7 @@ function CardCreationDialog({
     resolver: zodResolver(cardFormSchema),
     defaultValues: {
       hint: "",
-      deck: "",
+      deck: decks.find(v => isDeckUncategorised(v))?._id ?? "",
     },
   })
 
@@ -329,9 +329,9 @@ function CardCreationDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {decks.map((deck, idx) => isDeckUncategorised(deck) ? "" : (
+                      {decks.map((deck, idx) => (
                         <SelectItem key={idx} value={deck._id}>
-                          {deck.name}
+                          {isDeckUncategorised(deck) ? <>&nbsp;</> : deck.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
