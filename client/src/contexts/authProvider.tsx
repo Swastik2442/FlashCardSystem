@@ -5,7 +5,8 @@ import {
   useState,
   useEffect,
   Dispatch,
-  SetStateAction
+  SetStateAction,
+  useMemo
 } from "react"
 import {
   registerUser,
@@ -31,9 +32,15 @@ type AuthFunctionReturns = Promise<void> | void
 interface AuthProviderState {
   /** Username of the User */
   user: string | null
+  /** Whether the User is Rate Limited or not */
+  isUserRateLimited: boolean
   /** Date till the User is Rate Limited */
   limitedTill: Date | null
-  /** Function to set the Date till the User is Rate Limited */
+  /**
+   * Function to set the Date till the User is Rate Limited.
+   *
+   * Will not do anything if provided date is before the one currently set.
+   */
   setLimitedTill: Dispatch<SetStateAction<Date | null>>
   /** Function to Register a User */
   registerUser: (data: TRegisterFormSchema) => AuthFunctionReturns
@@ -53,6 +60,7 @@ interface AuthProviderState {
 
 const initialState: AuthProviderState = {
   user: null,
+  isUserRateLimited: false,
   limitedTill: null,
   setLimitedTill: () => console.error("setLimitedTill not implemented"),
   registerUser: () => console.error("registerUser not implemented"),
@@ -76,6 +84,22 @@ const AuthProviderContext = createContext<AuthProviderState>(initialState)
 export function AuthProvider({ children, ...props }: { children: React.ReactNode }) {
   const [user, setUser] = useState<string | null>(localStorage.getItem(USER_STORAGE_KEY))
   const [limitedTill, setLimitedTill] = useState<Date | null>(null)
+  const isUserRateLimited = useMemo(
+    () => (limitedTill != null && limitedTill > new Date()),
+    [limitedTill]
+  )
+
+  const handleLimitedTill: Dispatch<SetStateAction<Date | null>> = (value) => {
+    const resolvedValue = typeof value === "function" ? value(limitedTill) : value
+    if (limitedTill == null || resolvedValue == null || resolvedValue > limitedTill) {
+      setLimitedTill(resolvedValue)
+      if (resolvedValue)
+        setTimeout(
+          () => setLimitedTill(null),
+          resolvedValue.getTime() - new Date().getTime()
+        )
+    }
+  }
 
   const handleRegister = async (data: TRegisterFormSchema) => {
     await registerUser(data)
@@ -139,8 +163,9 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
 
   const value: AuthProviderState = {
     user: user,
+    isUserRateLimited: isUserRateLimited,
     limitedTill: limitedTill,
-    setLimitedTill: setLimitedTill,
+    setLimitedTill: handleLimitedTill,
     registerUser: handleRegister,
     loginUser: handleLogin,
     logoutUser: handleLogout,

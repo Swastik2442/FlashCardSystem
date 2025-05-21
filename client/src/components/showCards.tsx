@@ -156,13 +156,13 @@ function ShowCards({
       return { cardsPreviously }
     },
     onSuccess: (data, cardID) => {
-      if (data instanceof Date || typeof data == "string") {
-        setLimitedTill(
-          (data instanceof Date)
-          ? data
-          : (new Date(new Date().getTime() + 1800000)) // 30 Minutes
-        )
+      if (data instanceof Date) {
+        setLimitedTill(data)
         toast.warning("Rate Limited for a few Minutes")
+      } else if (!data) {
+        if (import.meta.env.DEV)
+          console.error("An error occurred while populating the card")
+        toast.error("Failed to Populate the Card")
       } else {
         cardForm.setValue("question", data.question, { shouldDirty: true })
         cardForm.setValue("answer", data.answer, { shouldDirty: true })
@@ -285,9 +285,7 @@ function CardEditDialog({
   handleCardEditing: (values: ICard) => void
   handleCardPopulation: () => void
 }) {
-  const { limitedTill } = useAuth()
-  const isUserRatelimited = limitedTill instanceof Date && new Date() < limitedTill
-
+  const { isUserRateLimited } = useAuth()
   const { features } = useFeatures()
   const decksQuery = useAllDecksQuery()
 
@@ -381,14 +379,14 @@ function CardEditDialog({
               {features.GEN_AI && <Button
                 type="button"
                 title={
-                  isUserRatelimited
+                  isUserRateLimited
                   ? "Can only be done once in a few Minutes"
                   : "Populate Card"
                 }
                 variant="ghost"
                 className="group sm:mr-auto"
                 onClick={onCardPopulation}
-                disabled={populatingCard || isUserRatelimited}
+                disabled={populatingCard || isUserRateLimited}
               >
                 {populatingCard ? <LoadingIcon /> : <>
                   <SparklesIcon className="size-4 group-hover:hidden" />

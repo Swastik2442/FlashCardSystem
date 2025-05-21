@@ -301,10 +301,9 @@ export function DeckOptionsDropdown({
   owner: string
 }) {
   const navigate = useNavigate()
-  const { user, limitedTill, setLimitedTill } = useAuth()
+  const { user, isUserRateLimited, setLimitedTill } = useAuth()
   const { features } = useFeatures()
   const isUserDeckOwner = user == owner
-  const isUserRatelimited = limitedTill != null && limitedTill > new Date()
 
   const [dropdownMenuOpen, setDropdownMenuOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -340,13 +339,8 @@ export function DeckOptionsDropdown({
       setPopulatingDeck(true)
       try {
         const res = await populateDeck(deckID)
-        // TODO: Make a robust system of detecting such things
-        if (res instanceof Date || typeof res == "string") {
-          setLimitedTill(
-            (res instanceof Date)
-            ? res
-            : (new Date(new Date().getTime() + 1800000)) // 30 Minutes
-          )
+        if (res instanceof Date) {
+          setLimitedTill(res)
           toast.warning("Rate Limited for a few Minutes")
         } else {
           toast.success("Deck Populated")
@@ -377,9 +371,9 @@ export function DeckOptionsDropdown({
     ...(features.GEN_AI ? [{
       label: "Populate",
       icon: populatingDeck ? LoadingIcon : Sparkles,
-      title: isUserRatelimited ? "Can only be done once in a few Minutes" : undefined,
+      title: isUserRateLimited ? "Can only be done once in a few Minutes" : undefined,
       onClick: handleDeckPopulate,
-      disabled: !deck.isEditable || isUserRatelimited || populatingDeck
+      disabled: !deck.isEditable || isUserRateLimited || populatingDeck
     }] : []),
     {
       label: "Change Owner",

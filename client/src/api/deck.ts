@@ -154,7 +154,7 @@ export const updateDeck = async (deckID: string, data: TDeckFormSchema) => {
 /**
  * Makes a GET request to populate the Deck with the given ID with AI-generated Cards
  * @param deckID ID of the Deck
- * @returns Message from the Server
+ * @returns Message from the Server or if Rate Limited, Date till Rate Limited
  */
 export const populateDeck = async (deckID: string) => {
   const res = await fetchWithCredentials(
@@ -164,23 +164,15 @@ export const populateDeck = async (deckID: string) => {
   });
 
   const data = await res.json() as ICustomResponse<string | undefined>;
-  let returnData: Date | string | undefined = data?.data;
-
   if (res.status == 429) {
-    if (typeof returnData == "string") {
-      try {
-        const rlDate = new Date(returnData);
-        returnData = rlDate;
-      } catch {
-        returnData = "RATELIMITED";
-      }
-    } else
-      returnData = returnData ?? "RATELIMITED";
-  }
-  else if (!res.ok)
+    const retryAfter = res.headers.get("Retry-After")
+    if (retryAfter)
+      return new Date(new Date().getTime() + parseFloat(retryAfter));
+    return;
+  } else if (!res.ok)
     throw new Error(data.message || "Failed to Populate the Deck");
 
-  return returnData;
+  return data?.data;
 }
 
 /**
