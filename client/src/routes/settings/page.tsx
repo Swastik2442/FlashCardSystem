@@ -1,19 +1,38 @@
-import { JSX } from "react";
-import { useLoaderData, Link, LoaderFunctionArgs } from "react-router-dom";
-import { ListTodo, SettingsIcon, ShieldCheck, User } from "lucide-react";
-import { useAuth } from "@/contexts/authProvider";
-import { SidebarProvider, SidebarTrigger, Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
-import { UserOptions, UserOptionsLoader } from "./options/userOptions";
-import { AccountOptions, AccountOptionsLoader } from "./options/accountOptions";
-import { SecurityOptions } from "./options/securityOptions";
-import { FeaturesOptions } from "./options/featuresOptions";
-import { useMediaQuery } from "@/hooks/mediaQuery";
+import { JSX } from "react"
+import {
+  useLoaderData,
+  Link,
+  LoaderFunctionArgs
+} from "react-router-dom"
+import {
+  ListTodo,
+  SettingsIcon,
+  ShieldCheck,
+  User
+} from "lucide-react"
+import { useAuth } from "@/contexts/authProvider"
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem
+} from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { UserOptions } from "./options/user"
+import { AccountOptions } from "./options/account"
+import { SecurityOptions } from "./options/security"
+import { FeaturesOptions } from "./options/features"
+import { useMediaQuery } from "@/hooks/mediaQuery"
 
 interface ISettingsData {
   name: string,
-  Component: ({ data }: { data?: unknown }) => JSX.Element,
-  data: unknown
+  Component: () => JSX.Element,
 }
 
 const settingsOptions = [
@@ -22,13 +41,15 @@ const settingsOptions = [
     items: [
       {
         title: "Profile",
-        url: "/settings/user",
+        url: "/user",
         icon: User,
+        Component: UserOptions
       },
       {
         title: "Account",
-        url: "/settings/account",
+        url: "/account",
         icon: SettingsIcon,
+        Component: AccountOptions
       },
     ]
   },
@@ -37,53 +58,49 @@ const settingsOptions = [
     items: [
       {
         title: "Authentication",
-        url: "/settings/security",
+        url: "/security",
         icon: ShieldCheck,
+        Component: SecurityOptions
       },
       {
         title: "Features",
-        url: "/settings/features",
+        url: "/features",
         icon: ListTodo,
+        Component: FeaturesOptions
       },
     ]
   },
-] as const;
+] as const
 
-export async function SettingsLoader({ params }: LoaderFunctionArgs) {
-  let name = params.name, Component, data;
+export function SettingsLoader({ params }: LoaderFunctionArgs) {
+  let name = params.name, Component
+  name ??= "user"
 
-  switch (name) {
-    case "user":
-      Component = UserOptions;
-      data = await UserOptionsLoader();
-      break;
-    case "account":
-      Component = AccountOptions;
-      data = await AccountOptionsLoader();
-      break;
-    case "security":
-      Component = SecurityOptions;
-      break;
-    case "features":
-      Component = FeaturesOptions;
-    break;
-    default:
-      name = "user";
-      Component = UserOptions;
-      data = await UserOptionsLoader();
-      break;
+  for (const group of settingsOptions) {
+    for (const item of group.items) {
+      if (item.url.endsWith(`/${name}`)) {
+        Component = item.Component
+        break
+      }
+    }
+    if (Component) break
+  }
+  if (!Component) {
+    name = "user"
+    Component = UserOptions
   }
 
+  // Convert to Sentence Case
   name = name.replace(/\w\S*/g,
     text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
-  );
-  return {name, Component, data};
+  )
+  return { name, Component }
 }
 
 export function Settings() {
-  const { name, Component, data } = useLoaderData<ISettingsData>();
-  const { user } = useAuth();
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const { name, Component } = useLoaderData<ISettingsData>()
+  const { user } = useAuth()
+  const isDesktop = useMediaQuery("(min-width: 768px)")
 
   return (
     <div className="my-4">
@@ -103,12 +120,12 @@ export function Settings() {
           </div>
           <hr className="my-4" />
           <div className="mx-4">
-            <Component data={data} />
+            <Component />
           </div>
         </div>
       </SidebarProvider>
     </div>
-  );
+  )
 }
 
 function SettingsSidebar({ collapsible }: { collapsible: boolean }) {
@@ -123,7 +140,7 @@ function SettingsSidebar({ collapsible }: { collapsible: boolean }) {
                 {group.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <Link to={item.url} preventScrollReset={true}>
+                      <Link to={"/settings" + item.url} preventScrollReset={true}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -136,7 +153,7 @@ function SettingsSidebar({ collapsible }: { collapsible: boolean }) {
         ))}
       </SidebarContent>
     </Sidebar>
-  );
+  )
 }
 
-export default Settings;
+export default Settings

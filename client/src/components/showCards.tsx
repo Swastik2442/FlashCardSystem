@@ -119,7 +119,7 @@ function ShowCards({
     },
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while editing the card", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Edit the Card")
     },
@@ -142,7 +142,7 @@ function ShowCards({
     },
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while deleting the card", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Delete the Card")
     },
@@ -180,7 +180,7 @@ function ShowCards({
     },
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while populating the card", err)
       toast.error("Failed to Populate the Card")
     },

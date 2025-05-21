@@ -1,15 +1,36 @@
 import { useQuery } from "@tanstack/react-query"
-import { getUser, getUserDecks, getUserLikedDecks } from "@/api/user"
-import { getUserDecksQueryKey, getUserLikedDecksQueryKey, getUserQueryKey } from "@/constants"
+import {
+  getLoggedInUser,
+  getUser,
+  getUserDecks,
+  getUserLikedDecks
+} from "@/api/user"
+import {
+  getUserDecksQueryKey,
+  getUserLikedDecksQueryKey,
+  getUserQueryKey
+} from "@/constants"
 
 export function useUserQuery<TSelected = IUser>(
   userID?: string,
   select?: (data: IUser) => TSelected
 ) {
   return useQuery({
+    // Required otherwise it will overwrite current/logged in user query key
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     queryKey: getUserQueryKey(userID!),
     queryFn: () => getUser(userID!),
     enabled: !!userID,
+    select
+  })
+}
+
+export function useCurrentUserQuery<TSelected = IUserPrivate>(
+  select?: (data: IUserPrivate) => TSelected
+) {
+  return useQuery({
+    queryKey: getUserQueryKey(),
+    queryFn: getLoggedInUser,
     select
   })
 }

@@ -187,7 +187,7 @@ export function CardCreationDialog({
     },
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.cardsPreviously)
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while creating a Card", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Card")
     },
@@ -354,7 +354,7 @@ export function DeckOptionsDropdown({
           await navigate(0)
         }
       } catch (err) {
-        if (import.meta.env.NODE_ENV == "development")
+        if (import.meta.env.DEV)
           console.error("An error occurred while populating the deck", err)
         toast.error("Failed to Populate the Deck")
       }
@@ -475,7 +475,7 @@ function DeckDeleteDialog({
         toast.info("Deck Deleted")
         await navigate("/dashboard", { replace: true })
       } catch (err) {
-        if (import.meta.env.NODE_ENV == "development")
+        if (import.meta.env.DEV)
           console.error("An error occurred while deleting the deck", err)
         toast.error("Failed to Delete Deck")
       }
@@ -539,7 +539,7 @@ function DeckEditDialog({
     },
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.deckPreviously)
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while editing the deck", err)
       toast.error("Failed to Edit the Deck")
     },
@@ -672,7 +672,7 @@ function DeckShareDialog({
       toast.success("Deck Shared")
       deckShareForm.reset()
     } catch (err) {
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while sharing the deck", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Share the Deck")
     }
@@ -793,7 +793,7 @@ function DeckOwnerChangeDialog({
       deckOwnerChangeForm.reset()
       await navigate("/dashboard", { replace: true })
     } catch (err) {
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while changing the deck's owner", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Change the Deck's Owner")
     }

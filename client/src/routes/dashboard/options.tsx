@@ -133,7 +133,7 @@ function DeckCreationDialog({
     },
     onError: (err, _, ctx) => {
       if (ctx) queryClient.setQueryData(queryKey, ctx.decksPreviously)
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while creating a deck", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Deck")
     },
@@ -252,7 +252,7 @@ function CardCreationDialog({
           ctx.queryKey,
           ctx.cardsPreviously
         )
-      if (import.meta.env.NODE_ENV == "development")
+      if (import.meta.env.DEV)
         console.error("An error occurred while creating a Card", err)
       toast.error((err instanceof Error) ? err.message : "Failed to Create a Card")
     },

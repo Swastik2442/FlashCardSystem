@@ -29,7 +29,7 @@ import { secondsToString } from "@/utils/time"
 function nextCard(playedCards: number[], totalCards: number) {
   let random = Math.floor(Math.random() * totalCards)
   if (playedCards.length === totalCards) {
-    if (import.meta.env.NODE_ENV == "development")
+    if (import.meta.env.DEV)
       console.log("No more cards left")
     return random
   }

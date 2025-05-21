@@ -1,3 +1,4 @@
+import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import {
   getAllDecksSorted,
@@ -12,7 +13,6 @@ import {
   UNCATEGORISED_DECK_NAME,
 } from "@/constants"
 import { useUserQuery } from "./userQueries"
-import { useMemo } from "react"
 
 export function useAllDecksQuery<TSelected = ILessDeck[]>(
   select?: (data: ILessDeck[]) => TSelected
@@ -24,6 +24,7 @@ export function useAllDecksQuery<TSelected = ILessDeck[]>(
   })
 }
 
+// Make the uncatDeckID as not null (Context/Cache thing?)
 export function useUncatDeckQuery<TSelected = Nullable<ILessDeck>>(
   select?: (data: Nullable<ILessDeck>) => TSelected
 ) {

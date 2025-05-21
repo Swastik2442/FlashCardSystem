@@ -19,7 +19,8 @@ export const getDeckCardsQueryKey = (deckID: string) => {
   return [DECK_QUERY_KEY, deckID, CARDS_QUERY_KEY]
 }
 
-export const getUserQueryKey = (userID: string) => {
+export const getUserQueryKey = (userID?: string) => {
+  if (!userID) return [USER_QUERY_KEY]
   return [USER_QUERY_KEY, userID]
 }
 
