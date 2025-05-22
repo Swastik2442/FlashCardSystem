@@ -8,12 +8,29 @@ import { tryCatch } from "../utils/wrappers";
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
+export const getUserWith = async (username: string) => {
+    let user;
+    if (username.length === 24 && checkForHexRegExp.test(username)) // is ID
+        user = await User.findById(username).select(
+            "-password -refreshToken"
+        );
+    if (!user) {
+        user = await User.findOne({
+            username: username.toLowerCase()
+        }).select("-password -refreshToken");
+        if (!user) return null;
+    }
+    return user;
+}
+
 /**
  * @route GET user/
  * @desc Gets the logged in User's Full Name, Username, Email
  * @access private
  */
-export const GetUserPrivate = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetUserPrivate = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     res.status(200).json({
         status: "success",
         message: "User found",
@@ -30,23 +47,18 @@ export const GetUserPrivate = tryCatch(async (req: ExpressRequest, res: ExpressR
  * @desc Gets the User Full Name and Username with the given Username/ID
  * @access public
  */
-export const GetUser = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetUser = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     const username = req.params.username;
-    let user;
-    if (username.length === 24 && checkForHexRegExp.test(username))
-        user = await User.findById(username).select("-password -refreshToken");
+    const user = await getUserWith(username);
     if (!user) {
-        user = await User.findOne({
-            username: username.toLowerCase()
-        }).select("-password -refreshToken");
-        if (!user) {
-            res.status(404).json({
-                status: "error",
-                message: "User not found",
-                data: null,
-            });
-            return;
-        }
+        res.status(404).json({
+            status: "error",
+            message: "User not found",
+            data: null
+        });
+        return;
     }
 
     res.status(200).json({
@@ -64,7 +76,9 @@ export const GetUser = tryCatch(async (req: ExpressRequest, res: ExpressResponse
  * @desc Gets the Users whose username is a substring of the given string
  * @access public
  */
-export const GetUserSub = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetUserSub = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     const str = req.params.str;
     const users = await User.find({
         username: { $regex: str, $options: "i" }
@@ -90,21 +104,18 @@ export const GetUserSub = tryCatch(async (req: ExpressRequest, res: ExpressRespo
  * @desc Gets the User's Decks visible to the current User
  * @access public
  */
-export const GetUserDecks = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetUserDecks = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     const username = req.params.username;
-    let user;
-    if (username.length === 24 && checkForHexRegExp.test(username))
-        user = await User.findById(username).select("-password -refreshToken");
+    const user = await getUserWith(username);
     if (!user) {
-        user = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshToken");
-        if (!user) {
-            res.status(404).json({
-                status: "error",
-                message: "User not found",
-                data: null,
-            });
-            return;
-        }
+        res.status(404).json({
+            status: "error",
+            message: "User not found",
+            data: null
+        });
+        return;
     }
 
     const decks = await Deck.find({
@@ -124,13 +135,26 @@ export const GetUserDecks = tryCatch(async (req: ExpressRequest, res: ExpressRes
 });
 
 /**
- * @route GET user/liked
+ * @route GET user/liked/decks/:username
  * @desc Gets the Decks liked by the User
  * @access public
  */
-export const GetLikedDecks = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetLikedDecks = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
+    const username = req.params.username;
+    const user = await getUserWith(username);
+    if (!user) {
+        res.status(404).json({
+            status: "error",
+            message: "User not found",
+            data: null
+        });
+        return;
+    }
+
     const likedDecks = await Deck.find({
-        likedBy: req.user!._id,
+        likedBy: user._id,
         $or: [
             { isPrivate: false },
             { sharedTo: { $elemMatch: { user: req.user!._id } } }
@@ -149,7 +173,9 @@ export const GetLikedDecks = tryCatch(async (req: ExpressRequest, res: ExpressRe
  * @desc Edit the Details of the Logged In User
  * @access private
  */
-export const UpdateUser = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const UpdateUser = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     const { fullName } = req.body;
     if (!fullName) {
         res.status(422).json({
@@ -173,7 +199,9 @@ export const UpdateUser = tryCatch(async (req: ExpressRequest, res: ExpressRespo
  * @desc Get all Possible User Roles
  * @access private
  */
-export const GetUserAccessibleRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetUserAccessibleRoles = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     res.status(200).json({
         status: "success",
         message: "Possible User Roles",
@@ -186,7 +214,9 @@ export const GetUserAccessibleRoles = tryCatch(async (req: ExpressRequest, res: 
  * @desc Get current User Roles
  * @access private
  */
-export const GetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetUserRoles = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     if (!req.user)
         throw new Error("User not found");
     res.status(200).json({
@@ -201,7 +231,9 @@ export const GetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressRes
  * @desc Set current User Roles
  * @access private
  */
-export const SetUserRoles = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const SetUserRoles = tryCatch(async (
+    req: ExpressRequest, res: ExpressResponse
+) => {
     const { roles } = req.body;
     if (!req.user)
         throw new Error("User not found");

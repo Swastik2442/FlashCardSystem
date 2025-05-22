@@ -111,7 +111,7 @@ describe("User Routes", () => {
 
     it("should get the user's liked decks", async () => {
         const res = await request(app)
-            .get("/user/liked")
+            .get(`/user/liked/decks/${sampleUser1.username}`)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -317,7 +317,7 @@ describe("Deck Routes", () => {
         expect(res.body.data.likes).toBe(0);
     });
 
-    it("should get the cards in the deck", async () => {
+    it("should get all the cards in a deck", async () => {
         const res = await request(app)
             .get(`/deck/cards/${deckId}`)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
@@ -329,7 +329,6 @@ describe("Deck Routes", () => {
         expect(res.body.data[0].question).toBeDefined();
         expect(res.body.data[0].answer).toBeDefined();
         expect(res.body.data[0].hint).toBeDefined();
-        expect(res.body.data[0].deck).toBeDefined();
     });
 
     it("should get all decks owned by the user", async () => {

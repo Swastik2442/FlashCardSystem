@@ -1,20 +1,24 @@
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
-import { ThemeProvider } from "@/contexts/themeProvider";
-import { AuthProvider } from "@/contexts/authProvider";
-import { FeaturesProvider } from "@/contexts/featuresProvider";
-import { Toaster } from "@/components/ui/sonner";
-import ErrorBoundary from "@/components/errorBoundary";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import PrivateRoutes from "@/components/privateRoutes";
-import Home from "@/routes/home";
-import Register from "@/routes/auth/register";
-import Login from "@/routes/auth/login";
-import { Dashboard, DashboardLoader } from "@/routes/dashboard/page";
-import { Deck, DeckLoader } from "@/routes/deck/page";
-import { UserProfile, UserProfileLoader } from "@/routes/userProfile";
-import { Playground, PlaygroundLoader } from "@/routes/playground";
-import { Settings, SettingsLoader } from "@/routes/settings/page";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+import { ThemeProvider } from "@/contexts/themeProvider"
+import { AuthProvider } from "@/contexts/authProvider"
+import { FeaturesProvider } from "@/contexts/featuresProvider"
+import { Toaster } from "@/components/ui/sonner"
+import ErrorBoundary from "@/components/errorBoundary"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import PrivateRoutes from "@/components/privateRoutes"
+import Home from "@/routes/home"
+import Register from "@/routes/auth/register"
+import Login from "@/routes/auth/login"
+import { Dashboard } from "@/routes/dashboard/page"
+import { Deck } from "@/routes/deck/page"
+import { UserProfile } from "@/routes/userProfile"
+import { Playground } from "@/routes/playground"
+import { Settings, SettingsLoader } from "@/routes/settings/page"
+
+const queryClient = new QueryClient()
 
 const RoutesWithHeaderFooter = () => (
   <>
@@ -22,23 +26,23 @@ const RoutesWithHeaderFooter = () => (
     <Outlet />
     <Footer />
   </>
-);
+)
 
 const Router = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
-    errorElement: <ErrorBoundary />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/auth/register",
     element: <Register />,
-    errorElement: <ErrorBoundary />,
+    errorElement: <ErrorBoundary />
   },
   {
     path: "/auth/login",
     element: <Login />,
-    errorElement: <ErrorBoundary />,
+    errorElement: <ErrorBoundary />
   },
   {
     element: <PrivateRoutes />,
@@ -51,8 +55,7 @@ const Router = createBrowserRouter([
             <Playground />
           </>
         ),
-        loader: PlaygroundLoader,
-        errorElement: <ErrorBoundary />,
+        errorElement: <ErrorBoundary />
       },
       {
         path: "/play/:did",
@@ -62,8 +65,7 @@ const Router = createBrowserRouter([
             <Playground />
           </>
         ),
-        loader: PlaygroundLoader,
-        errorElement: <ErrorBoundary />,
+        errorElement: <ErrorBoundary />
       },
       {
         element: <RoutesWithHeaderFooter />,
@@ -71,42 +73,40 @@ const Router = createBrowserRouter([
           {
             path: "/dashboard",
             element: <Dashboard />,
-            loader: DashboardLoader,
-            errorElement: <ErrorBoundary />,
+            errorElement: <ErrorBoundary />
           },
           {
             path: "/deck/:did",
             element: <Deck />,
-            loader: DeckLoader,
-            errorElement: <ErrorBoundary />,
+            errorElement: <ErrorBoundary />
           },
           {
             path: "/users/:username",
             element: <UserProfile />,
-            loader: UserProfileLoader,
-            errorElement: <ErrorBoundary />,
+            errorElement: <ErrorBoundary />
           },
           {
             path: "/settings",
             element: <Settings />,
             loader: SettingsLoader,
-            errorElement: <ErrorBoundary />,
+            errorElement: <ErrorBoundary />
           },
           {
             path: "/settings/:name",
             element: <Settings />,
             loader: SettingsLoader,
-            errorElement: <ErrorBoundary />,
-          },
+            errorElement: <ErrorBoundary />
+          }
         ]
-      },
+      }
     ]
   }
-]);
+])
 
 function App() {
   return (
     <>
+    <QueryClientProvider client={queryClient}>
     <ThemeProvider>
     <AuthProvider>
     <FeaturesProvider>
@@ -114,9 +114,11 @@ function App() {
     </FeaturesProvider>
     </AuthProvider>
     </ThemeProvider>
+    <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
     <Toaster richColors toastOptions={{}} />
     </>
-  );
+  )
 }
 
 export default App

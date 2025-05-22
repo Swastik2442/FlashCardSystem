@@ -1,41 +1,55 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/authProvider";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { changeUsernameFormSchema, changeEmailFormSchema } from "@/types/forms";
-import type { TChangeUsernameFormSchema, TChangeEmailFormSchema } from "@/types/forms";
-import { getLoggedInUser } from "@/api/user";
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
+import { useAuth } from "@/contexts/authProvider"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  changeUsernameFormSchema,
+  changeEmailFormSchema
+} from "@/types/forms"
+import type {
+  TChangeUsernameFormSchema,
+  TChangeEmailFormSchema
+} from "@/types/forms"
+import { useCurrentUserQuery } from "@/hooks/userQueries"
 
-interface IAccountOptionsData {
-    email: string;
-    username: string;
-}
-
-export async function AccountOptionsLoader() {
-    const data = await getLoggedInUser();
-    return data;
-}
-
-export function AccountOptions({ data }: { data: IAccountOptionsData }) {
+export function AccountOptions() {
+  const userQuery = useCurrentUserQuery()
   return (
     <>
       <div>
         <p className="text-lg p-2">Username</p><hr />
         <div className="p-2">
-          <ChangeUsernameForm username={data.username} />
+          {userQuery.data && <ChangeUsernameForm username={userQuery.data?.username} />}
         </div>
       </div>
       <div>
         <p className="text-lg p-2">Email</p><hr />
         <div className="p-2">
-          <ChangeEmailForm email={data.email} />
+          {userQuery.data && <ChangeEmailForm email={userQuery.data?.email} />}
         </div>
       </div>
       <div>
@@ -45,35 +59,41 @@ export function AccountOptions({ data }: { data: IAccountOptionsData }) {
         </div>
       </div>
     </>
-  );
+  )
 }
 
 function ChangeUsernameForm({ username }: { username: string }) {
-  const [formActive, setFormActive] = useState(false);
-  const { changeUsername } = useAuth();
+  const [formActive, setFormActive] = useState(false)
+  const { changeUsername } = useAuth()
   const usernameForm = useForm<TChangeUsernameFormSchema>({
     resolver: zodResolver(changeUsernameFormSchema),
     defaultValues: {
       username: username,
     },
-  });
+  })
 
   async function handleUsernameChange(values: TChangeUsernameFormSchema) {
     try {
-      await changeUsername(values);
-      setFormActive(false);
-      toast.success("Username changed successfully");
-      usernameForm.reset();
+      await changeUsername(values)
+      setFormActive(false)
+      toast.success("Username changed successfully")
+      usernameForm.reset()
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Change Username");
+      if (import.meta.env.DEV)
+        console.error("An error occurred while changing the username", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Change Username")
     }
   }
 
   if (!formActive) {
     return (
-      <Button onClick={() => setFormActive(true)} type="button" title="Change Username" variant="secondary">Change Username</Button>
-    );
+      <Button
+        onClick={() => setFormActive(true)}
+        type="button"
+        title="Change Username"
+        variant="secondary"
+      >Change Username</Button>
+    )
   }
 
   return (
@@ -105,39 +125,50 @@ function ChangeUsernameForm({ username }: { username: string }) {
             </FormItem>
           )}
         />
-        <Button onClick={() => setFormActive(false)} type="button" title="Cancel" variant="outline">Cancel</Button>
+        <Button
+          onClick={() => setFormActive(false)}
+          type="button"
+          title="Cancel"
+          variant="outline"
+        >Cancel</Button>
         <Button type="submit" title="Save">Save</Button>
       </form>
     </Form>
-  );
+  )
 }
 
 function ChangeEmailForm({ email }: { email: string }) {
-  const [formActive, setFormActive] = useState(false);
-  const { changeEmail } = useAuth();
+  const [formActive, setFormActive] = useState(false)
+  const { changeEmail } = useAuth()
   const emailForm = useForm<TChangeEmailFormSchema>({
     resolver: zodResolver(changeEmailFormSchema),
     defaultValues: {
       email: email,
     },
-  });
+  })
 
   async function handleEmailChange(values: TChangeEmailFormSchema) {
     try {
-      await changeEmail(values);
-      setFormActive(false);
-      toast.success("Email changed successfully");
-      emailForm.reset();
+      await changeEmail(values)
+      setFormActive(false)
+      toast.success("Email changed successfully")
+      emailForm.reset()
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Change Email");
+      if (import.meta.env.DEV)
+        console.error("An error occurred while changing the user email", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Change Email")
     }
   }
 
   if (!formActive) {
     return (
-      <Button onClick={() => setFormActive(true)} type="button" title="Change Email" variant="secondary">Change Email</Button>
-    );
+      <Button
+        onClick={() => setFormActive(true)}
+        type="button"
+        title="Change Email"
+        variant="secondary"
+      >Change Email</Button>
+    )
   }
 
   return (
@@ -169,26 +200,35 @@ function ChangeEmailForm({ email }: { email: string }) {
             </FormItem>
           )}
         />
-        <Button onClick={() => setFormActive(false)} type="button" title="Cancel" variant="outline">Cancel</Button>
+        <Button
+          onClick={() => setFormActive(false)}
+          type="button"
+          title="Cancel"
+          variant="outline"
+        >Cancel</Button>
         <Button type="submit" title="Save">Save</Button>
       </form>
     </Form>
-  );
+  )
 }
 
 function DeleteAccountOption() {
-  const navigate = useNavigate();
-  const { deleteUser } = useAuth();
+  const navigate = useNavigate()
+  const { deleteUser } = useAuth()
 
   const handleUserDeletion = async () => {
-    await deleteUser();
-    await navigate("/");
+    await deleteUser()
+    await navigate("/")
   }
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button type="button" title="Delete Account" variant="destructive">Delete Account</Button>
+        <Button
+          type="button"
+          title="Delete Account"
+          variant="destructive"
+        >Delete Account</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -205,7 +245,7 @@ function DeleteAccountOption() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }
 
 export default AccountOptions

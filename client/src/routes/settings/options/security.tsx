@@ -1,15 +1,28 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/authProvider";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { changePasswordFormSchema } from "@/types/forms";
-import type { TChangePasswordFormSchema } from "@/types/forms";
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
+import { useAuth } from "@/contexts/authProvider"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { changePasswordFormSchema } from "@/types/forms"
+import type { TChangePasswordFormSchema } from "@/types/forms"
 
 export function SecurityOptions() {
   return (
@@ -29,36 +42,42 @@ export function SecurityOptions() {
 }
 
 function ChangePasswordOption() {
-  const { changePassword } = useAuth();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const { changePassword } = useAuth()
+  const [dialogOpen, setDialogOpen] = useState(false)
   const passwordForm = useForm<TChangePasswordFormSchema>({
     resolver: zodResolver(changePasswordFormSchema),
     defaultValues: {
       oldPassword: "",
       newPassword: "",
     },
-  });
+  })
 
   const handleFormCancel = () => {
-    setDialogOpen(false);
-    passwordForm.clearErrors();
+    setDialogOpen(false)
+    passwordForm.clearErrors()
   }
 
   async function handlePasswordCreation(values: TChangePasswordFormSchema) {
     try {
-      await changePassword(values);
-      setDialogOpen(false);
-      toast.success("Password changed successfully");
-      passwordForm.reset();
+      await changePassword(values)
+      setDialogOpen(false)
+      toast.success("Password changed successfully")
+      passwordForm.reset()
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to change the Password");
+      if (import.meta.env.DEV)
+        console.error("An error occurred while changing the user's password", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to change the Password")
     }
   }
 
   return (
     <>
-      <Button onClick={() => setDialogOpen(true)} type="button" title="Change Password"variant="secondary" >Change Password</Button>
+      <Button
+        onClick={() => setDialogOpen(true)}
+        type="button"
+        title="Change Password"
+        variant="secondary"
+      >Change Password</Button>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -68,6 +87,7 @@ function ChangePasswordOption() {
             </DialogDescription>
           </DialogHeader>
           <Form {...passwordForm}>
+            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
             <form className="grid gap-2 py-2" onSubmit={passwordForm.handleSubmit(handlePasswordCreation)}>
               <FormField
                 control={passwordForm.control}
@@ -96,8 +116,18 @@ function ChangePasswordOption() {
                 )}
               />
               <DialogFooter>
-                <Button onClick={handleFormCancel} type="button" title="Cancel" variant="outline">Cancel</Button>
-                <Button onClick={() => passwordForm.reset()} type="button" title="Reset" variant="secondary">Reset</Button>
+                <Button
+                  onClick={handleFormCancel}
+                  type="button"
+                  title="Cancel"
+                  variant="outline"
+                >Cancel</Button>
+                <Button
+                  onClick={() => passwordForm.reset()}
+                  type="button"
+                  title="Reset"
+                  variant="secondary"
+                >Reset</Button>
                 <Button type="submit" title="Change">Change</Button>
               </DialogFooter>
             </form>
@@ -105,7 +135,7 @@ function ChangePasswordOption() {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
 
 export default SecurityOptions

@@ -1,17 +1,24 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { featuresEditFormSchema } from "@/types/forms";
-import type { TFeaturesEditFormSchema } from "@/types/forms";
-import { useFeatures } from "@/contexts/featuresProvider";
-import type { FeatureProviderState } from "@/contexts/featuresProvider";
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { toast } from "sonner"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { featuresEditFormSchema } from "@/types/forms"
+import type { TFeaturesEditFormSchema } from "@/types/forms"
+import { useFeatures } from "@/contexts/featuresProvider"
+import type { FeatureProviderState } from "@/contexts/featuresProvider"
 
 export function FeaturesOptions() {
-  const { features, setFeatures } = useFeatures();
+  const { features, setFeatures } = useFeatures()
   return (
       <>
     <div>
@@ -32,21 +39,23 @@ function FeaturesEditForm({
   const featuresEditForm = useForm<TFeaturesEditFormSchema>({
     resolver: zodResolver(featuresEditFormSchema),
     defaultValues: features,
-  });
+  })
 
   async function handleFeaturesUpdate(values: TFeaturesEditFormSchema) {
     try {
-      await setFeatures(values);
-      toast.success("User updated successfully");
-      featuresEditForm.reset(values);
+      await setFeatures(values)
+      toast.success("Features updated successfully")
+      featuresEditForm.reset(values)
     } catch (err) {
-      console.error(err);
-      toast.error((err instanceof Error) ? err.message : "Failed to Update User");
+      if (import.meta.env.DEV)
+        console.error("An error occurred while changing the features", err)
+      toast.error((err instanceof Error) ? err.message : "Failed to Update Features")
     }
   }
 
   return (
     <Form {...featuresEditForm}>
+      {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
       <form className="grid gap-2" onSubmit={featuresEditForm.handleSubmit(handleFeaturesUpdate)}>
         <FormField
           control={featuresEditForm.control}
@@ -79,7 +88,7 @@ function FeaturesEditForm({
         </div>}
       </form>
     </Form>
-  );
+  )
 }
 
-export default FeaturesOptions;
+export default FeaturesOptions

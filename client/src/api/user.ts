@@ -64,9 +64,9 @@ export const getUserDecks = async (user: string) => {
  * Makes a GET request to get the Liked Decks of the User (Logged in User only)
  * @returns Decks liked by the User
  */
-export const getUserLikedDecks = async () => {
+export const getUserLikedDecks = async (user: string) => {
   const response = await makeRequest<ILessDeck[]>(
-    "/user/liked",
+    "/user/liked/decks/" + user,
     "get",
     null,
     "Failed to fetch Liked Decks"

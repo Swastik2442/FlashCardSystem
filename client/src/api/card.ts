@@ -36,7 +36,7 @@ export const updateCard = async (cardID: string, data: TCardFormSchema) => {
 /**
  * Makes a GET request to populate the card with the given ID with AI-generated content
  * @param cardID ID of the card
- * @returns Data for the Populated Card
+ * @returns Data for the Populated Card or if Rate Limited, Date till Rate Limited
  */
 export const populateCard = async (cardID: string) => {
   const res = await fetchWithCredentials(
@@ -45,23 +45,16 @@ export const populateCard = async (cardID: string) => {
     throw new Error(err?.message || "Failed to Populate the Card");
   });
 
-  const data = await res.json() as ICustomResponse<string | Omit<ICard, "_id" | "deck">>;
-  let returnData: Date | string | Omit<ICard, "_id" | "deck"> = data?.data;
+  const data = await res.json() as ICustomResponse<Omit<ILessCard, "_id"> | undefined>;
   if (res.status == 429) {
-    if (typeof returnData == "string") {
-      try {
-        const rlDate = new Date(returnData);
-        returnData = rlDate;
-      } catch {
-        returnData = "RATELIMITED";
-      }
-    } else
-      returnData = returnData ?? "RATELIMITED";
-  }
-  else if (!res.ok)
+    const retryAfter = res.headers.get("retry-after")
+    if (retryAfter)
+      return new Date(new Date().getTime() + parseInt(retryAfter) * 1000);
+    return;
+  } else if (!res.ok)
     throw new Error(data.message || "Failed to Populate the Card");
 
-  return returnData;
+  return data?.data;
 }
 
 /**

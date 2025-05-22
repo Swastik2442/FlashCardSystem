@@ -128,7 +128,7 @@ export const GetDeck = tryCatch(async (req: ExpressRequest, res: ExpressResponse
  */
 export const GetDeckCards = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
     const id = req.params.did;
-    const deck = await Deck.findById(id).select("-description -dateCreated -dateUpdated -likedBy -__v");
+    const deck = await Deck.findById(id).select("-deck -description -dateCreated -dateUpdated -likedBy -__v");
     if (!deck) {
         res.status(404).json({
             status: "error",

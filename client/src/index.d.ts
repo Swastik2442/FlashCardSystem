@@ -1,3 +1,5 @@
+type Nullable<T> = T | null;
+
 interface IUser {
   fullName: string;
   username: string;
@@ -37,6 +39,8 @@ interface ICard {
   hint: string;
   deck: string;
 }
+
+type ILessCard = Omit<ICard, "deck">;
 
 interface ICustomResponse<T> {
   readonly status: string;
