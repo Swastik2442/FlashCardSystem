@@ -17,7 +17,7 @@ async function Ratelimiter(req: ExpressRequest, res: ExpressResponse, next: Next
         next();
     else {
         res.status(429).set({
-            "Retry-After": Math.max(0, reset - new Date().getTime()).toString(),
+            "Retry-After": Math.max(0, Math.ceil((reset - new Date().getTime()) / 1000)).toString(),
             "Access-Control-Expose-Headers": "Retry-After"
         }).json({
             status: "error",

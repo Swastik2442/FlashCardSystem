@@ -1,4 +1,3 @@
-export const USER_STORAGE_KEY = "fcs-user"
 export const THEME_STORAGE_KEY = "fcs-ui-theme"
 export const SEARCH_USERS_STORAGE_KEY = "fcs-search-users"
 

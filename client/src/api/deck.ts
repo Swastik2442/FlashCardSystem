@@ -167,7 +167,7 @@ export const populateDeck = async (deckID: string) => {
   if (res.status == 429) {
     const retryAfter = res.headers.get("Retry-After")
     if (retryAfter)
-      return new Date(new Date().getTime() + parseFloat(retryAfter));
+      return new Date(new Date().getTime() + parseInt(retryAfter) * 1000);
     return;
   } else if (!res.ok)
     throw new Error(data.message || "Failed to Populate the Deck");

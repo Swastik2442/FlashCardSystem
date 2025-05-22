@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { useAuth } from "@/contexts/authProvider"
 import {
   getAllDecksSorted,
   getDeck,
@@ -17,9 +18,11 @@ import { useUserQuery } from "./userQueries"
 export function useAllDecksQuery<TSelected = ILessDeck[]>(
   select?: (data: ILessDeck[]) => TSelected
 ) {
+  const { user } = useAuth()
   return useQuery({
     queryKey: getAllDecksQueryKey(),
     queryFn: async () => await getAllDecksSorted(),
+    enabled: !!user,
     select
   })
 }

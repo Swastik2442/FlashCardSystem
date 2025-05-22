@@ -49,7 +49,7 @@ export const populateCard = async (cardID: string) => {
   if (res.status == 429) {
     const retryAfter = res.headers.get("retry-after")
     if (retryAfter)
-      return new Date(new Date().getTime() + parseInt(retryAfter));
+      return new Date(new Date().getTime() + parseInt(retryAfter) * 1000);
     return;
   } else if (!res.ok)
     throw new Error(data.message || "Failed to Populate the Card");

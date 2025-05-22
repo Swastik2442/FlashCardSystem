@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
+import { useAuth } from "@/contexts/authProvider"
 import {
   getLoggedInUser,
   getUser,
@@ -28,9 +29,11 @@ export function useUserQuery<TSelected = IUser>(
 export function useCurrentUserQuery<TSelected = IUserPrivate>(
   select?: (data: IUserPrivate) => TSelected
 ) {
+  const { user } = useAuth()
   return useQuery({
     queryKey: getUserQueryKey(),
     queryFn: getLoggedInUser,
+    enabled: !!user,
     select
   })
 }

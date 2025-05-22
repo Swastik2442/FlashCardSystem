@@ -3,6 +3,7 @@ import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { doubleCsrf } from "csrf-csrf";
+import compression from "compression";
 import authRouter from "./routes/auth.route";
 import userRouter from "./routes/user.route";
 import deckRouter from "./routes/deck.route";
@@ -25,6 +26,7 @@ app.use(morgan("short", {
 app.use(cors(corsOptions));
 app.use(cookieParser(env.COOKIE_SIGN_SECRET));
 app.use(express.json());
+app.use(compression());
 
 app.use((_req, res, next) => {
     res.set({
