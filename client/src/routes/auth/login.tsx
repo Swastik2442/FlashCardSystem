@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -15,15 +15,17 @@ import type { TLoginFormSchema } from "@/types/forms";
  * Component for the Login page
  */
 export default function Login() {
-  const auth = useAuth();
+  const { user, loginUser } = useAuth();
   const navigate = useNavigate();
   const loginForm = useForm<TLoginFormSchema>({
     resolver: zodResolver(loginFormSchema)
   });
+  if (user)
+    return <Navigate to="/dashboard" replace={true} />;
 
   async function handleLogin(values: TLoginFormSchema) {
     try {
-      await auth.loginUser(values);
+      await loginUser(values);
       toast.success("Logged in Successfully");
       await navigate("/dashboard");
     } catch (err) {

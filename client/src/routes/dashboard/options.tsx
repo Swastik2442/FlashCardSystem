@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { Plus } from "lucide-react"
-import { useKeyPress } from "@/hooks/keyPress"
+import { registerShortcut, useKeyPress } from "@/hooks/keyPress"
 import {
   Dialog,
   DialogContent,
@@ -50,6 +50,24 @@ import {
 import { createCard } from "@/api/card"
 import { getAllDecksQueryKey, getDeckCardsQueryKey } from "@/constants"
 
+const openDropdownMenuKS = { key: ".", altKey: true }
+const openDeckCreationDialogKS = { key: "s", altKey: true }
+const openCardCreationDialogKS = { key: "n", altKey: true }
+const execAt = "Dashboard"
+
+registerShortcut(openDropdownMenuKS, {
+  name: "Open Dropdown Menu",
+  where: execAt
+})
+registerShortcut(openDeckCreationDialogKS, {
+  name: "Open Deck Creation Dialog Box",
+  where: execAt
+})
+registerShortcut(openCardCreationDialogKS, {
+  name: "Open Card Creation Dialog Box",
+  where: execAt
+})
+
 /**
  * A Dropdown Menu that allows the User to create a new Deck or Card
  * @param decks Decks owned or editable by the User
@@ -68,9 +86,9 @@ export function CreationMenu({ decks }: { decks: ILessDeck[] }) {
     setIsDropdownMenuOpen(false)
   }
 
-  useKeyPress(() => setIsDropdownMenuOpen(true), { code: "Period", altKey: true })
-  useKeyPress(openDeckDialog, { code: "KeyS", altKey: true })
-  useKeyPress(openCardDialog, { code: "KeyK", altKey: true })
+  useKeyPress(() => setIsDropdownMenuOpen(true), openDropdownMenuKS)
+  useKeyPress(openDeckDialog, openDeckCreationDialogKS)
+  useKeyPress(openCardDialog, openCardCreationDialogKS)
 
   return (
     <>

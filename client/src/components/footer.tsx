@@ -28,7 +28,9 @@ export default function Footer() {
       <hr className="w-3/4 mx-auto" />
       <div className="flex items-center h-14">
         <p>
-          &copy; <Link to="https://swastik2442.vercel.app">Swastik Kulshreshtha</Link>
+          &copy; <Link to="https://swastik2442.vercel.app" target="_blank" className="hover:underline">
+          Swastik Kulshreshtha
+          </Link>
           <span className="hidden sm:inline-block">
             , Sourabh Yadav &amp; Saurabh Saini
           </span>

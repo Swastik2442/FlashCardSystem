@@ -102,10 +102,6 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
     }
   }
 
-  const handleRegister = async (data: TRegisterFormSchema) => {
-    await registerUser(data)
-  }
-
   const handleLogin = async (data: TLoginFormSchema) => {
     const username = await loginUser(data)
     setUser(username)
@@ -122,33 +118,21 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
     setUser(username)
   }
 
-  const handleEmailChange = async (data: TChangeEmailFormSchema) => {
-    await changeEmail(data)
-  }
-
-  const handlePasswordChange = async (data: TChangePasswordFormSchema) => {
-    await changePassword(data)
-  }
-
   const handleUserDeletion = async () => {
     setUser(null)
     await queryClient.invalidateQueries()
     await deleteUser()
   }
 
-
   const handleRefreshingTokens = async () => {
     const username = await refreshTokens()
     setUser(username)
   }
   useEffect(() => {
-    if (!user)
-      return
-
     if (!didInit) {
       didInit = true
       void handleRefreshingTokens()
-    } else {
+    } else if (user != null) {
       const interval  = setInterval(() => {
         void handleRefreshingTokens()
       }, 1500000) // 25 minutes
@@ -161,12 +145,12 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
     isUserRateLimited: isUserRateLimited,
     limitedTill: limitedTill,
     setLimitedTill: handleLimitedTill,
-    registerUser: handleRegister,
+    registerUser: async data => { await registerUser(data) },
     loginUser: handleLogin,
     logoutUser: handleLogout,
     changeUsername: handleUsernameChange,
-    changeEmail: handleEmailChange,
-    changePassword: handlePasswordChange,
+    changeEmail: async data => { await changeEmail(data) },
+    changePassword: async data => { await changePassword(data) },
     deleteUser: handleUserDeletion
   }
 

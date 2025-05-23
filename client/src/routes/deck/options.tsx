@@ -18,7 +18,7 @@ import {
   Sparkles
 } from "lucide-react"
 import { useAuth } from "@/contexts/authProvider"
-import { useKeyPress } from "@/hooks/keyPress"
+import { registerShortcut, useKeyPress } from "@/hooks/keyPress"
 import {
   Dialog,
   DialogTrigger,
@@ -83,6 +83,29 @@ interface IDeckOptionsProps {
   dialogOpen: boolean
   setDialogOpen: Dispatch<SetStateAction<boolean>>
 }
+
+const openCardCreationDialogKS = { key: "n", altKey: true }
+const openDeckOptionsDropdownMenuKS = { key: ".", altKey: true }
+const openShareDialogKS = { key: "\\", altKey: true }
+const openEditDialogKS = { key: "F2" }
+const execAt = "Deck View"
+
+registerShortcut(openCardCreationDialogKS, {
+  name: "Open Card Creation Dialog Box",
+  where: execAt
+})
+registerShortcut(openDeckOptionsDropdownMenuKS, {
+  name: "Open Dropdown Menu",
+  where: execAt
+})
+registerShortcut(openShareDialogKS, {
+  name: "Share the Deck",
+  where: execAt
+})
+registerShortcut(openEditDialogKS, {
+  name: "Edit the Deck Details",
+  where: execAt
+})
 
 /**
  * A Button to Play the Deck (navigate to its corresponding Play Page)
@@ -167,7 +190,7 @@ export function CardCreationDialog({
     defaultValues: { hint: "" }
   })
 
-  useKeyPress(() => setDialogOpen(true), { code: "KeyN", altKey: true })
+  useKeyPress(() => setDialogOpen(true), openCardCreationDialogKS)
 
   const queryKey = useMemo(() => getDeckCardsQueryKey(deckID), [deckID])
   const cardCreationMutation = useMutation({
@@ -329,9 +352,9 @@ export function DeckOptionsDropdown({
     setDropdownMenuOpen(false)
   }
 
-  useKeyPress(() => setDropdownMenuOpen(true), { code: "Period", altKey: true })
-  useKeyPress(openShareDialog, { code: "Backslash", altKey: true })
-  useKeyPress(openEditDialog, { code: "F2" })
+  useKeyPress(() => setDropdownMenuOpen(true), openDeckOptionsDropdownMenuKS)
+  useKeyPress(openShareDialog, openShareDialogKS)
+  useKeyPress(openEditDialog, openEditDialogKS)
 
   const handleDeckPopulate = () => {
     void (async () => {

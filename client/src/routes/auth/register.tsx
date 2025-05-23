@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -15,15 +15,17 @@ import type { TRegisterFormSchema } from "@/types/forms";
  * Component for the Registration page
  */
 export default function Register() {
-  const auth = useAuth();
+  const { user, registerUser } = useAuth();
   const navigate = useNavigate();
   const registerForm = useForm<TRegisterFormSchema>({
     resolver: zodResolver(registerFormSchema)
   });
+  if (user)
+    return <Navigate to="/dashboard" replace={true} />;
 
   async function handleRegister(values: TRegisterFormSchema) {
     try {
-      await auth.registerUser(values);
+      await registerUser(values);
       toast.success("Registration Successful");
       await navigate("/auth/login");
     } catch (err) {
