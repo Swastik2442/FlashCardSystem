@@ -18,7 +18,8 @@ import {
   Sparkles
 } from "lucide-react"
 import { useAuth } from "@/contexts/authProvider"
-import { registerShortcut, useKeyPress } from "@/hooks/keyPress"
+import { useFeatures } from "@/contexts/featuresProvider"
+import { useKeyPress } from "@/hooks/keyPress"
 import {
   Dialog,
   DialogTrigger,
@@ -48,6 +49,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import ConfirmationDialog from "@/components/confirmationDialog"
 import UserSearchField from "@/components/userSearchField"
+import { LoadingIcon } from "@/components/icons"
 import {
   deckFormSchema,
   deckShareFormSchema,
@@ -71,8 +73,7 @@ import {
   sortCards
 } from "@/api/deck"
 import { createCard } from "@/api/card"
-import { LoadingIcon } from "@/components/icons"
-import { useFeatures } from "@/contexts/featuresProvider"
+import { registerShortcut } from "@/features/keyboard/ks"
 import {
   getDeckCardsQueryKey,
   getDeckQueryKey
@@ -84,25 +85,24 @@ interface IDeckOptionsProps {
   setDialogOpen: Dispatch<SetStateAction<boolean>>
 }
 
-const openCardCreationDialogKS = { key: "n", altKey: true }
-const openDeckOptionsDropdownMenuKS = { key: ".", altKey: true }
-const openShareDialogKS = { key: "\\", altKey: true }
-const openEditDialogKS = { key: "F2" }
 const execAt = "Deck View"
-
-registerShortcut(openCardCreationDialogKS, {
+const openCardCreationDialogKS = await registerShortcut({ key: "n", altKey: true }, {
+  id: ["card", "create"],
   name: "Open Card Creation Dialog Box",
   where: execAt
 })
-registerShortcut(openDeckOptionsDropdownMenuKS, {
+const openDeckOptionsDropdownMenuKS = await registerShortcut({ key: ".", altKey: true }, {
+  id: ["ui", "dropdown", "open"],
   name: "Open Dropdown Menu",
   where: execAt
 })
-registerShortcut(openShareDialogKS, {
+const openShareDialogKS = await registerShortcut({ key: "\\", altKey: true }, {
+  id: ["deck", "share"],
   name: "Share the Deck",
   where: execAt
 })
-registerShortcut(openEditDialogKS, {
+const openEditDialogKS = await registerShortcut({ key: "F2" }, {
+  id: ["deck", "edit"],
   name: "Edit the Deck Details",
   where: execAt
 })

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { Plus } from "lucide-react"
-import { registerShortcut, useKeyPress } from "@/hooks/keyPress"
+import { useKeyPress } from "@/hooks/keyPress"
 import {
   Dialog,
   DialogContent,
@@ -48,22 +48,22 @@ import {
   sortDecks
 } from "@/api/deck"
 import { createCard } from "@/api/card"
+import { registerShortcut } from "@/features/keyboard/ks"
 import { getAllDecksQueryKey, getDeckCardsQueryKey } from "@/constants"
 
-const openDropdownMenuKS = { key: ".", altKey: true }
-const openDeckCreationDialogKS = { key: "s", altKey: true }
-const openCardCreationDialogKS = { key: "n", altKey: true }
 const execAt = "Dashboard"
-
-registerShortcut(openDropdownMenuKS, {
+const openDropdownMenuKS = await registerShortcut({ key: ".", altKey: true }, {
+  id: ["ui", "dropdown", "open"],
   name: "Open Dropdown Menu",
   where: execAt
 })
-registerShortcut(openDeckCreationDialogKS, {
+const openDeckCreationDialogKS = await registerShortcut({ key: "s", altKey: true }, {
+  id: ["deck", "create"],
   name: "Open Deck Creation Dialog Box",
   where: execAt
 })
-registerShortcut(openCardCreationDialogKS, {
+const openCardCreationDialogKS = await registerShortcut({ key: "n", altKey: true }, {
+  id: ["card", "create"],
   name: "Open Card Creation Dialog Box",
   where: execAt
 })

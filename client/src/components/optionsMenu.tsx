@@ -3,7 +3,7 @@ import { User, Keyboard, Cloud, LogOut, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/authProvider"
-import { useKeyPress, registerShortcut } from "@/hooks/keyPress"
+import { useKeyPress } from "@/hooks/keyPress"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -16,22 +16,22 @@ import {
 } from "@/components/ui/dropdown-menu"
 import ConfirmationDialog from "@/components/confirmationDialog"
 import KeyboardShortcutsDialog from "@/components/keyboardShortcuts"
+import { registerShortcut } from "@/features/keyboard/ks"
 
-const dashboardKS = { key: "b", altKey: true }
-const userProfileKS = { key: "u", altKey: true }
-const keyboardShortcutsKS = { key: "?", shiftKey: true, altKey: true }
 const execAt = "Everywhere"
-
-registerShortcut(dashboardKS, {
+const dashboardKS = await registerShortcut({ key: "b", altKey: true }, {
+  id: ["app", "routes", "dashboard"],
   name: "Go to Dashboard",
   where: execAt
 })
-registerShortcut(userProfileKS, {
+const userProfileKS = await registerShortcut({ key: "u", altKey: true }, {
+  id: ["app", "routes", "userProfile"],
   name: "Show User Profile",
   where: execAt,
   description: "Shows the current User's Profile"
 })
-registerShortcut(keyboardShortcutsKS, {
+const keyboardShortcutsKS = await registerShortcut({ key: "?", shiftKey: true, altKey: true }, {
+  id: ["app", "keyboardShortcuts"],
   name: "Show Keyboard Shortcuts",
   where: execAt,
   description: "Shows all the Keyboard Shortcuts"
