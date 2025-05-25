@@ -14,7 +14,7 @@ const Text = memo(({
     title={value}
     className={cn(
       "capitalize",
-      "text-ellipsis whitespace-nowrap overflow-hidden",
+      "text-ellipsis whitespace-nowrap overflow-hidden leading-[1.5]",
       className
     )}
     {...props}

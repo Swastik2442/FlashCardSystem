@@ -97,7 +97,7 @@ const columns: ColumnDef<KeyboardShortcut>[] = [
             <ShowKeyboardKeys
               config={config}
               onClick={() => meta?.setEditing(row.index)}
-              className="border-background"
+              className="pl-[1px]"
             />
           </div>
         )}
@@ -296,7 +296,10 @@ export const KeyboardShortcutsDialog = memo(({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-full">
+      <DialogContent
+        className="max-w-[95vw] max-h-full"
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Keyboard Shortcuts</DialogTitle>
           <DialogDescription>

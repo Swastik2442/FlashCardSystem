@@ -26,19 +26,31 @@ export function ShowDecks({
       initial={{ opacity: 0.0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
-      className={cn("flex flex-wrap gap-4", className)}
+      className={cn(
+        "grid gap-4",
+        "grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]",
+        "sm:grid-cols-[repeat(auto-fit,minmax(36rem,1fr))]",
+        className
+      )}
       {...props}
     >
       {decks.map((deck, idx) => (
-        <Card className="min-w-72 flex-1 flex flex-col justify-between" key={idx}>
+        <Card key={idx}>
           <Link to={`/deck/${deck._id}`}>
             <CardHeader>
-              <CardTitle>{deck.name}</CardTitle>
+              <CardTitle
+                title={deck.name}
+                className="text-ellipsis whitespace-nowrap overflow-hidden leading-[1.5]"
+              >
+                {deck.name}
+              </CardTitle>
             </CardHeader>
           </Link>
           <CardFooter className="flex justify-between">
-            <span className="text-sm font-light">{getFormattedDate(deck.dateUpdated)}</span>
-            <span>{deck.isPrivate ? <Lock className="size-4" /> : ""}</span>
+            <span title={"Last Modified: " + (new Date(deck.dateUpdated).toLocaleString())} className="text-sm font-light">
+              {getFormattedDate(deck.dateUpdated)}
+            </span>
+            {deck.isPrivate && <span title="Private"><Lock className="size-4" /></span>}
           </CardFooter>
         </Card>
       ))}

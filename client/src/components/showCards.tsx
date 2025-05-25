@@ -208,18 +208,23 @@ function ShowCards({
         initial={{ opacity: 0.0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.8, ease: "easeInOut" }}
-        className="flex flex-wrap gap-4 mx-8"
+        className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] mx-8"
       >
         {cardsQuery.data?.map((card, idx) => (
           <Card
-            className="min-w-72 flex-1 flex flex-col justify-between group"
+            className="group"
             key={idx}
           >
             <CardHeader
               className="cursor-pointer"
               onClick={() => editable && selectCardToEdit(card)}
             >
-              <CardTitle className="font-normal">{card.question}</CardTitle>
+              <CardTitle
+                title={card.question}
+                className="font-normal text-ellipsis whitespace-nowrap overflow-hidden leading-[1.5]"
+              >
+                {card.question}
+              </CardTitle>
             </CardHeader>
             {editable && <CardFooter
               className="flex justify-end gap-2 invisible group-hover:visible"

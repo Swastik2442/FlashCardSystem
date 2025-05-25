@@ -67,7 +67,7 @@ export function KeyboardInput({ value, setValue, cancelEditing }: {
 
   return (
     <div className="flex" ref={inputRef}>
-      <ShowKeyboardKeys config={tempValue} className="w-full" />
+      <ShowKeyboardKeys config={tempValue} className="w-full border rounded-l-md" />
       <Button
         type="button"
         title="Confirm"
@@ -99,8 +99,6 @@ export function KeyboardInput({ value, setValue, cancelEditing }: {
 /**
  * Component for showcasing a set of Keyboard Keys
  * @param config KeyPressConfig for the Keyboard Keys
- *
- * Add `border-background` to className to remove border
  */
 export function ShowKeyboardKeys({
   config, className, ...props
@@ -115,7 +113,7 @@ export function ShowKeyboardKeys({
   ), [config])
 
   return (
-    <div className={cn("capitalize min-h-8 flex items-center border rounded-l-md", className)} {...props}>
+    <div className={cn("capitalize min-h-8 flex items-center", className)} {...props}>
       {keys.length > 0 && keys.map((key, idx) => (
         <span key={idx} className="flex items-center">
           <span className="border rounded-sm shadow-sm p-1">{key}</span>
