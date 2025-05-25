@@ -1,5 +1,5 @@
+// Make sure to edit the one in @/features/keyboard/components/keyboardInput.tsx to match the configuration
 export type ModifierKeys = Pick<KeyboardEvent, "altKey" | "ctrlKey" | "shiftKey" | "metaKey">
-// Make sure to edit the one in @/components/keyboardInput.tsx to match the configuration
 
 export interface KeyPressConfig extends Partial<ModifierKeys> {
   key: KeyboardEvent["key"]

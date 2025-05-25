@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { Plus } from "lucide-react"
-import { useKeyPress } from "@/hooks/keyPress"
+import { useKeyPress } from "@/features/keyboard/hooks/keyPress"
 import {
   Dialog,
   DialogContent,

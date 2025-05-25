@@ -19,7 +19,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/contexts/authProvider"
 import { useFeatures } from "@/contexts/featuresProvider"
-import { useKeyPress } from "@/hooks/keyPress"
+import { useKeyPress } from "@/features/keyboard/hooks/keyPress"
 import {
   Dialog,
   DialogTrigger,

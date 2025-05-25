@@ -3,7 +3,7 @@ import { User, Keyboard, Cloud, LogOut, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/authProvider"
-import { useKeyPress } from "@/hooks/keyPress"
+import { useKeyPress } from "@/features/keyboard/hooks/keyPress"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import ConfirmationDialog from "@/components/confirmationDialog"
-import KeyboardShortcutsDialog from "@/components/keyboardShortcuts"
+import KeyboardShortcutsDialog from "@/features/keyboard/components/keyboardShortcuts"
 import { registerShortcut } from "@/features/keyboard/ks"
 
 const execAt = "Everywhere"

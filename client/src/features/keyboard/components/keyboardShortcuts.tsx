@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import {
   RowData,
   ColumnDef,
@@ -13,11 +13,11 @@ import {
   useReactTable
 } from "@tanstack/react-table"
 import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { useIsMobile } from "@/hooks/useMobile"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
@@ -35,17 +35,24 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { KeyboardInput, ShowKeyboardKeys } from "@/components/keyboardInput"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Text } from "@/components/ui/text"
+import {
+  KeyboardInput,
+  ShowKeyboardKeys
+} from "@/features/keyboard/components/keyboardInput"
 import {
   getRegisteredShortcuts,
   setUserShortcut,
   resetUserShortcuts
 } from "@/features/keyboard/ks"
-import type { KeyboardShortcut, KeyPressConfig } from "@/features/keyboard/types"
+import type {
+  KeyboardShortcut,
+  KeyPressConfig
+} from "@/features/keyboard/types"
 
-declare module '@tanstack/react-table' {
+declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
     editing: number
@@ -69,25 +76,28 @@ const columns: ColumnDef<KeyboardShortcut>[] = [
       )
     },
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("name")}</div>
+      <Text value={row.original.name} />
     ),
   },
   {
     accessorKey: "shortcut",
     header: "Shortcut",
     cell: ({ row, table: { options: { meta } } }) => {
+      const config = row.original.userConfig ?? row.original.defaultConfig
       return (
         <>
         {meta!.editing == row.index ? (
           <KeyboardInput
-            cancelEditing={() => meta!.setEditing(-1)}
+            value={config}
             setValue={meta!.setValue}
+            cancelEditing={() => meta!.setEditing(-1)}
           />
         ) : (
           <div className="hover:cursor-pointer">
             <ShowKeyboardKeys
-              config={row.original.userConfig ?? row.original.defaultConfig}
+              config={config}
               onClick={() => meta?.setEditing(row.index)}
+              className="border-background"
             />
           </div>
         )}
@@ -99,25 +109,30 @@ const columns: ColumnDef<KeyboardShortcut>[] = [
     accessorKey: "where",
     header: "Where",
     cell: ({ row }) => (
-      <div className="capitalize">
-        {Array.from(row.original.where).sort().join(", ")}
-      </div>
+      <Text value={Array.from(row.original.where).sort().join(", ")} />
     )
   },
   {
     accessorKey: "description",
-    header: "Description"
+    header: "Description",
+    cell: ({ row }) => (
+      <Text value={row.original.description} />
+    )
   }
 ]
 
-export function KeyboardShortcutsTable({data}: {data: KeyboardShortcut[]}) {
-  const [tableData, setTableData] = useState(data)
+/**
+ * Table Component for showcasing all the Keyboard Shortcuts
+ */
+export const KeyboardShortcutsTable = memo(() => {
+  const [tableData, setTableData] = useState(getRegisteredShortcuts)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [editingKS, setEditingKS] = useState(-1)
 
+  // Edit a specific User Shortcut
   const handleUserKSEdit = (config: Nullable<KeyPressConfig>) => {
     void setUserShortcut(editingKS, config)
     setTableData(old => {
@@ -125,6 +140,16 @@ export function KeyboardShortcutsTable({data}: {data: KeyboardShortcut[]}) {
       return old
     })
     setEditingKS(-1)
+  }
+
+  // Reset all Keyboard Shortcuts to Default
+  const handleUserKSReset = () => {
+    setEditingKS(-1)
+    void resetUserShortcuts()
+    setTableData(old => old.map(v => ({
+      ...v,
+      userConfig: null
+    })))
   }
 
   const table = useReactTable<KeyboardShortcut>({
@@ -150,6 +175,18 @@ export function KeyboardShortcutsTable({data}: {data: KeyboardShortcut[]}) {
       setValue: handleUserKSEdit
     }
   })
+
+  // Toggle Columns Visibility as per Screen Size
+  const isMobile = useIsMobile()
+  useEffect(() => {
+    const whereCol = table.getColumn("where")
+    if (isMobile && whereCol?.getIsVisible()) {
+      whereCol.toggleVisibility(false)
+    } else if (!isMobile && !(whereCol?.getIsVisible())) {
+      // BUG: will override user selected column in columns checkbox
+      whereCol?.toggleVisibility(true)
+    }
+  }, [table, isMobile])
 
   return (
     <div className="w-full">
@@ -190,7 +227,7 @@ export function KeyboardShortcutsTable({data}: {data: KeyboardShortcut[]}) {
         </DropdownMenu>
       </div>
       <div className="rounded-md border">
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -239,27 +276,27 @@ export function KeyboardShortcutsTable({data}: {data: KeyboardShortcut[]}) {
           </TableBody>
         </Table>
       </div>
+      <div className="float-end py-4">
+        <Button type="button" title="Reset" variant="ghost" size="sm" onClick={handleUserKSReset}>
+          Reset to Default
+        </Button>
+      </div>
     </div>
   )
-}
+})
 
-export function KeyboardShortcutsDialog({
+/**
+ * Dialog Component for showcasing all the Keyboard Shortcuts
+ */
+export const KeyboardShortcutsDialog = memo(({
   open, onOpenChange
 }: {
   open: boolean,
   onOpenChange: (open: boolean) => void
-}) {
-  const [refreshData, setRefreshData] = useState(false)
-  const data = useMemo(getRegisteredShortcuts, [refreshData])
-
-  const handleReset = () => {
-    void resetUserShortcuts()
-    setRefreshData(p => !p)
-  }
-
+}) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-fit max-h-full">
+      <DialogContent className="max-w-[95vw] max-h-full">
         <DialogHeader>
           <DialogTitle>Keyboard Shortcuts</DialogTitle>
           <DialogDescription>
@@ -267,16 +304,11 @@ export function KeyboardShortcutsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="max-w-full max-h-[80vh] overflow-y-auto">
-          <KeyboardShortcutsTable data={data} />
+          <KeyboardShortcutsTable />
         </div>
-        <DialogFooter>
-          <Button type="button" title="Reset" variant="ghost" size={"sm"} onClick={handleReset}>
-            Reset to Default
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
-}
+})
 
 export default KeyboardShortcutsDialog
