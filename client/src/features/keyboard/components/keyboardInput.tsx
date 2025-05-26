@@ -13,7 +13,7 @@ import type { KeyPressConfig } from "@/features/keyboard/types"
 import { cn } from "@/utils/css"
 
 // Make sure to edit the one in @/features/keyboard/types.d.ts to match the configuration
-const modifierKeys = ["Alt", "Control", "Shift", "Meta"]
+const modifierKeys = ["Alt", "Control", "Shift", "Meta"] as const
 
 /**
  * Component for taking a set of Keyboard Keys as Input
@@ -52,7 +52,7 @@ export function KeyboardInput({ value, setValue, cancelEditing }: {
     const { key, ctrlKey, altKey, shiftKey, metaKey } = e
     if (key == "Escape")
       cancelEditing()
-    if (!modifierKeys.includes(key))
+    if (!modifierKeys.includes(key as typeof modifierKeys[number]))
       setTempValue({ key, ctrlKey, altKey, shiftKey, metaKey })
   }, [cancelEditing]) as EventListener
 

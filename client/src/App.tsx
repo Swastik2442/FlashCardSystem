@@ -1,3 +1,5 @@
+import { lazy } from "react"
+import { preconnect } from "react-dom"
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
@@ -5,18 +7,20 @@ import { ThemeProvider } from "@/contexts/themeProvider"
 import { AuthProvider } from "@/contexts/authProvider"
 import { FeaturesProvider } from "@/contexts/featuresProvider"
 import { Toaster } from "@/components/ui/sonner"
-import ErrorBoundary from "@/components/errorBoundary"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
-import PrivateRoutes from "@/components/privateRoutes"
-import Home from "@/routes/home"
-import Register from "@/routes/auth/register"
-import Login from "@/routes/auth/login"
-import { Dashboard } from "@/routes/dashboard/page"
-import { Deck } from "@/routes/deck/page"
-import { UserProfile } from "@/routes/userProfile"
-import { Playground } from "@/routes/playground"
-import { Settings, SettingsLoader } from "@/routes/settings/page"
+
+const PrivateRoutes = lazy(() => import("@/components/privateRoutes"))
+const ErrorBoundary = lazy(() => import("@/components/errorBoundary"))
+const Header = lazy(() => import("@/components/header"))
+const Footer = lazy(() => import("@/components/footer"))
+const Home = lazy(() => import("@/routes/home"))
+const Register = lazy(() => import("@/routes/auth/register"))
+const Login = lazy(() => import("@/routes/auth/login"))
+const Dashboard = lazy(() => import("@/routes/dashboard/page").then(m => ({ default: m.Dashboard })))
+const Deck = lazy(() => import("@/routes/deck/page").then(m => ({ default: m.Deck })))
+const UserProfile = lazy(() => import("@/routes/userProfile").then(m => ({ default: m.UserProfile })))
+const Playground = lazy(() => import("@/routes/playground").then(m => ({ default: m.Playground })))
+const Settings = lazy(() => import("@/routes/settings/page").then(m => ({ default: m.Settings })))
+const SettingsLoader = async () => (await import("@/routes/settings/page")).SettingsLoader
 
 const queryClient = new QueryClient()
 
@@ -104,6 +108,7 @@ const Router = createBrowserRouter([
 ])
 
 function App() {
+  preconnect(import.meta.env.VITE_SERVER_HOST)
   return (
     <>
     <QueryClientProvider client={queryClient}>
