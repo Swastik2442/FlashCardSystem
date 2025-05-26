@@ -1,20 +1,47 @@
-import express, { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
+import express, {
+    Request as ExpressRequest,
+    Response as ExpressResponse,
+    NextFunction
+} from "express";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { doubleCsrf } from "csrf-csrf";
 import compression from "compression";
-import authRouter from "./routes/auth.route";
-import userRouter from "./routes/user.route";
-import deckRouter from "./routes/deck.route";
-import cardRouter from "./routes/card.route";
-import { CSRF_COOKIE_NAME } from "./constants";
-import env from "./env";
+import {
+    getAccessToken,
+    verifyAccessToken
+} from "@/middlewares/auth.middleware";
+import authRouter from "@/routes/auth.route";
+import userRouter from "@/routes/user.route";
+import deckRouter from "@/routes/deck.route";
+import cardRouter from "@/routes/card.route";
+import { CSRF_COOKIE_NAME } from "@/constants";
+import env from "@/env";
+import { randomBytes } from "crypto";
 
 const corsOptions = {
     origin: env.CLIENT_HOST,
     credentials: true,
 };
+
+const { invalidCsrfTokenError, generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
+    getSecret: () => env.CSRF_TOKEN_SECRET,
+    cookieName: CSRF_COOKIE_NAME,
+    cookieOptions: {
+        secure: env.NODE_ENV === "production",
+        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+    },
+    getSessionIdentifier: (req) => {
+        try {
+            const token = getAccessToken(req)
+            verifyAccessToken(token);
+            return token;
+        } catch {
+            return randomBytes(32).toString("hex");
+        }
+    }
+});
 
 const app = express();
 
@@ -47,7 +74,7 @@ app.use((_req, res, next) => {
     next();
 });
 
-app.options('*', cors(corsOptions));
+app.options('*any', cors(corsOptions));
 app.get("/", (_req, res) => {
     res.json({
         status: "success",
@@ -57,23 +84,16 @@ app.get("/", (_req, res) => {
 });
 app.get("/favicon.ico", (_req, res) => { res.status(204).end() });
 
-const { invalidCsrfTokenError, generateToken, doubleCsrfProtection } = doubleCsrf({
-    getSecret: () => env.CSRF_TOKEN_SECRET,
-    cookieName: CSRF_COOKIE_NAME,
-    cookieOptions: {
-        signed: true,
-        secure: env.NODE_ENV === "production",
-        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
-    },
-    // TODO: Add getSessionIdentifier to return random uuid from jwt to identify session
-});
-
 app.get("/csrf-token", (req, res) => {
-    res.json({
-        status: "success",
-        message: "CSRF Token generated",
-        data: generateToken(req, res)
-    });
+    try {
+        res.json({
+            status: "success",
+            message: "CSRF Token generated",
+            data: generateCsrfToken(req, res, { validateOnReuse: false, overwrite: true })
+        });
+    } catch (err: unknown) {
+        console.log(err)
+    }
     res.end();
 });
 

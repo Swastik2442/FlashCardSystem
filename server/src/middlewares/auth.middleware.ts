@@ -1,10 +1,30 @@
-import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
+import {
+    Request as ExpressRequest,
+    Response as ExpressResponse,
+    NextFunction
+} from "express";
 import jwt from "jsonwebtoken"
-import User from "../models/user.model";
-import { canUseFeature } from "../featureFlags";
-import type { FeatureFlagName } from "../featureFlags";
-import { ACCESS_TOKEN_COOKIE_NAME } from "../constants";
-import env from "../env";
+import User from "@/models/user.model";
+import { canUseFeature } from "@/featureFlags";
+import type { FeatureFlagName } from "@/featureFlags";
+import { ACCESS_TOKEN_COOKIE_NAME } from "@/constants";
+import env from "@/env";
+
+/**
+ * @desc Gets the Access Token from the Request
+ * @access private
+ */
+export const getAccessToken = (req: ExpressRequest) => {
+    return req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] ?? req.header("Authorization")?.replace("Bearer ", "");
+}
+
+/**
+ * @desc Verifies the Access Token to be valid and signed by server, and returns the decoded object
+ * @access private
+ */
+export const verifyAccessToken = (token: string) => {
+    return jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+}
 
 /**
  * @desc Verifies the Access Token and adds User param to Request
@@ -12,11 +32,11 @@ import env from "../env";
  */
 export async function VerifyJWT(req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
     try {
-        const token = req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] ?? req.header("Authorization")?.replace("Bearer ", "");
+        const token = getAccessToken(req);
         if (!token)
             throw new Error("Unauthorized Request");
 
-        const decodedToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+        const decodedToken = verifyAccessToken(token);
         const user = await User.findById(
             (decodedToken as jwt.JwtPayload)?._id
         ).select("-password -refreshToken -__v");

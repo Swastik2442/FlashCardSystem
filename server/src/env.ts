@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { z } from "zod";
+import ms, { StringValue } from "ms";
 
 const envSchema = z.object({
     PORT: z.coerce.number().min(1024).max(49151).optional().default(2442),
@@ -9,8 +10,16 @@ const envSchema = z.object({
     KV_REST_API_TOKEN: z.string().min(1),
     ACCESS_TOKEN_SECRET: z.string().min(1),
     REFRESH_TOKEN_SECRET: z.string().min(1),
-    ACCESS_TOKEN_EXPIRY: z.string().min(1).optional().default("30m"),
-    REFRESH_TOKEN_EXPIRY: z.string().min(1).optional().default("15d"),
+    ACCESS_TOKEN_EXPIRY: z.string().refine(
+        (val) => ms(val as StringValue) !== undefined, {
+            message: "Invalid duration string",
+        }
+    ).optional().default("30m"),
+    REFRESH_TOKEN_EXPIRY: z.string().refine(
+        (val) => ms(val as StringValue) !== undefined, {
+            message: "Invalid duration string",
+        }
+    ).optional().default("15d"),
     CLIENT_HOST: z.string().url(),
     COOKIE_SIGN_SECRET: z.string().min(1),
     CSRF_TOKEN_SECRET: z.string().min(1),

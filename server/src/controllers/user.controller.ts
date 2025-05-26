@@ -1,10 +1,16 @@
-import { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import User from "../models/user.model";
-import type { UserRole } from "../models/user.model";
-import Deck from "../models/deck.model";
-import { CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
-import { UserAccessibleRoles } from "../featureFlags";
-import { tryCatch } from "../utils/wrappers";
+import {
+    Request as ExpressRequest,
+    Response as ExpressResponse
+} from "express";
+import User from "@/models/user.model";
+import type { UserRole } from "@/models/user.model";
+import Deck from "@/models/deck.model";
+import {
+    CSRF_COOKIE_NAME,
+    UNCATEGORISED_DECK_NAME
+} from "@/constants";
+import { UserAccessibleRoles } from "@/featureFlags";
+import { tryCatch } from "@/utils/wrappers";
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 
@@ -202,7 +208,10 @@ export const UpdateUser = tryCatch(async (
 export const GetUserAccessibleRoles = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
-    res.status(200).json({
+    res.status(200).set(
+        "Cache-Control",
+        "private, max-age=43200"
+    ).json({
         status: "success",
         message: "Possible User Roles",
         data: UserAccessibleRoles
@@ -219,7 +228,10 @@ export const GetUserRoles = tryCatch(async (
 ) => {
     if (!req.user)
         throw new Error("User not found");
-    res.status(200).json({
+    res.status(200).set(
+        "Cache-Control",
+        "private, max-age=60"
+    ).json({
         status: "success",
         message: "Successfully get User Roles",
         data: req.user.roles

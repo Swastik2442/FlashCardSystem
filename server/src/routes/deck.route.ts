@@ -1,9 +1,30 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
-import Ratelimiter from "../middlewares/ratelimit.middleware";
-import Validate from "../middlewares/validate.middleware";
-import { VerifyJWT, AllowUser, AllowUserFor } from "../middlewares/auth.middleware";
-import { CreateDeck, GetDeck, DeleteDeck, UpdateDeck, PopulateDeck, GetAllDecks, ShareDeck, GetDeckLikes, LikeDeck, UnlikeDeck, GetDeckCards, ChangeDeckOwner } from "../controllers/deck.controller";
+import Ratelimiter from "@/middlewares/ratelimit.middleware";
+import Validate from "@/middlewares/validate.middleware";
+import {
+    VerifyJWT,
+    AllowUser,
+    AllowUserFor
+} from "@/middlewares/auth.middleware";
+import {
+    CreateDeck,
+    GetDeck,
+    DeleteDeck,
+    UpdateDeck,
+    PopulateDeck,
+    GetAllDecks,
+    ShareDeck,
+    GetDeckLikes,
+    LikeDeck,
+    UnlikeDeck,
+    GetDeckCards,
+    ChangeDeckOwner
+} from "@/controllers/deck.controller";
+import {
+    createDeckIdChain,
+    createUsernameChain
+} from "@/utils/validationChains";
 
 const router = express.Router();
 router.use(VerifyJWT);
@@ -35,44 +56,18 @@ router.post(
 router.get(
     "/populate/:did",
     (...params) => AllowUserFor("GEN_AI", ...params),
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
+    createDeckIdChain(),
     Validate,
     Ratelimiter,
     PopulateDeck
 );
 
-router.get(
-    "/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    Validate,
-    GetDeck
-);
-router.delete(
-    "/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    Validate,
-    DeleteDeck
-);
+router.get("/:did", createDeckIdChain(), Validate, GetDeck);
+router.delete("/:did", createDeckIdChain(), Validate, DeleteDeck);
 
 router.patch(
     "/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
+    createDeckIdChain(),
     oneOf([
         check("name")
             .notEmpty()
@@ -85,80 +80,28 @@ router.patch(
             .escape(),
         check("isPrivate")
             .isBoolean(),
-    ], "At least one field is required"),
+    ], { message: "At least one field is required" }),
     Validate,
     UpdateDeck
 );
 
-router.get(
-    "/cards/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    Validate,
-    GetDeckCards
-);
+router.get("/cards/:did", createDeckIdChain(), Validate, GetDeckCards);
 
-router.patch(
-    "/owner/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    check("user")
-        .notEmpty()
-        .withMessage("User is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .escape(),
-    Validate,
-    ChangeDeckOwner
-)
+router.patch("/owner/:did", createDeckIdChain(), createUsernameChain("user"), Validate, ChangeDeckOwner)
 
 router.post(
     "/share/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    check("user")
-        .notEmpty()
-        .withMessage("User ID is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .escape(),
-    check("isEditable")
-        .isBoolean(),
+    createDeckIdChain(),
+    createUsernameChain("user"),
+    check("isEditable").isBoolean(),
     Validate,
     ShareDeck
 );
 
 router.post(
     "/unshare/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    check("user")
-        .notEmpty()
-        .withMessage("User ID is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .escape(),
+    createDeckIdChain(),
+    createUsernameChain("user"),
     check("unshare")
         .notEmpty()
         .withMessage("Setting an unshare variable is required"),
@@ -166,37 +109,10 @@ router.post(
     ShareDeck
 );
 
-router.get(
-    "/likes/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    Validate,
-    GetDeckLikes
-);
+router.get("/likes/:did", createDeckIdChain(), Validate, GetDeckLikes);
 
-router.post(
-    "/likes/add/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    Validate,
-    LikeDeck
-);
+router.post("/likes/add/:did", createDeckIdChain(), Validate, LikeDeck);
 
-router.post(
-    "/likes/remove/:did",
-    check("did")
-        .notEmpty()
-        .withMessage("Deck ID is required")
-        .trim()
-        .escape(),
-    Validate,
-    UnlikeDeck
-);
+router.post("/likes/remove/:did", createDeckIdChain(), Validate, UnlikeDeck);
 
 export default router;

@@ -1,11 +1,22 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-import { Request as ExpressRequest, Response as ExpressResponse } from "express";
-import Deck from "../models/deck.model";
-import Card from "../models/card.model";
-import type { ICard } from "../models/card.model";
-import env from "../env";
-import { GEMINI_MODEL_NAME, CSRF_COOKIE_NAME, UNCATEGORISED_DECK_NAME } from "../constants";
-import { tryCatch } from "../utils/wrappers";
+import {
+    GoogleGenerativeAI,
+    Schema,
+    SchemaType
+} from "@google/generative-ai";
+import {
+    Request as ExpressRequest,
+    Response as ExpressResponse
+} from "express";
+import Deck from "@/models/deck.model";
+import Card from "@/models/card.model";
+import type { ICard } from "@/models/card.model";
+import env from "@/env";
+import {
+    GEMINI_MODEL_NAME,
+    CSRF_COOKIE_NAME,
+    UNCATEGORISED_DECK_NAME
+} from "@/constants";
+import { tryCatch } from "@/utils/wrappers";
 
 type CardSchema = Omit<ICard, "deck">;
 
@@ -30,7 +41,7 @@ const aiCardSchema = {
         }
     },
     required: ["question", "answer"],
-};
+} as Schema;
 
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 const aiCardModel = genAI.getGenerativeModel({

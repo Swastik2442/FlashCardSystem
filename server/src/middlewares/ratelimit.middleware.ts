@@ -1,7 +1,11 @@
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
-import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
-import env from "../env";
+import {
+    Request as ExpressRequest,
+    Response as ExpressResponse,
+    NextFunction
+} from "express";
+import env from "@/env";
 
 const ratelimit = new Ratelimit({
     redis: new Redis({

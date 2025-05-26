@@ -1,11 +1,18 @@
-import { Request as ExpressRequest, Response as ExpressResponse } from "express";
+import {
+    Request as ExpressRequest,
+    Response as ExpressResponse
+} from "express";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import ms from "ms";
-import User from "../models/user.model";
-import env from "../env";
-import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME, CSRF_COOKIE_NAME } from "../constants";
-import { tryCatch } from "../utils/wrappers";
+import ms, { type StringValue } from "ms";
+import User from "@/models/user.model";
+import env from "@/env";
+import {
+    ACCESS_TOKEN_COOKIE_NAME,
+    REFRESH_TOKEN_COOKIE_NAME,
+    CSRF_COOKIE_NAME
+} from "@/constants";
+import { tryCatch } from "@/utils/wrappers";
 
 const cookieOptions = {
     httpOnly: true,
@@ -113,8 +120,8 @@ export const Login = tryCatch(async (req: ExpressRequest, res: ExpressResponse) 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
     res.status(200)
-    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY as StringValue) })
+    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY as StringValue) })
     .clearCookie(CSRF_COOKIE_NAME)
     .json({
         status: "success",
@@ -184,8 +191,8 @@ export const RefreshAccessToken = tryCatch(async (req: ExpressRequest, res: Expr
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     res.status(200)
-    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY as StringValue) })
+    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY as StringValue) })
     .json({
         status: "success",
         message: "Access Token refreshed",
@@ -293,8 +300,8 @@ export const ChangePassword = tryCatch(async (req: ExpressRequest, res: ExpressR
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     res.status(200)
-    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY as StringValue) })
+    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY as StringValue) })
     .clearCookie(CSRF_COOKIE_NAME)
     .json({
         status: "success",

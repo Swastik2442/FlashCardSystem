@@ -2,10 +2,10 @@ import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import { Response as superagentResponse } from "superagent";
 import request from "supertest";
 import mongoose from "mongoose";
-import app from "../src/app";
-import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "../src/constants";
-import env from "../src/env";
-import User from "../src/models/user.model";
+import app from "@/app";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "@/constants";
+import env from "@/env";
+import User from "@/models/user.model";
 import { sampleUser1 as sampleUser, getCookie } from "./utils";
 
 let authTokens = { access_token: "", refresh_token: "" };
@@ -195,7 +195,7 @@ describe("Auth Routes", () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
         expect(res.body.message).toBe("Deleted the User");
-    
+
         const user = await User.findById(userID);
         expect(user).toBeNull();
     });

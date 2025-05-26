@@ -1,9 +1,20 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
-import Validate from "../middlewares/validate.middleware";
-import { AllowUser, VerifyJWT } from "../middlewares/auth.middleware";
-import { GetUserPrivate, GetUser, GetUserSub, GetLikedDecks, GetUserDecks, UpdateUser, GetUserAccessibleRoles, GetUserRoles, SetUserRoles } from "../controllers/user.controller";
-import { UserAccessibleRoles } from "../featureFlags";
+import Validate from "@/middlewares/validate.middleware";
+import { AllowUser, VerifyJWT } from "@/middlewares/auth.middleware";
+import {
+    GetUserPrivate,
+    GetUser,
+    GetUserSub,
+    GetLikedDecks,
+    GetUserDecks,
+    UpdateUser,
+    GetUserAccessibleRoles,
+    GetUserRoles,
+    SetUserRoles
+} from "@/controllers/user.controller";
+import { UserAccessibleRoles } from "@/featureFlags";
+import { createUsernameChain } from "@/utils/validationChains";
 
 const router = express.Router();
 router.use(VerifyJWT);
@@ -20,71 +31,18 @@ router.patch(
             .trim()
             .isLength({ min: 3, max: 64 })
             .escape(),
-    ], "At least one field is required"),
+    ], { message: "At least one field is required" }),
     Validate,
     UpdateUser
 );
 
-router.get(
-    "/get/:username",
-    check("username")
-        .notEmpty()
-        .withMessage("Username is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .withMessage("Can only contain lowercase letters, numbers, and underscores")
-        .escape(),
-    Validate,
-    GetUser
-);
+router.get("/get/:username", createUsernameChain(), Validate, GetUser);
 
-router.get(
-    "/substr/:str",
-    check("str")
-        .notEmpty()
-        .withMessage("str is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .withMessage("Can only contain lowercase letters, numbers, and underscores")
-        .escape(),
-    Validate,
-    GetUserSub
-);
+router.get("/substr/:str", createUsernameChain("str"), Validate, GetUserSub);
 
-router.get(
-    "/decks/:username",
-    check("username")
-        .notEmpty()
-        .withMessage("Username is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .escape(),
-    Validate,
-    GetUserDecks
-);
+router.get("/decks/:username", createUsernameChain(), Validate, GetUserDecks);
 
-router.get(
-    "/liked/decks/:username",
-    check("username")
-        .notEmpty()
-        .withMessage("Username is required")
-        .trim()
-        .isLength({ min: 2, max: 32 })
-        .withMessage("Must be at least 2 Characters and at most 32 Characters long")
-        .toLowerCase()
-        .matches(/^[a-z0-9_]+$/)
-        .escape(),
-    GetLikedDecks
-);
+router.get("/liked/decks/:username", createUsernameChain(), GetLikedDecks);
 
 router.get("/roles/all", GetUserAccessibleRoles);
 router.get("/roles", GetUserRoles);
