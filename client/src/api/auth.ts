@@ -1,6 +1,12 @@
 import { makeRequest } from "@/api/common";
 import fetchWithCredentials from "@/utils/fetch";
-import type { TLoginFormSchema, TRegisterFormSchema, TChangeUsernameFormSchema, TChangeEmailFormSchema, TChangePasswordFormSchema } from "@/types/forms";
+import type {
+  TLoginFormSchema,
+  TRegisterFormSchema,
+  TChangeUsernameFormSchema,
+  TChangeEmailFormSchema,
+  TChangePasswordFormSchema
+} from "@/types/forms";
 
 /**
  * Makes a GET request to refresh the user tokens
@@ -32,7 +38,8 @@ export async function registerUser(data: TRegisterFormSchema) {
     "/auth/register",
     "post",
     data,
-    "Failed to Register"
+    "Failed to Register",
+    false
   );
   return response.message;
 }
@@ -47,7 +54,8 @@ export async function loginUser(data: TLoginFormSchema) {
     "/auth/login",
     "post",
     data,
-    "Failed to Login"
+    "Failed to Login",
+    false
   );
   return response.data;
 }

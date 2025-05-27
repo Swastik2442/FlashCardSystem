@@ -1,5 +1,7 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
+import { doubleCsrf } from "csrf-csrf";
+
 import {
     Register,
     Login,
@@ -11,12 +13,17 @@ import {
     DeleteUser
 } from "@/controllers/auth.controller";
 import Validate from "@/middlewares/validate.middleware";
-import { VerifyJWT } from "@/middlewares/auth.middleware";
+import {
+    VerifyJWT,
+    getSessionID,
+} from "@/middlewares/auth.middleware";
 import {
     createEmailChain,
     createPasswordChain,
     createUsernameChain
 } from "@/utils/validationChains";
+import { CSRF_COOKIE_NAME } from "@/constants";
+import env from "@/env";
 
 const router = express.Router();
 
@@ -58,6 +65,60 @@ router.post(
 );
 
 router.get("/refresh-token", RefreshAccessToken);
+
+// CSRF Stuff
+const { invalidCsrfTokenError, generateCsrfToken, doubleCsrfProtection } = doubleCsrf({
+    getSecret: () => env.CSRF_TOKEN_SECRET,
+    getSessionIdentifier: getSessionID,
+    cookieName: CSRF_COOKIE_NAME,
+    cookieOptions: {
+        secure: env.NODE_ENV === "production",
+        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+    }
+});
+
+router.get("/csrf-token", (req, res) => {
+    try {
+        const token = generateCsrfToken(req, res, {
+            validateOnReuse: true,
+            overwrite: true
+        });
+        res.json({
+            status: "success",
+            message: "CSRF Token generated",
+            data: token
+        });
+    } catch (err: unknown) {
+        if (err == 401) {
+            res.status(401).json({
+                status: "error",
+                message: "Unauthorized Request",
+                data: null
+            });
+        } else {
+            console.log(err);
+            res.status(500).json({
+                status: "error",
+                message: "Internal Server Error",
+                data: null
+            });
+        }
+    }
+    res.end();
+});
+
+router.use(doubleCsrfProtection);
+router.use((err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err == invalidCsrfTokenError) {
+        res.status(403).json({
+            status: "error",
+            message: "CSRF Validation failed"
+        });
+        res.end();
+    } else {
+        next();
+    }
+});
 
 router.use(VerifyJWT);
 router.get("/logout", Logout);

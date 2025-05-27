@@ -6,7 +6,7 @@ import fetchWithCredentials from "@/utils/fetch";
  */
 export async function getCSRFToken() {
   const res = await fetchWithCredentials(
-    `${import.meta.env.VITE_SERVER_HOST}/csrf-token`,
+    `${import.meta.env.VITE_SERVER_HOST}/auth/csrf-token`,
     "get"
   ).catch((err: Error) => {
     throw new Error(err?.message || "Failed to get CSRF Token");
@@ -25,13 +25,15 @@ export async function getCSRFToken() {
  * @param method Method of the request
  * @param data Data to be sent in the request
  * @param errMsg Error message to be thrown if no error message is received from the server
+ * @param csrf Whether to enable CSRF Protection or not
  * @returns Data from the Server
  */
 export async function makeRequest<T>(
     url: string,
     method: "get" | "post" | "PATCH" | "delete",
     data?: unknown,
-    errMsg?: string
+    errMsg?: string,
+    csrf = true
 ) {
   url = import.meta.env.VITE_SERVER_HOST + url;
   errMsg = errMsg ?? "Failed to make the request";
@@ -44,12 +46,11 @@ export async function makeRequest<T>(
       throw new Error(err?.message ?? errMsg);
     });
   } else {
-    const csrfToken = await getCSRFToken();
     res = await fetchWithCredentials(
       url,
       method,
       JSON.stringify(data),
-      csrfToken
+      csrf ? await getCSRFToken() : undefined
     ).catch((err: Error) => {
       throw new Error(err?.message ?? errMsg);
     });

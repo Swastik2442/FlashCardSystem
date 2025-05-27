@@ -7,13 +7,13 @@ import User from "@/models/user.model";
 import Deck from "@/models/deck.model";
 import Card from "@/models/card.model";
 import { UserAccessibleRoles } from "@/featureFlags";
-import { sampleUser1, sampleUser2, sampleDeck, sampleCard, getCookie } from "./utils";
+import { sampleUser1, sampleUser2, sampleDeck, sampleCard, getCookie, getCSRFToken } from "./utils";
 
-let authTokens1 = { access_token: "", refresh_token: "" };
-let authTokens2 = { access_token: "", refresh_token: "" };
+const authTokens1 = { access_token: "", refresh_token: "" };
+const authTokens2 = { access_token: "", refresh_token: "" };
 
 export const setRoles = async (roles: Record<string, boolean>) => {
-    const tokenRes = await request(app).get("/csrf-token");
+    const tokenRes = await getCSRFToken(app, authTokens1);
     const res = await request(app)
         .patch("/user/roles")
         .set("x-csrf-token", tokenRes.body.data)
@@ -29,48 +29,33 @@ beforeAll(async () => {
         { dbName: "testing_project" }
     );
 
-    // Get CSRF Token
-    const tokenRes = await request(app).get("/csrf-token");
-
     // Register Users
     await request(app)
         .post("/auth/register")
-        .set("x-csrf-token", tokenRes.body.data)
-        .set("Cookie", getCookie(tokenRes))
         .send(sampleUser1);
 
     await request(app)
         .post("/auth/register")
-        .set("x-csrf-token", tokenRes.body.data)
-        .set("Cookie", getCookie(tokenRes))
         .send(sampleUser2);
 
     // Login Users
     const res1 = await request(app)
         .post("/auth/login")
-        .set("x-csrf-token", tokenRes.body.data)
-        .set("Cookie", getCookie(tokenRes))
         .send({
             username: sampleUser1.username,
             password: sampleUser1.password,
         });
-    authTokens1 = {
-        access_token: getCookie(res1, 0),
-        refresh_token: getCookie(res1, 1),
-    };
+    authTokens1.access_token = getCookie(res1, 0);
+    authTokens1.refresh_token = getCookie(res1, 1);
 
     const res2 = await request(app)
         .post("/auth/login")
-        .set("x-csrf-token", tokenRes.body.data)
-        .set("Cookie", getCookie(tokenRes))
         .send({
             username: sampleUser2.username,
             password: sampleUser2.password,
         });
-    authTokens2 = {
-        access_token: getCookie(res2, 0),
-        refresh_token: getCookie(res2, 1),
-    };
+    authTokens2.access_token = getCookie(res2, 0);
+    authTokens2.refresh_token = getCookie(res2, 1);
 });
 
 afterAll(async () => {
@@ -120,7 +105,7 @@ describe("User Routes", () => {
 
     it("should change the user's name", async () => {
         const updatedUser = { fullName: "Updated User" };
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .patch("/user")
             .set("x-csrf-token", tokenRes.body.data)
@@ -178,7 +163,7 @@ describe("Card Routes", () => {
     let cardId: string;
 
     it("should create a new card", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post("/card/new")
             .set("x-csrf-token", tokenRes.body.data)
@@ -205,7 +190,7 @@ describe("Card Routes", () => {
     });
 
     it("should update the card by ID", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const updatedCard = { question: "Updated Question" };
         const res = await request(app)
             .patch(`/card/${cardId}`)
@@ -256,7 +241,7 @@ describe("Card Routes", () => {
     });
 
     it("should delete the card by ID", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .delete(`/card/${cardId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -274,7 +259,7 @@ describe("Deck Routes", () => {
     let deckId: string, cardId: string;
 
     it("should create a new deck", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post("/deck/new")
             .set("x-csrf-token", tokenRes.body.data)
@@ -288,7 +273,7 @@ describe("Deck Routes", () => {
     });
 
     it("should add a card to the deck", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post("/card/new")
             .set("x-csrf-token", tokenRes.body.data)
@@ -351,7 +336,7 @@ describe("Deck Routes", () => {
 
     it("should update the deck", async () => {
         const updatedDeck = { name: "Updated Deck Name" };
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .patch(`/deck/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -402,7 +387,7 @@ describe("Deck Routes", () => {
     });
 
     it("should like the deck", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post(`/deck/likes/add/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -415,8 +400,23 @@ describe("Deck Routes", () => {
         expect(deck?.likes).toBe(1);
     });
 
+    it("should get all the users who liked the deck", async () => {
+        const res = await request(app)
+            .get(`/deck/likes/${deckId}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Successfully get Deck Likes");
+
+        const deck = await Deck.findById(deckId);
+        const likedBy = (deck?.likedBy ?? []).map(id => id.toString());
+        expect(res.body.data).toHaveLength(likedBy.length);
+        for (const user of likedBy)
+            expect(res.body.data).toContain(user);
+    });
+
     it("should unlike the deck", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post(`/deck/likes/remove/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -431,7 +431,7 @@ describe("Deck Routes", () => {
 
     it("should share the deck with read access", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post(`/deck/share/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -451,7 +451,7 @@ describe("Deck Routes", () => {
 
     it("should share the deck with write access", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post(`/deck/share/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -471,7 +471,7 @@ describe("Deck Routes", () => {
 
     it("should unshare the deck", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .post(`/deck/unshare/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -490,7 +490,7 @@ describe("Deck Routes", () => {
     });
 
     it("should change the deck's owner", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .patch(`/deck/owner/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
@@ -506,7 +506,7 @@ describe("Deck Routes", () => {
     });
 
     it("should delete the deck", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens1);
         const res = await request(app)
             .delete(`/deck/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)

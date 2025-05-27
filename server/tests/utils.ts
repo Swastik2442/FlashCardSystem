@@ -1,3 +1,4 @@
+import { Express } from "express";
 import request from "supertest";
 
 export const sampleUser1 = {
@@ -28,4 +29,16 @@ export const sampleDeck = {
 
 export const getCookie = (res: request.Response, idx = 0) => {
     return res.headers["set-cookie"][idx].split(";")[0];
+}
+
+export const getCSRFToken = async (
+    app: Express,
+    authTokens: {
+        access_token: string
+        refresh_token: string
+    }
+) => {
+    return await request(app)
+        .get("/auth/csrf-token")
+        .set("Cookie", `${authTokens.access_token};${authTokens.refresh_token}`);
 }

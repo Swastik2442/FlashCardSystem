@@ -7,6 +7,7 @@ import {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
+
 import User from "@/models/user.model";
 import Deck from "@/models/deck.model";
 import Card from "@/models/card.model";
@@ -417,7 +418,7 @@ export const ShareDeck = tryCatch(async (req: ExpressRequest, res: ExpressRespon
  */
 export const GetDeckLikes = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
     const id = req.params.did;
-    const deck = await Deck.findById(id);
+    const deck = await Deck.findById(id).select("-description -likes -__v -dateUpdated -dateCreated");
     if (!deck) {
         res.status(404).json({
             status: "error",
@@ -434,6 +435,7 @@ export const GetDeckLikes = tryCatch(async (req: ExpressRequest, res: ExpressRes
 
     res.status(200).json({
         status: "success",
+        message: "Successfully get Deck Likes",
         data: deck.likedBy,
     });
 });

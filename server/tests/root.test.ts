@@ -37,16 +37,6 @@ describe("Root Routes", () => {
         expect(res.headers).toHaveProperty("access-control-allow-credentials");
     });
 
-    it("should return a CSRF Token", async () => {
-        const res = await request(app).get("/csrf-token");
-        expect(res.statusCode).toBe(200);
-        expect(res.body.status).toBe("success");
-        expect(res.body.message).toBe("CSRF Token generated");
-        expect(res.body.data).toBeDefined();
-        expect(res.headers).toHaveProperty("set-cookie");
-        expect(res.headers["set-cookie"][0]).toContain("fcs.x-csrf-token");
-    });
-
     it("should return HTTP status 404 for an unknown route", async () => {
         const res = await request(app).get("/notarouteweshouldhave2442");
         expect(res.statusCode).toBe(404);

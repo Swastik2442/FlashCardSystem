@@ -3,21 +3,19 @@ import { Response as superagentResponse } from "superagent";
 import request from "supertest";
 import mongoose from "mongoose";
 import app from "@/app";
+import User from "@/models/user.model";
 import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "@/constants";
 import env from "@/env";
-import User from "@/models/user.model";
-import { sampleUser1 as sampleUser, getCookie } from "./utils";
+import { sampleUser1 as sampleUser, getCookie, getCSRFToken } from "./utils";
 
-let authTokens = { access_token: "", refresh_token: "" };
+const authTokens = { access_token: "", refresh_token: "" };
 
 const setAuthTokens = (res: superagentResponse) => {
     expect(res.header).toHaveProperty("set-cookie");
     expect(res.headers["set-cookie"][0]).toContain(ACCESS_TOKEN_COOKIE_NAME);
     expect(res.headers["set-cookie"][1]).toContain(REFRESH_TOKEN_COOKIE_NAME);
-    authTokens = {
-        access_token: getCookie(res, 0),
-        refresh_token: getCookie(res, 1),
-    };
+    authTokens.access_token = getCookie(res, 0);
+    authTokens.refresh_token = getCookie(res, 1);
 }
 
 beforeAll(async () => {
@@ -36,11 +34,8 @@ describe("Auth Routes", () => {
     let userID: string;
 
     it("should register a new user", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post("/auth/register")
-            .set("x-csrf-token", tokenRes.body.data)
-            .set("Cookie", getCookie(tokenRes))
             .send(sampleUser);
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -58,11 +53,8 @@ describe("Auth Routes", () => {
     });
 
     it("should login the user using email", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post("/auth/login")
-            .set("x-csrf-token", tokenRes.body.data)
-            .set("Cookie", getCookie(tokenRes))
             .send({
                 email: sampleUser.email,
                 password: sampleUser.password,
@@ -75,11 +67,8 @@ describe("Auth Routes", () => {
     });
 
     it("should login the user using username", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
         const res = await request(app)
             .post("/auth/login")
-            .set("x-csrf-token", tokenRes.body.data)
-            .set("Cookie", getCookie(tokenRes))
             .send({
                 username: sampleUser.username,
                 password: sampleUser.password,
@@ -102,9 +91,19 @@ describe("Auth Routes", () => {
         setAuthTokens(res);
     });
 
+    it("should return a CSRF Token", async () => {
+        const res = await getCSRFToken(app, authTokens);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("CSRF Token generated");
+        expect(res.body.data).toBeDefined();
+        expect(res.headers).toHaveProperty("set-cookie");
+        expect(res.headers["set-cookie"][0]).toContain("fcs.x-csrf-token");
+    });
+
     it("should change the user's username", async () => {
         sampleUser.username += "123";
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens);
         const res = await request(app)
             .patch("/auth/edit/username")
             .set("x-csrf-token", tokenRes.body.data)
@@ -125,7 +124,7 @@ describe("Auth Routes", () => {
 
     it("should change the user's email", async () => {
         sampleUser.email = "123" + sampleUser.email;
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens);
         const res = await request(app)
             .patch("/auth/edit/email")
             .set("x-csrf-token", tokenRes.body.data)
@@ -145,7 +144,7 @@ describe("Auth Routes", () => {
 
     it("should change the user's password", async () => {
         const newPassword = sampleUser.password + "123";
-        const tokenRes = await request(app).get("/csrf-token");
+        const tokenRes = await getCSRFToken(app, authTokens);
         const res = await request(app)
             .patch("/auth/edit/password")
             .set("x-csrf-token", tokenRes.body.data)
@@ -176,17 +175,15 @@ describe("Auth Routes", () => {
     });
 
     it("should delete the user", async () => {
-        const tokenRes = await request(app).get("/csrf-token");
         const loginRes = await request(app)
             .post("/auth/login")
-            .set("x-csrf-token", tokenRes.body.data)
-            .set("Cookie", getCookie(tokenRes))
             .send({
                 username: sampleUser.username,
                 password: sampleUser.password,
             });
-        setAuthTokens(loginRes);
+            setAuthTokens(loginRes);
 
+        const tokenRes = await getCSRFToken(app, authTokens);
         const res = await request(app)
             .delete("/auth/delete")
             .set("x-csrf-token", tokenRes.body.data)

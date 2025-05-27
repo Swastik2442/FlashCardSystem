@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/themeProvider"
 import { AuthProvider } from "@/contexts/authProvider"
 import { FeaturesProvider } from "@/contexts/featuresProvider"
 import { Toaster } from "@/components/ui/sonner"
+import { SettingsLoader } from "@/routes/settings/page"
 
 const PrivateRoutes = lazy(() => import("@/components/privateRoutes"))
 const ErrorBoundary = lazy(() => import("@/components/errorBoundary"))
@@ -20,7 +21,6 @@ const Deck = lazy(() => import("@/routes/deck/page").then(m => ({ default: m.Dec
 const UserProfile = lazy(() => import("@/routes/userProfile").then(m => ({ default: m.UserProfile })))
 const Playground = lazy(() => import("@/routes/playground").then(m => ({ default: m.Playground })))
 const Settings = lazy(() => import("@/routes/settings/page").then(m => ({ default: m.Settings })))
-const SettingsLoader = async () => (await import("@/routes/settings/page")).SettingsLoader
 
 const queryClient = new QueryClient()
 
