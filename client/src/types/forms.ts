@@ -87,7 +87,16 @@ export type TCardFormSchema = z.infer<typeof cardFormSchema>;
 
 // Schema for Deck Sharing Settings Form
 export const deckShareFormSchema = z.object({
-  user: z.string().min(1, { message: "User cannot be empty." }),
+  users: z.array(z.object({
+    _id: z.string().length(24, { message: "ID must be of 24 characters." }),
+    fullName: z.string()
+      .min(3, { message: "Name must be at least 3 characters." })
+      .max(64, { message: "Name cannot be more than 64 characters." }),
+    username: z.string().toLowerCase()
+      .regex(/^[a-z0-9_]+$/, { message: "Username can only contain lowercase letters, numbers, and underscores." })
+      .min(2, { message: "Username must be at least 2 characters." })
+      .max(32, { message: "Username cannot be more than 32 characters." }),
+  })),
   isEditable: z.boolean().default(false).optional(),
   unshare: z.boolean().default(false).optional(),
 });

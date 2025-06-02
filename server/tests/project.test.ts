@@ -436,7 +436,7 @@ describe("Deck Routes", () => {
             .post(`/deck/share/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token};${getCookie(tokenRes)}`)
-            .send({ user: user!._id, isEditable: false });
+            .send({ users: [user!._id], isEditable: false });
 
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -456,7 +456,7 @@ describe("Deck Routes", () => {
             .post(`/deck/share/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token};${getCookie(tokenRes)}`)
-            .send({ user: user!._id, isEditable: true });
+            .send({ users: [user!._id], isEditable: true });
 
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");
@@ -469,6 +469,27 @@ describe("Deck Routes", () => {
         expect(accessible?.writable).toBe(true);
     });
 
+    it("should get the users with whom the deck is shared", async () => {
+        const deck = await Deck.findById(deckId);
+        const sharedWith = (deck?.sharedTo ?? []).map(
+            d => JSON.parse(JSON.stringify({
+                user: d.user, isEditable: d.editable
+            }))
+        );
+
+        const res = await request(app)
+            .get(`/deck/share/${deckId}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.message).toBe("Successfully get Shared with Users");
+        expect(res.body.data).toHaveLength(sharedWith.length);
+
+        for (const item of sharedWith)
+            expect(res.body.data).toContainEqual(item)
+    });
+
     it("should unshare the deck", async () => {
         const user = await User.findOne({ username: sampleUser2.username.toLowerCase() });
         const tokenRes = await getCSRFToken(app, authTokens1);
@@ -476,7 +497,7 @@ describe("Deck Routes", () => {
             .post(`/deck/unshare/${deckId}`)
             .set("x-csrf-token", tokenRes.body.data)
             .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token};${getCookie(tokenRes)}`)
-            .send({ user: user!._id, unshare: true });
+            .send({ users: [user!._id], unshare: true });
 
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe("success");

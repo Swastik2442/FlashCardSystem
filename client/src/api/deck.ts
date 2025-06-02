@@ -216,7 +216,7 @@ export const shareDeck = async (deckID: string, data: TDeckShareFormSchema) => {
   const response = await makeRequest<undefined>(
     `/deck/${shareORunshare}/${deckID}`,
     "post",
-    data,
+    { ...data, users: data.users.map(u => u._id) },
     `Failed to ${shareORunshare} the Deck`
   );
   return response.message;

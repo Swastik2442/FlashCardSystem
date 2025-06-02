@@ -49,6 +49,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import ConfirmationDialog from "@/components/confirmationDialog"
 import UserSearchField from "@/components/userSearchField"
+import { ShowUsers } from "@/components/showUsers"
 import { LoadingIcon } from "@/components/icons"
 import {
   deckFormSchema,
@@ -515,7 +516,6 @@ function DeckDeleteDialog({
  * @param deck information about the Deck
  * @param dialogOpen Whether the dialog is Open or not
  * @param setDialogOpen Function to set the Dialog Open or Closed
- * @returns
  */
 function DeckEditDialog({
   deckID,
@@ -657,7 +657,6 @@ function DeckEditDialog({
  * @param deckID ID of the Deck
  * @param dialogOpen Whether the dialog is Open or not
  * @param setDialogOpen Function to set the Dialog Open or Closed
- * @returns
  */
 function DeckShareDialog({
   deckID,
@@ -667,19 +666,30 @@ function DeckShareDialog({
   const deckShareForm = useForm<TDeckShareFormSchema>({
     resolver: zodResolver(deckShareFormSchema),
     defaultValues: {
+      users: [],
       isEditable: false,
-      unshare: false,
+      unshare: false
     },
   })
 
+  const [userInput, setUserInput] = useState("")
   const handleUserSelection = (user: IUserWithID) => {
-    deckShareForm.setValue("user", user._id)
+    const users = deckShareForm.getValues("users")
+    if (users.some(v => user._id == v._id))
+      toast.warning("User already added!")
+    else
+      deckShareForm.setValue("users", users.concat(user))
+    setUserInput("")
+  }
+  const handleUserRemoval = (index: number) => {
+    const users = deckShareForm.getValues("users")
+    users.splice(index, 1)
+    deckShareForm.setValue("users", users)
   }
   const handleLinkCopy = () => {
     void navigator.clipboard.writeText(`${import.meta.env.VITE_CLIENT_HOST}/deck/${deckID}`)
     toast.info("Link Copied")
   }
-  const handleShareCancel = () => setDialogOpen(false)
 
   async function handleDeckSharing(values: TDeckShareFormSchema) {
     setDialogOpen(false)
@@ -700,18 +710,20 @@ function DeckShareDialog({
         <DialogHeader>
           <DialogTitle>Share Deck</DialogTitle>
           <DialogDescription>
-            Share the Deck to others. Copy the link below and share it with your friends.
+            Share the Deck with others. Copy the link below and share it with your friends.
           </DialogDescription>
         </DialogHeader>
         <Form {...deckShareForm}>
           <form className="grid gap-2" onSubmit={deckShareForm.handleSubmit(handleDeckSharing)}>
             <FormField
               control={deckShareForm.control}
-              name="user"
+              name="users"
               render={({ field }) => (
-                <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
-                  <FormLabel className="text-right">User</FormLabel>
-                  <UserSearchField value={field.value} onSelect={handleUserSelection} />
+                <FormItem className="grid grid-cols-4 items-center gap-x-2">
+                  <FormLabel className="text-right">Users</FormLabel>
+                  <ShowUsers className="col-span-3 min-h-11" users={field.value} removeUser={handleUserRemoval} />
+                  <div></div>
+                  <UserSearchField value={userInput} onSelect={handleUserSelection} />
                   <FormMessage className="col-span-4 text-right" />
                 </FormItem>
               )}
@@ -722,23 +734,6 @@ function DeckShareDialog({
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
                   <FormLabel className="text-right">Can Edit?</FormLabel>
-                  <FormControl>
-                    <Switch
-                      className="!mt-0 col-span-3"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage className="col-span-4 text-right" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={deckShareForm.control}
-              name="unshare"
-              render={({ field }) => (
-                <FormItem className="grid grid-cols-4 items-center gap-2 min-h-9">
-                  <FormLabel className="text-right">Remove Sharing</FormLabel>
                   <FormControl>
                     <Switch
                       className="!mt-0 col-span-3"
@@ -763,15 +758,15 @@ function DeckShareDialog({
                 type="button"
                 title="Cancel"
                 variant="outline"
-                onClick={handleShareCancel}
+                onClick={() => setDialogOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                title="Edit"
+                title="Save"
               >
-                Edit
+                Save
               </Button>
             </DialogFooter>
           </form>
@@ -839,7 +834,7 @@ function DeckOwnerChangeDialog({
             />
             <DialogFooter>
               <Button onClick={() => setDialogOpen(false)} type="button" title="Cancel" variant="outline">Cancel</Button>
-              <Button type="submit" title="Change Owner" variant="destructive">Change Owner</Button>
+              <Button type="submit" title="Change Owner" variant="destructive" className="text-background">Change Owner</Button>
             </DialogFooter>
           </form>
         </Form>

@@ -358,56 +358,84 @@ export const ChangeDeckOwner = tryCatch(async (req: ExpressRequest, res: Express
 });
 
 /**
- * @route POST deck/share/:did or POST deck/unshare/:did
- * @desc Shares/Unshares the Deck with the given ID with the given User ID
+ * @route GET deck/share/:did
+ * @desc Gets the User IDs of the Users with whom the Deck is Shared
  * @access private
  */
-export const ShareDeck = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+export const GetSharedWithUsers = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
     const id = req.params.did;
-    const { user, isEditable, unshare } = req.body;
-
-    let userByID;
-    if (user.length === 24 && checkForHexRegExp.test(user))
-        userByID = await User.findById(user).select("-password -refreshToken");
-    if (!userByID) {
-        userByID = await User.findOne({ username: user.toLowerCase() }).select("-password -refreshToken");
-        if (!userByID || String(userByID._id) == String(req.user!._id)) {
-            res.status(422).json({
-                status: "error",
-                message: "Invalid User ID",
-            });
-            return;
-        }
-    }
 
     const deck = await Deck.findOne({
         _id: id,
         owner: req.user!._id,
-        name: { $ne: UNCATEGORISED_DECK_NAME },
-    });
+        name: { $ne: UNCATEGORISED_DECK_NAME }
+    }).select("-owner -name -description -dateCreated -dateUpdated -isPrivate -likes -likedBy");
     if (!deck) {
         res.status(404).json({
             status: "error",
             message: "Deck not found",
+            data: null
         });
         return;
     }
 
-    await Deck.updateOne(
+    res.status(200).json({
+        status: "success",
+        message: "Successfully get Shared with Users",
+        data: deck.sharedTo.map(v => ({ user: v.user, isEditable: v.editable }))
+    });
+});
+
+/**
+ * @route POST deck/share/:did or POST deck/unshare/:did
+ * @desc Shares/Unshares the Deck with the given User IDs
+ * @access private
+ */
+export const ShareDeck = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
+    const id = req.params.did;
+    const { users, isEditable, unshare } = req.body;
+
+    // Find the Deck
+    const deck = await Deck.findOne({
+        _id: id,
+        owner: req.user!._id,
+        name: { $ne: UNCATEGORISED_DECK_NAME }
+    });
+    if (!deck) {
+        res.status(404).json({ status: "error", message: "Deck not found" });
+        return;
+    }
+
+    // Find the Users
+    let usersByID;
+    if (users[0].length === 24 && checkForHexRegExp.test(users[0])) // IDs
+        usersByID = await User.find({ _id: { $in: users } }).select("-password -refreshToken");
+    if (!usersByID) {
+        usersByID = await User.find({                               // Usernames
+            username: { $in: users.map((u: string) => u.toLowerCase()) }
+        }).select("-password -refreshToken");
+        if (!usersByID || usersByID.length != users.length) {
+            res.status(422).json({ status: "error", message: "Invalid User ID" });
+            return;
+        }
+    }
+    usersByID = usersByID.map(u => u.id);
+
+    // Share/Unshare the Deck
+    await Deck.updateOne(     // Unshare
         { _id: deck._id },
-        { $pull: { sharedTo: { user: userByID._id } } }
+        { $pull: { sharedTo: { user: { $in: usersByID } } } }
     );
     if (!unshare || unshare == undefined || isEditable != undefined)
-        await Deck.updateOne(
+        await Deck.updateOne( // Share
             { _id: deck._id },
-            { $push: { sharedTo: { user: userByID._id, editable: isEditable } } }
+            { $push: { sharedTo: {
+                $each: usersByID.map(id => ({ user: id, editable: isEditable }))
+            } } }
         );
 
-    res.status(200)
-    .clearCookie(CSRF_COOKIE_NAME)
-    .json({
-        status: "success",
-        message: "Deck sharing updated",
+    res.status(200).clearCookie(CSRF_COOKIE_NAME).json({
+        status: "success", message: "Deck sharing updated"
     });
 });
 

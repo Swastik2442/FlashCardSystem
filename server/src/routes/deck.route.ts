@@ -19,7 +19,8 @@ import {
     LikeDeck,
     UnlikeDeck,
     GetDeckCards,
-    ChangeDeckOwner
+    ChangeDeckOwner,
+    GetSharedWithUsers
 } from "@/controllers/deck.controller";
 import {
     createDeckIdChain,
@@ -89,10 +90,15 @@ router.get("/cards/:did", createDeckIdChain(), Validate, GetDeckCards);
 
 router.patch("/owner/:did", createDeckIdChain(), createUsernameChain("user"), Validate, ChangeDeckOwner)
 
+router.get("/share/:did", createDeckIdChain(), Validate, GetSharedWithUsers)
+
 router.post(
     "/share/:did",
     createDeckIdChain(),
-    createUsernameChain("user"),
+    check("users")
+        .isArray({ min: 1 })
+        .withMessage("At least one User must be specified"),
+    createUsernameChain("users.*"),
     check("isEditable").isBoolean(),
     Validate,
     ShareDeck
@@ -101,7 +107,10 @@ router.post(
 router.post(
     "/unshare/:did",
     createDeckIdChain(),
-    createUsernameChain("user"),
+    check("users")
+        .isArray({ min: 1 })
+        .withMessage("At least one User must be specified"),
+    createUsernameChain("users.*"),
     check("unshare")
         .notEmpty()
         .withMessage("Setting an unshare variable is required"),
