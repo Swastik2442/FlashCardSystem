@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
+import {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useState
+} from "react"
 import { useNavigate } from "react-router-dom"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQuery,
+  useQueryClient
+} from "@tanstack/react-query"
 import {
   RowData,
   ColumnDef,
@@ -815,23 +825,32 @@ const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
  */
 function DeckSharedWithTable({ deckID }: { deckID: string }) {
   const queryClient = useQueryClient()
-  const queryKey = getDeckQueryKey(deckID)
-  const sharedWithQuery = useQuery({
-    queryKey: [...queryKey, SHARED_WITH_QUERY_KEY],
+  const queryKey = useMemo(() => getDeckQueryKey(deckID), [deckID])
+  const sharedWithIDsQueryKey = useMemo(
+    () => [...queryKey, SHARED_WITH_QUERY_KEY],
+    [queryKey]
+  )
+  const sharedWithUsersQueryKey = useMemo(
+    () => [...queryKey, SHARED_WITH_QUERY_KEY, USER_QUERY_KEY],
+    [queryKey]
+  )
+
+  const sharedWithIDsQuery = useQuery({
+    queryKey: sharedWithIDsQueryKey,
     queryFn: () => getSharedWithUsers(deckID)
   })
   const sharedWithUsersQuery = useQuery({
-    queryKey: [...queryKey, SHARED_WITH_QUERY_KEY, USER_QUERY_KEY],
-    queryFn: () => getUsers(sharedWithQuery.data!.map(v => v.user)),
-    enabled: sharedWithQuery.isSuccess
+    queryKey: sharedWithUsersQueryKey,
+    queryFn: () => getUsers(sharedWithIDsQuery.data!.map(v => v.user)),
+    enabled: sharedWithIDsQuery.isSuccess
   })
 
-  const [shareDialogOpen, setShareDialogOpen] = useState(false)
   const [data, setData] = useState<SharedWithUser[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
 
   useEffect(() => { // Sets individual User Query Key
     if (!sharedWithUsersQuery.data) return;
@@ -840,34 +859,65 @@ function DeckSharedWithTable({ deckID }: { deckID: string }) {
   }, [sharedWithUsersQuery.data, queryClient])
 
   useEffect(() => { // Sets the Combined Data from both Queries
-    if (!sharedWithQuery.data || !sharedWithUsersQuery.data) return;
+    if (!sharedWithIDsQuery.data || !sharedWithUsersQuery.data) return;
     const combined = sharedWithUsersQuery.data.sort(
       (a, b) => a._id.localeCompare(b._id)
     ) as SharedWithUser[]
-    const other = sharedWithQuery.data.sort(
+    const other = sharedWithIDsQuery.data.sort(
       (a, b) => a.user.localeCompare(b.user)
     )
-    console.log(combined, other)
 
     for (let idx = 0; idx < other.length; idx++) {
       combined[idx].isEditable = other[idx].isEditable
     }
     setData(combined)
-  }, [sharedWithQuery.data, sharedWithUsersQuery.data, setData])
+  }, [sharedWithIDsQuery.data, sharedWithUsersQuery.data, setData])
 
-  const handleEditableChange = (users: string[], editable: boolean) => {
+  const deckSharingMutation = useMutation({
+    mutationFn: ({ deckID, values }: {
+      deckID: string, values: TDeckShareFormSchema
+    }) => shareDeck(deckID, values),
+    onMutate: async () => {
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: sharedWithIDsQueryKey }),
+        queryClient.cancelQueries({ queryKey: sharedWithUsersQueryKey })
+      ])
+    },
+    onSuccess: () => {
+      toast.success("Deck Sharing Updated")
+    },
+    onError: err => {
+      if (import.meta.env.DEV)
+        console.error("An error occurred while sharing the deck", err)
+      toast.error("Failed to Share the Deck")
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: sharedWithIDsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: sharedWithUsersQueryKey })
+      ])
+    }
+  })
+
+  const handleEditableChange = (users: string[], isEditable: boolean) => {
     if (!users || users.length == 0) return;
-    setData(oldData => oldData.map(v => {
+    setData(old => old.map(v => {
       if (users.includes(v._id))
-        return { ...v, isEditable: editable }
+        return { ...v, isEditable }
       return v
     }))
-    // Mutate
+    deckSharingMutation.mutate({ deckID, values: {
+      users: users.map(u => ({ _id: u, fullName: "", username: "" })),
+      isEditable
+    } })
   }
   const handleRemoval = (users: string[]) => {
     if (!users || users.length == 0) return;
-    setData(oldData => oldData.filter(v => !users.includes(v._id)))
-    // Mutate
+    setData(old => old.filter(v => !users.includes(v._id)))
+    deckSharingMutation.mutate({ deckID, values: {
+      users: users.map(u => ({ _id: u, fullName: "", username: "" })),
+      unshare: true
+    } })
   }
 
   const table = useReactTable<SharedWithUser>({
@@ -881,6 +931,7 @@ function DeckSharedWithTable({ deckID }: { deckID: string }) {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    getRowId: row => row._id,
     state: {
       sorting,
       columnFilters,
