@@ -7,8 +7,6 @@ import {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
-
-import User from "@/models/user.model";
 import Deck from "@/models/deck.model";
 import Card from "@/models/card.model";
 import type { ICard } from "@/models/card.model";
@@ -18,6 +16,7 @@ import {
     CSRF_COOKIE_NAME,
     UNCATEGORISED_DECK_NAME
 } from "@/constants";
+import { getUserWith, getUsersWith } from "@/utils/models";
 import { tryCatch } from "@/utils/wrappers";
 
 type CardSchema = Omit<ICard, "deck">;
@@ -303,8 +302,6 @@ export const PopulateDeck = tryCatch(async (req: ExpressRequest, res: ExpressRes
     });
 });
 
-const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
-
 /**
  * @route PATCH deck/owner/:did
  * @desc Changes the Owner of the Deck with the given ID
@@ -314,18 +311,13 @@ export const ChangeDeckOwner = tryCatch(async (req: ExpressRequest, res: Express
     const id = req.params.did;
     const { user } = req.body;
 
-    let userByID;
-    if (user.length === 24 && checkForHexRegExp.test(user))
-        userByID = await User.findById(user).select("-password -refreshToken");
-    if (!userByID) {
-        userByID = await User.findOne({ username: user.toLowerCase() }).select("-password -refreshToken");
-        if (!userByID || String(userByID._id) == String(req.user!._id)) {
-            res.status(422).json({
-                status: "error",
-                message: "Invalid User ID",
-            });
-            return;
-        }
+    const userByID = await getUserWith(user);
+    if (!userByID || String(userByID._id) == String(req.user!._id)) {
+        res.status(422).json({
+            status: "error",
+            message: "Invalid User ID",
+        });
+        return;
     }
 
     const deck = await Deck.findOne({
@@ -407,17 +399,10 @@ export const ShareDeck = tryCatch(async (req: ExpressRequest, res: ExpressRespon
     }
 
     // Find the Users
-    let usersByID;
-    if (users[0].length === 24 && checkForHexRegExp.test(users[0])) // IDs
-        usersByID = await User.find({ _id: { $in: users } }).select("-password -refreshToken");
-    if (!usersByID) {
-        usersByID = await User.find({                               // Usernames
-            username: { $in: users.map((u: string) => u.toLowerCase()) }
-        }).select("-password -refreshToken");
-        if (!usersByID || usersByID.length != users.length) {
-            res.status(422).json({ status: "error", message: "Invalid User ID" });
-            return;
-        }
+    let usersByID = await getUsersWith(users);
+    if (!usersByID || usersByID.length != users.length) {
+        res.status(422).json({ status: "error", message: "Invalid User ID" });
+        return;
     }
     usersByID = usersByID.map(u => u.id);
 

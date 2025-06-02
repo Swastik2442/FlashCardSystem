@@ -1,7 +1,20 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Dispatch, SetStateAction, useMemo, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  RowData,
+  ColumnDef,
+  ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+  VisibilityState,
+} from "@tanstack/react-table"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -15,7 +28,10 @@ import {
   Trash2,
   Link2,
   UserCog,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  PlusCircle,
+  MoreHorizontal
 } from "lucide-react"
 import { useAuth } from "@/contexts/authProvider"
 import { useFeatures } from "@/contexts/featuresProvider"
@@ -31,8 +47,11 @@ import {
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import {
@@ -43,9 +62,19 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Switch } from "@/components/ui/switch"
+import { Text } from "@/components/ui/text"
 import { Textarea } from "@/components/ui/textarea"
 import ConfirmationDialog from "@/components/confirmationDialog"
 import UserSearchField from "@/components/userSearchField"
@@ -71,13 +100,18 @@ import {
   changeDeckOwner,
   updateDeck,
   populateDeck,
-  sortCards
+  sortCards,
+  getSharedWithUsers
 } from "@/api/deck"
 import { createCard } from "@/api/card"
+import { getUsers } from "@/api/user"
 import { registerShortcut } from "@/features/keyboard/ks"
 import {
   getDeckCardsQueryKey,
-  getDeckQueryKey
+  getDeckQueryKey,
+  getUserQueryKey,
+  SHARED_WITH_QUERY_KEY,
+  USER_QUERY_KEY
 } from "@/constants"
 
 interface IDeckOptionsProps {
@@ -452,7 +486,7 @@ export function DeckOptionsDropdown({
           setDialogOpen={setEditDialogOpen}
         />
         {isUserDeckOwner && <>
-          <DeckShareDialog
+          <DeckSharedWithDialog
             deckID={deckID}
             dialogOpen={shareDialogOpen}
             setDialogOpen={setShareDialogOpen}
@@ -649,6 +683,342 @@ function DeckEditDialog({
         </Form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * A Dialog showing the Users with whom the Deck is Shared
+ * @param deckID ID of the Deck
+ * @param dialogOpen Whether the dialog is Open or not
+ * @param setDialogOpen Function to set the Dialog Open or Closed
+ */
+function DeckSharedWithDialog({
+  deckID,
+  dialogOpen,
+  setDialogOpen
+}: IDeckOptionsProps) {
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent className="sm:max-w-[60vw] max-h-full">
+        <DialogHeader>
+          <DialogTitle>Shared with Users</DialogTitle>
+          <DialogDescription>
+            Users with whom the Deck is Shared.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-w-full max-h-[80vh] overflow-y-auto">
+          <DeckSharedWithTable deckID={deckID} />
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface TableMeta<TData extends RowData> {
+    handleEditableChange?: (users: string[], editable: boolean) => void
+    handleRemoval?: (users: string[]) => void
+  }
+}
+
+interface SharedWithUser extends IUserWithID {
+  isEditable?: boolean
+}
+const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+          || (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false
+  },
+  {
+    accessorKey: "fullName",
+    header: "Name"
+  },
+  {
+    accessorKey: "username",
+    header: "Username"
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => (
+      <Text value={row.original.isEditable ? "Editor" : "Viewer"} />
+    )
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row, table: { options: { meta } } }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              className="h-8 w-8 p-0"
+              title={"Actions for " + row.original.fullName}
+              variant="ghost"
+            >
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => {
+              window.open([
+                import.meta.env.VITE_CLIENT_HOST,
+                "users",
+                row.original.username
+              ].join("/"), "_blank")
+            }}>
+              Go to Profile
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={
+              () => meta!.handleEditableChange!(
+                [row.original._id],
+                !row.original.isEditable
+              )
+            }>
+              Change to {row.original.isEditable ? "Viewer" : "Editor"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={
+              () => meta!.handleRemoval!([row.original._id])
+            }>
+              Remove
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    }
+  },
+]
+
+/**
+ * A Data Table of the Users with whom the Deck is Shared
+ * @param deckID ID of the Deck
+ */
+function DeckSharedWithTable({ deckID }: { deckID: string }) {
+  const queryClient = useQueryClient()
+  const queryKey = getDeckQueryKey(deckID)
+  const sharedWithQuery = useQuery({
+    queryKey: [...queryKey, SHARED_WITH_QUERY_KEY],
+    queryFn: () => getSharedWithUsers(deckID)
+  })
+  const sharedWithUsersQuery = useQuery({
+    queryKey: [...queryKey, SHARED_WITH_QUERY_KEY, USER_QUERY_KEY],
+    queryFn: () => getUsers(sharedWithQuery.data!.map(v => v.user)),
+    enabled: sharedWithQuery.isSuccess
+  })
+
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [data, setData] = useState<SharedWithUser[]>([])
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+
+  useEffect(() => { // Sets individual User Query Key
+    if (!sharedWithUsersQuery.data) return;
+    for (const user of sharedWithUsersQuery.data)
+      queryClient.setQueryData(getUserQueryKey(user._id), user)
+  }, [sharedWithUsersQuery.data, queryClient])
+
+  useEffect(() => { // Sets the Combined Data from both Queries
+    if (!sharedWithQuery.data || !sharedWithUsersQuery.data) return;
+    const combined = sharedWithUsersQuery.data.sort(
+      (a, b) => a._id.localeCompare(b._id)
+    ) as SharedWithUser[]
+    const other = sharedWithQuery.data.sort(
+      (a, b) => a.user.localeCompare(b.user)
+    )
+    console.log(combined, other)
+
+    for (let idx = 0; idx < other.length; idx++) {
+      combined[idx].isEditable = other[idx].isEditable
+    }
+    setData(combined)
+  }, [sharedWithQuery.data, sharedWithUsersQuery.data, setData])
+
+  const handleEditableChange = (users: string[], editable: boolean) => {
+    if (!users || users.length == 0) return;
+    setData(oldData => oldData.map(v => {
+      if (users.includes(v._id))
+        return { ...v, isEditable: editable }
+      return v
+    }))
+    // Mutate
+  }
+  const handleRemoval = (users: string[]) => {
+    if (!users || users.length == 0) return;
+    setData(oldData => oldData.filter(v => !users.includes(v._id)))
+    // Mutate
+  }
+
+  const table = useReactTable<SharedWithUser>({
+    data,
+    columns: sharedWithColumns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection
+    },
+    meta: {
+      handleEditableChange,
+      handleRemoval
+    }
+  })
+
+  return (
+    <div className="w-full">
+      <div className="flex items-center py-4 gap-1">
+        <Input
+          placeholder="Filter Users..."
+          value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("fullName")?.setFilterValue(event.target.value)}
+          className="max-w-sm"
+        />
+        <Button
+          onClick={() => setShareDialogOpen(true)}
+          type="button"
+          title="Add Users"
+          variant="ghost"
+          size="icon"
+        ><PlusCircle/></Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {(table.getIsAllRowsSelected()
+              || (table.getIsSomeRowsSelected() && "indeterminate")
+             ) && <Button className="h-8 w-8 p-0" title="Actions" variant="ghost">
+              <MoreHorizontal />
+            </Button>}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={
+              () => handleEditableChange(Object.keys(rowSelection), false)
+            }>
+              Change to Viewer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={
+              () => handleEditableChange(Object.keys(rowSelection), true)
+            }>
+              Change to Editor
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={
+              () => handleRemoval(Object.keys(rowSelection))
+            }>
+              Remove
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-auto">
+              Columns <ChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanHide())
+              .map((column) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                )
+              })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={sharedWithColumns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <DeckShareDialog
+        deckID={deckID}
+        dialogOpen={shareDialogOpen}
+        setDialogOpen={setShareDialogOpen}
+      />
+    </div>
   )
 }
 

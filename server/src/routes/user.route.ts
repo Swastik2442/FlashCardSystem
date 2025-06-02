@@ -11,7 +11,8 @@ import {
     UpdateUser,
     GetUserAccessibleRoles,
     GetUserRoles,
-    SetUserRoles
+    SetUserRoles,
+    GetUsers
 } from "@/controllers/user.controller";
 import { UserAccessibleRoles } from "@/featureFlags";
 import { createUsernameChain } from "@/utils/validationChains";
@@ -37,6 +38,20 @@ router.patch(
 );
 
 router.get("/get/:username", createUsernameChain(), Validate, GetUser);
+router.get(
+    "/get",
+    oneOf([
+        createUsernameChain("usernames"),
+        [
+            check("usernames")
+                .isArray({ min: 1 })
+                .withMessage("At least one User must be specified"),
+            createUsernameChain("usernames.*")
+        ]
+    ]),
+    Validate,
+    GetUsers
+);
 
 router.get("/substr/:str", createUsernameChain("str"), Validate, GetUserSub);
 

@@ -1,13 +1,13 @@
-import { useRouteError, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { useRouteError, useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button"
 
 /**
  * A Component to display the Error Message when an Error occurs while rendering a Page.
  */
 export default function ErrorBoundary() {
-  const err = useRouteError();
-  const navigate = useNavigate();
+  const err = useRouteError()
+  const navigate = useNavigate()
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-950 w-full rounded-md z-0">
@@ -69,9 +69,9 @@ export default function ErrorBoundary() {
             <p>{err.message}</p>
           </>}
           <p>Please try again later</p>
-          <Button onClick={() => navigate(-1)} type="button" title="Go Back" className="dark mt-4">Go Back</Button>
+          <Button onClick={() => void navigate(-1)} type="button" title="Go Back" className="dark mt-4">Go Back</Button>
         </motion.div>
       </div>
     </div>
-  );
+  )
 }

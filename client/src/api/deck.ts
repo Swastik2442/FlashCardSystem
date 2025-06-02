@@ -206,6 +206,20 @@ export const unlikeDeck = async (deckID: string) => {
 }
 
 /**
+ * Makes a GET request to fetch the IDs of the Users with whom the Deck is shared
+ * @returns User IDs of the Users with whom the Deck is shared
+ */
+export const getSharedWithUsers = async (deckID: string) => {
+  const response = await makeRequest<{ user: string, isEditable: boolean }[]>(
+    `/deck/share/${deckID}`,
+    "get",
+    null,
+    "Failed to fetch Users"
+  );
+  return response.data;
+}
+
+/**
  * Makes a POST request to share/unshare the Deck with the given ID
  * @param deckID ID of the Deck
  * @param data information regarding the share/unshare

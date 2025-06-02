@@ -1,3 +1,4 @@
+export const USER_STORAGE_KEY = "fcs-user"
 export const THEME_STORAGE_KEY = "fcs-ui-theme"
 export const SEARCH_USERS_STORAGE_KEY = "fcs-search-users"
 
@@ -9,6 +10,7 @@ export const DECK_QUERY_KEY = "deck"
 export const CARDS_QUERY_KEY = "cards"
 export const USER_QUERY_KEY = "user"
 export const LIKED_QUERY_KEY = "liked"
+export const SHARED_WITH_QUERY_KEY = "sharedWith"
 
 export const getAllDecksQueryKey = () => [ALL_DECKS_QUERY_KEY]
 

@@ -74,6 +74,24 @@ describe("User Routes", () => {
         expect(res.body.data.username).toBe(sampleUser1.username.toLowerCase());
     });
 
+    it("should get the public details of multiple users", async () => {
+        const users = (await User.find({
+            username: { $in: [sampleUser1.username, sampleUser2.username] }
+        })).map(u => JSON.parse(JSON.stringify({
+            _id: u._id, fullName: u.fullName, username: u.username
+        })));
+
+        const res = await request(app)
+            .get(`/user/get?usernames=${sampleUser1.username}&usernames=${sampleUser2.username}`)
+            .set("Cookie", `${authTokens1.access_token};${authTokens1.refresh_token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe("success");
+        expect(res.body.data).toHaveLength(2);
+
+        for (const user of users)
+            expect(res.body.data).toContainEqual(user);
+    });
+
     it("should get the user's decks visible to current user", async () => {
         const res = await request(app)
             .get(`/user/decks/${sampleUser1.username}`)

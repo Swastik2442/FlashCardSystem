@@ -26,6 +26,7 @@ import type {
   TChangeEmailFormSchema,
   TChangePasswordFormSchema
 } from "@/types/forms"
+import { USER_STORAGE_KEY } from "@/constants"
 
 type AuthFunctionReturns = Promise<void> | void
 
@@ -82,7 +83,7 @@ const AuthProviderContext = createContext<AuthProviderState>(initialState)
  * @param props Additional props to the AuthProvider
  */
 export function AuthProvider({ children, ...props }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<string | null>(null)
+  const [user, setUser] = useState<string | null>(localStorage.getItem(USER_STORAGE_KEY))
   const [limitedTill, setLimitedTill] = useState<Date | null>(null)
   const isUserRateLimited = useMemo(
     () => (limitedTill != null && limitedTill > new Date()),
@@ -105,10 +106,12 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
   const handleLogin = async (data: TLoginFormSchema) => {
     const username = await loginUser(data)
     setUser(username)
+    localStorage.setItem(USER_STORAGE_KEY, username)
   }
 
   const handleLogout = async () => {
     setUser(null)
+    localStorage.removeItem(USER_STORAGE_KEY)
     await queryClient.invalidateQueries()
     await logoutUser()
   }
@@ -116,10 +119,12 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
   const handleUsernameChange = async (data: TChangeUsernameFormSchema) => {
     const username = await changeUsername(data)
     setUser(username)
+    localStorage.setItem(USER_STORAGE_KEY, username)
   }
 
   const handleUserDeletion = async () => {
     setUser(null)
+    localStorage.removeItem(USER_STORAGE_KEY)
     await queryClient.invalidateQueries()
     await deleteUser()
   }
@@ -127,6 +132,10 @@ export function AuthProvider({ children, ...props }: { children: React.ReactNode
   const handleRefreshingTokens = async () => {
     const username = await refreshTokens()
     setUser(username)
+    if (username)
+      localStorage.setItem(USER_STORAGE_KEY, username)
+    else
+      localStorage.removeItem(USER_STORAGE_KEY)
   }
   useEffect(() => {
     if (!didInit) {

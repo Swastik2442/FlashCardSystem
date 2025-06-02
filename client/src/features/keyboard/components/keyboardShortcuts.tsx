@@ -55,9 +55,9 @@ import type {
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
-    editing: number
-    setEditing: (v: number) => void
-    setValue: (v: Nullable<KeyPressConfig>) => void
+    editing?: number
+    setEditing?: (v: number) => void
+    setValue?: (v: Nullable<KeyPressConfig>) => void
   }
 }
 
@@ -89,14 +89,14 @@ const columns: ColumnDef<KeyboardShortcut>[] = [
         {meta!.editing == row.index ? (
           <KeyboardInput
             value={config}
-            setValue={meta!.setValue}
-            cancelEditing={() => meta!.setEditing(-1)}
+            setValue={meta!.setValue!}
+            cancelEditing={() => meta!.setEditing!(-1)}
           />
         ) : (
           <div className="hover:cursor-pointer">
             <ShowKeyboardKeys
               config={config}
-              onClick={() => meta?.setEditing(row.index)}
+              onClick={() => meta?.setEditing!(row.index)}
               className="pl-[1px]"
             />
           </div>

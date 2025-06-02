@@ -10,24 +10,8 @@ import {
     UNCATEGORISED_DECK_NAME
 } from "@/constants";
 import { UserAccessibleRoles } from "@/featureFlags";
+import { getUserWith, getUsersWith } from "@/utils/models";
 import { tryCatch } from "@/utils/wrappers";
-
-const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
-
-export const getUserWith = async (username: string) => {
-    let user;
-    if (username.length === 24 && checkForHexRegExp.test(username)) // is ID
-        user = await User.findById(username).select(
-            "-password -refreshToken"
-        );
-    if (!user) {
-        user = await User.findOne({
-            username: username.toLowerCase()
-        }).select("-password -refreshToken");
-        if (!user) return null;
-    }
-    return user;
-}
 
 /**
  * @route GET user/
@@ -53,9 +37,7 @@ export const GetUserPrivate = tryCatch(async (
  * @desc Gets the User Full Name and Username with the given Username/ID
  * @access public
  */
-export const GetUser = tryCatch(async (
-    req: ExpressRequest, res: ExpressResponse
-) => {
+export const GetUser = tryCatch(async (req, res) => {
     const username = req.params.username;
     const user = await getUserWith(username);
     if (!user) {
@@ -71,9 +53,37 @@ export const GetUser = tryCatch(async (
         status: "success",
         message: "User found",
         data: {
-            "fullName": user.fullName,
-            "username": user.username,
-        },
+            fullName: user.fullName,
+            username: user.username
+        }
+    });
+});
+
+/**
+ * @route GET user/get
+ * @desc Gets the Full Name and Username with the given Usernames/IDs
+ * @access public
+ */
+export const GetUsers = tryCatch(async (req, res) => {
+    const usernames = req.query.usernames;
+    const users = await getUsersWith((typeof usernames === "string") ? [usernames] : usernames as string[]);
+    if (!users) {
+        res.status(404).json({
+            status: "error",
+            message: "User(s) not found",
+            data: null
+        });
+        return;
+    }
+
+    res.status(200).json({
+        status: "success",
+        message: "User found",
+        data: users.map(user => ({
+            _id: user._id,
+            fullName: user.fullName,
+            username: user.username
+        }))
     });
 });
 
@@ -82,9 +92,7 @@ export const GetUser = tryCatch(async (
  * @desc Gets the Users whose username is a substring of the given string
  * @access public
  */
-export const GetUserSub = tryCatch(async (
-    req: ExpressRequest, res: ExpressResponse
-) => {
+export const GetUserSub = tryCatch(async (req, res) => {
     const str = req.params.str;
     const users = await User.find({
         username: { $regex: str, $options: "i" }
@@ -113,8 +121,7 @@ export const GetUserSub = tryCatch(async (
 export const GetUserDecks = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
-    const username = req.params.username;
-    const user = await getUserWith(username);
+    const user = await getUserWith(req.params.username);
     if (!user) {
         res.status(404).json({
             status: "error",
@@ -148,8 +155,7 @@ export const GetUserDecks = tryCatch(async (
 export const GetLikedDecks = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
-    const username = req.params.username;
-    const user = await getUserWith(username);
+    const user = await getUserWith(req.params.username);
     if (!user) {
         res.status(404).json({
             status: "error",
@@ -205,9 +211,7 @@ export const UpdateUser = tryCatch(async (
  * @desc Get all Possible User Roles
  * @access private
  */
-export const GetUserAccessibleRoles = tryCatch(async (
-    req: ExpressRequest, res: ExpressResponse
-) => {
+export const GetUserAccessibleRoles = tryCatch(async (_req, res) => {
     res.status(200).set(
         "Cache-Control",
         "private, max-age=43200"

@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Deck from "./deck.model";
-import { UNCATEGORISED_DECK_NAME } from "../constants";
-import env from "../env";
+import { UNCATEGORISED_DECK_NAME } from "@/constants";
+import env from "@/env";
 
 export type UserRole = "user" | "admin" | `tester_${string}`;
 
@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
     username: {
         type: String,
         require: true,
+        index: true,
         unique: true
     },
     password: {

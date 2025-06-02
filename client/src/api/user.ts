@@ -31,6 +31,22 @@ export const getUser = async (user: string) => {
 }
 
 /**
+ * Makes a GET request to get Information about multiple Users
+ * @param user List of Username or User ID of the Users
+ * @returns information about the Users
+ */
+export const getUsers = async (users: string[]) => {
+  if (!users || users.length == 0) return [];
+  const response = await makeRequest<IUserWithID[]>(
+    "/user/get?" + users.map(u => "usernames=" + u).join("&"),
+    "get",
+    null,
+    "Failed to get Users"
+  );
+  return response.data;
+}
+
+/**
  * Makes a GET request to get Users with the given substring in their Username
  * @param substring Substring to search for in the Usernames
  * @returns Users with the given substring in their Username
