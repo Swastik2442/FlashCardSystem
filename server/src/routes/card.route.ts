@@ -1,20 +1,20 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
-import Ratelimiter from "@/middlewares/ratelimit.middleware";
-import Validate from "@/middlewares/validate.middleware";
+import Ratelimiter from "@/middlewares/ratelimit.middleware.js";
+import Validate from "@/middlewares/validate.middleware.js";
 import {
     VerifyJWT,
     AllowUser,
     AllowUserFor
-} from "@/middlewares/auth.middleware";
+} from "@/middlewares/auth.middleware.js";
 import {
     CreateCard,
     GetCard,
     PopulateCard,
     DeleteCard,
     UpdateCard
-} from "@/controllers/card.controller";
-import { createCardIdChain } from "@/utils/validationChains";
+} from "@/controllers/card.controller.js";
+import { createCardIdChain } from "@/utils/validationChains.js";
 
 const router = express.Router();
 router.use(VerifyJWT);

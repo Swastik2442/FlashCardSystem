@@ -1,4 +1,4 @@
-import env from "@/env";
+import env from "@/env.js";
 
 export const GEMINI_MODEL_NAME = "gemini-2.0-flash";
 

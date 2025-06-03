@@ -5,14 +5,15 @@ import type {
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import ms, { type StringValue } from "ms";
-import User from "@/models/user.model";
-import env from "@/env";
+
+import User from "@/models/user.model.js";
+import env from "@/env.js";
 import {
     ACCESS_TOKEN_COOKIE_NAME,
     REFRESH_TOKEN_COOKIE_NAME,
     CSRF_COOKIE_NAME
-} from "@/constants";
-import { tryCatch } from "@/utils/wrappers";
+} from "@/constants.js";
+import { tryCatch } from "@/utils/wrappers.js";
 
 const cookieOptions = {
     httpOnly: true,

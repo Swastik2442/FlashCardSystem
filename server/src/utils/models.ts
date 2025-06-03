@@ -1,4 +1,4 @@
-import User from "@/models/user.model"
+import User from "@/models/user.model.js"
 
 const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
 

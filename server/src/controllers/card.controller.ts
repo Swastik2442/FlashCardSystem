@@ -7,16 +7,17 @@ import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
-import Deck from "@/models/deck.model";
-import Card from "@/models/card.model";
-import type { ICard } from "@/models/card.model";
-import env from "@/env";
+
+import Deck from "@/models/deck.model.js";
+import Card from "@/models/card.model.js";
+import type { ICard } from "@/models/card.model.js";
+import env from "@/env.js";
 import {
     GEMINI_MODEL_NAME,
     CSRF_COOKIE_NAME,
     UNCATEGORISED_DECK_NAME
-} from "@/constants";
-import { tryCatch } from "@/utils/wrappers";
+} from "@/constants.js";
+import { tryCatch } from "@/utils/wrappers.js";
 
 type CardSchema = Omit<ICard, "deck">;
 

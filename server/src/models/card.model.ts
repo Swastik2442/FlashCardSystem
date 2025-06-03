@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Deck from "./deck.model";
+import Deck from "./deck.model.js";
 
 export interface ICard {
     question: string;

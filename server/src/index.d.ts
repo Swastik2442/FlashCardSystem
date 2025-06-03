@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import type { IUser, IUserMethods } from "@/models/user.model";
+import type { IUser, IUserMethods } from "@/models/user.model.js";
 
 type IRequestUser = Omit<IUser, "password" | "refreshToken">;
 interface ICustomResponse<T> {

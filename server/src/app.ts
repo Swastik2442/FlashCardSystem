@@ -4,11 +4,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 
-import authRouter from "@/routes/auth.route";
-import userRouter from "@/routes/user.route";
-import deckRouter from "@/routes/deck.route";
-import cardRouter from "@/routes/card.route";
-import env from "@/env";
+import authRouter from "@/routes/auth.route.js";
+import userRouter from "@/routes/user.route.js";
+import deckRouter from "@/routes/deck.route.js";
+import cardRouter from "@/routes/card.route.js";
+import env from "@/env.js";
 
 const corsOptions = {
     origin: env.CLIENT_HOST,

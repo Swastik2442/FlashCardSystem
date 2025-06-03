@@ -5,10 +5,10 @@ import type {
 } from "express";
 import jwt from "jsonwebtoken"
 
-import User from "@/models/user.model";
-import { canUseFeature, type FeatureFlagName } from "@/lib/featureFlags";
-import { ACCESS_TOKEN_COOKIE_NAME } from "@/constants";
-import env from "@/env";
+import User from "@/models/user.model.js";
+import { canUseFeature, type FeatureFlagName } from "@/lib/featureFlags.js";
+import { ACCESS_TOKEN_COOKIE_NAME } from "@/constants.js";
+import env from "@/env.js";
 
 const getAccessToken = (req: ExpressRequest) => {
     return req.signedCookies[ACCESS_TOKEN_COOKIE_NAME] ?? req.header("Authorization")?.replace("Bearer ", "");

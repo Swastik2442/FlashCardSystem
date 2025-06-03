@@ -1,12 +1,12 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
-import Ratelimiter from "@/middlewares/ratelimit.middleware";
-import Validate from "@/middlewares/validate.middleware";
+import Ratelimiter from "@/middlewares/ratelimit.middleware.js";
+import Validate from "@/middlewares/validate.middleware.js";
 import {
     VerifyJWT,
     AllowUser,
     AllowUserFor
-} from "@/middlewares/auth.middleware";
+} from "@/middlewares/auth.middleware.js";
 import {
     CreateDeck,
     GetDeck,
@@ -21,11 +21,11 @@ import {
     GetDeckCards,
     ChangeDeckOwner,
     GetSharedWithUsers
-} from "@/controllers/deck.controller";
+} from "@/controllers/deck.controller.js";
 import {
     createDeckIdChain,
     createUsernameChain
-} from "@/utils/validationChains";
+} from "@/utils/validationChains.js";
 
 const router = express.Router();
 router.use(VerifyJWT);

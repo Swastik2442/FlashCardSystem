@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import type { IUser, UserRole } from "@/models/user.model"
-import { murmurHash } from "@/utils/murmurHash"
+import type { IUser, UserRole } from "@/models/user.model.js"
+import { murmurHash } from "@/utils/murmurHash.js"
 
 type UserWithID = Pick<IUser, "roles"> & { _id: mongoose.Types.ObjectId };
 

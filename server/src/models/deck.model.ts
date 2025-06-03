@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Card from "./card.model";
+import Card from "./card.model.js";
 
 export interface IDeck {
     owner: mongoose.Schema.Types.ObjectId;

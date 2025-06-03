@@ -1,9 +1,8 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
+    "module": "nodenext",
     "outDir": "dist",
-    "moduleResolution": "node10",
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,

@@ -5,7 +5,7 @@ import type {
     Response as ExpressResponse,
     NextFunction
 } from "express";
-import env from "@/env";
+import env from "@/env.js";
 
 const ratelimit = new Ratelimit({
     redis: new Redis({

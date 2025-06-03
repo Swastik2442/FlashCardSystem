@@ -11,19 +11,19 @@ import {
     ChangeEmail,
     ChangePassword,
     DeleteUser
-} from "@/controllers/auth.controller";
-import Validate from "@/middlewares/validate.middleware";
+} from "@/controllers/auth.controller.js";
+import Validate from "@/middlewares/validate.middleware.js";
 import {
     VerifyJWT,
     getSessionID,
-} from "@/middlewares/auth.middleware";
+} from "@/middlewares/auth.middleware.js";
 import {
     createEmailChain,
     createPasswordChain,
     createUsernameChain
-} from "@/utils/validationChains";
-import { CSRF_COOKIE_NAME } from "@/constants";
-import env from "@/env";
+} from "@/utils/validationChains.js";
+import { CSRF_COOKIE_NAME } from "@/constants.js";
+import env from "@/env.js";
 
 const router = express.Router();
 
