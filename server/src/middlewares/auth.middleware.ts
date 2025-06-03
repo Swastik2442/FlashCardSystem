@@ -1,4 +1,4 @@
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse,
     NextFunction
@@ -6,8 +6,7 @@ import {
 import jwt from "jsonwebtoken"
 
 import User from "@/models/user.model";
-import { canUseFeature } from "@/featureFlags";
-import type { FeatureFlagName } from "@/featureFlags";
+import { canUseFeature, type FeatureFlagName } from "@/lib/featureFlags";
 import { ACCESS_TOKEN_COOKIE_NAME } from "@/constants";
 import env from "@/env";
 

@@ -28,7 +28,10 @@ export const sampleDeck = {
 };
 
 export const getCookie = (res: request.Response, idx = 0) => {
-    return res.headers["set-cookie"][idx].split(";")[0];
+    const cookies = res.headers["set-cookie"];
+    if (Array.isArray(cookies) && cookies[idx]) {
+        return cookies[idx].split(";")[0];
+    }
 }
 
 export const getCSRFToken = async (

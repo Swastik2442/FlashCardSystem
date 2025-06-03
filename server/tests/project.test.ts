@@ -6,7 +6,7 @@ import env from "@/env";
 import User from "@/models/user.model";
 import Deck from "@/models/deck.model";
 import Card from "@/models/card.model";
-import { UserAccessibleRoles } from "@/featureFlags";
+import { UserAccessibleRoles } from "@/lib/featureFlags";
 import { sampleUser1, sampleUser2, sampleDeck, sampleCard, getCookie, getCSRFToken } from "./utils";
 
 const authTokens1 = { access_token: "", refresh_token: "" };
@@ -165,6 +165,7 @@ describe("User Routes", () => {
 
         const userBefore = await User.findOne({ username: sampleUser1.username.toLowerCase() });
         const randomRole = UserAccessibleRoles[Math.floor(Math.random() * UserAccessibleRoles.length)];
+        if (!randomRole) return;
         const rolePresentBefore = userBefore!.roles.includes(randomRole);
 
         const res = await setRoles({ [randomRole]: !rolePresentBefore });

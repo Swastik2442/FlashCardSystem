@@ -123,6 +123,7 @@ import {
   SHARED_WITH_QUERY_KEY,
   USER_QUERY_KEY
 } from "@/constants"
+import { cn } from "@/utils/css"
 
 interface IDeckOptionsProps {
   deckID: string
@@ -789,11 +790,14 @@ const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {(table.getIsAllRowsSelected()
-              || (table.getIsSomeRowsSelected() && "indeterminate")
-             ) && <Button className="h-8 w-8 p-0" title="Actions" variant="ghost">
+            <Button className={cn(
+              "h-8 w-8 p-0",
+              !(table.getIsAllRowsSelected()
+                || (table.getIsSomeRowsSelected() && "indeterminate")
+              ) && "invisible"
+            )} title="Actions" variant="ghost">
               <MoreHorizontal />
-            </Button>}
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -828,15 +832,18 @@ const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            {!(table.getIsAllRowsSelected()
-               || (table.getIsSomeRowsSelected() && "indeterminate")
-             ) && <Button
-              className="h-8 w-8 p-0"
+            <Button
+              className={cn(
+                "h-8 w-8 p-0",
+                (table.getIsAllRowsSelected()
+                  || (table.getIsSomeRowsSelected() && "indeterminate")
+                ) && "invisible"
+              )}
               title={"Actions for " + row.original.fullName}
               variant="ghost"
             >
               <MoreHorizontal />
-            </Button>}
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => {

@@ -1,6 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse,
     NextFunction

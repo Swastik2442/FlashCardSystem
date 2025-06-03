@@ -1,4 +1,4 @@
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
@@ -9,7 +9,7 @@ import {
     CSRF_COOKIE_NAME,
     UNCATEGORISED_DECK_NAME
 } from "@/constants";
-import { UserAccessibleRoles } from "@/featureFlags";
+import { UserAccessibleRoles } from "@/lib/featureFlags";
 import { getUserWith, getUsersWith } from "@/utils/models";
 import { tryCatch } from "@/utils/wrappers";
 
@@ -39,6 +39,15 @@ export const GetUserPrivate = tryCatch(async (
  */
 export const GetUser = tryCatch(async (req, res) => {
     const username = req.params.username;
+    if (!username) {
+        res.status(422).json({
+            status: "error",
+            message: "username is required",
+            data: null
+        });
+        return;
+    }
+
     const user = await getUserWith(username);
     if (!user) {
         res.status(404).json({
@@ -121,7 +130,17 @@ export const GetUserSub = tryCatch(async (req, res) => {
 export const GetUserDecks = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
-    const user = await getUserWith(req.params.username);
+    const username = req.params.username;
+    if (!username) {
+        res.status(422).json({
+            status: "error",
+            message: "username is required",
+            data: null
+        });
+        return;
+    }
+
+    const user = await getUserWith(username);
     if (!user) {
         res.status(404).json({
             status: "error",
@@ -155,7 +174,17 @@ export const GetUserDecks = tryCatch(async (
 export const GetLikedDecks = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
-    const user = await getUserWith(req.params.username);
+    const username = req.params.username;
+    if (!username) {
+        res.status(422).json({
+            status: "error",
+            message: "username is required",
+            data: null
+        });
+        return;
+    }
+
+    const user = await getUserWith(username);
     if (!user) {
         res.status(404).json({
             status: "error",

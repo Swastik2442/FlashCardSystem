@@ -14,7 +14,7 @@ import {
     SetUserRoles,
     GetUsers
 } from "@/controllers/user.controller";
-import { UserAccessibleRoles } from "@/featureFlags";
+import { UserAccessibleRoles } from "@/lib/featureFlags";
 import { createUsernameChain } from "@/utils/validationChains";
 
 const router = express.Router();

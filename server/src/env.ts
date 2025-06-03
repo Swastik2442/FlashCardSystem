@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { z } from "zod";
-import ms, { StringValue } from "ms";
+import ms, { type StringValue } from "ms";
 
 const envSchema = z.object({
     PORT: z.coerce.number().min(1024).max(49151).optional().default(2442),

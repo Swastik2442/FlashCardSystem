@@ -1,9 +1,9 @@
 import {
     GoogleGenerativeAI,
-    Schema,
-    SchemaType
+    SchemaType,
+    type Schema
 } from "@google/generative-ai";
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";

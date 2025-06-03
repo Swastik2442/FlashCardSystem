@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
 export const tryCatch = (fn: RequestHandler): RequestHandler => (
   req: Request,

@@ -12,8 +12,8 @@ const authTokens = { access_token: "", refresh_token: "" };
 
 const setAuthTokens = (res: superagentResponse) => {
     expect(res.header).toHaveProperty("set-cookie");
-    expect(res.headers["set-cookie"][0]).toContain(ACCESS_TOKEN_COOKIE_NAME);
-    expect(res.headers["set-cookie"][1]).toContain(REFRESH_TOKEN_COOKIE_NAME);
+    expect(res.headers["set-cookie"]?.[0]).toContain(ACCESS_TOKEN_COOKIE_NAME);
+    expect(res.headers["set-cookie"]?.[1]).toContain(REFRESH_TOKEN_COOKIE_NAME);
     authTokens.access_token = getCookie(res, 0);
     authTokens.refresh_token = getCookie(res, 1);
 }
@@ -98,7 +98,7 @@ describe("Auth Routes", () => {
         expect(res.body.message).toBe("CSRF Token generated");
         expect(res.body.data).toBeDefined();
         expect(res.headers).toHaveProperty("set-cookie");
-        expect(res.headers["set-cookie"][0]).toContain("fcs.x-csrf-token");
+        expect(res.headers["set-cookie"]?.[0]).toContain("fcs.x-csrf-token");
     });
 
     it("should change the user's username", async () => {

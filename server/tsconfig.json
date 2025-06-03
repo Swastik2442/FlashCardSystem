@@ -1,8 +1,16 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
+    "target": "esnext",
+    "module": "esnext",
     "outDir": "dist",
+    "moduleResolution": "node10",
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+		"importsNotUsedAsValues": "remove",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -12,6 +20,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "api/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "api/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules"]
 }

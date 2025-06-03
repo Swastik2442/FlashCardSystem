@@ -1,4 +1,4 @@
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
@@ -222,7 +222,7 @@ export const ChangeUsername = tryCatch(async (req: ExpressRequest, res: ExpressR
     }
 
     const usersWithSameUsername = await User.find({ username: username.toLowerCase() }).limit(1);
-    if (usersWithSameUsername.length > 0 && usersWithSameUsername[0].id !== user.id) {
+    if (usersWithSameUsername.length > 0 && usersWithSameUsername[0] && usersWithSameUsername[0].id !== user.id) {
         res.status(422).json({
             status: "error",
             message: "Username already exists",

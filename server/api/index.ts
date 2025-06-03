@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import app from "../src/app";
-import env from "../src/env";
+import app from "@/app";
+import env from "@/env";
 
 mongoose.connect(env.MONGODB_CONNECTION_URI).then(() => {
     console.log("[server]: Connected to MongoDB!");
