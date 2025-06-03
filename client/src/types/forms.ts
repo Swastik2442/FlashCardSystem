@@ -88,6 +88,7 @@ export type TCardFormSchema = z.infer<typeof cardFormSchema>;
 // Schema for Deck Sharing Settings Form
 export const deckShareFormSchema = z.object({
   users: z.array(z.object({
+    /** Only this field is required in Backend. Others are here for Frontend display only. */
     _id: z.string().length(24, { message: "ID must be of 24 characters." }),
     fullName: z.string()
       .min(3, { message: "Name must be at least 3 characters." })

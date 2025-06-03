@@ -55,9 +55,18 @@ import type {
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
-    editing?: number
-    setEditing?: (v: number) => void
-    setValue?: (v: Nullable<KeyPressConfig>) => void
+    /** Index of the Keyboard Shortcut being edited */
+    editingIndex?: number
+    /**
+     * Sets the {@link editingIndex}
+     * @param v Index of the Keyboard Shortcut to be edited
+     */
+    setEditingIndex?: (v: number) => void
+    /**
+     * Sets/Removes a User-defined Keyboard Shortcut to the Keyboard Shortcut with the index {@link editingIndex}
+     * @param v Keyboard Shortcut Key Config. Set to Null to Remove the Shortcut.
+     */
+    setUserShortcut?: (v: Nullable<KeyPressConfig>) => void
   }
 }
 
@@ -86,17 +95,17 @@ const columns: ColumnDef<KeyboardShortcut>[] = [
       const config = row.original.userConfig ?? row.original.defaultConfig
       return (
         <>
-        {meta!.editing == row.index ? (
+        {meta!.editingIndex == row.index ? (
           <KeyboardInput
             value={config}
-            setValue={meta!.setValue!}
-            cancelEditing={() => meta!.setEditing!(-1)}
+            setValue={meta!.setUserShortcut!}
+            cancelEditing={() => meta!.setEditingIndex!(-1)}
           />
         ) : (
           <div className="hover:cursor-pointer">
             <ShowKeyboardKeys
               config={config}
-              onClick={() => meta?.setEditing!(row.index)}
+              onClick={() => meta?.setEditingIndex!(row.index)}
               className="pl-[1px]"
             />
           </div>
@@ -130,21 +139,21 @@ export const KeyboardShortcutsTable = memo(() => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
-  const [editingKS, setEditingKS] = useState(-1)
+  const [editingIndex, setEditingIndex] = useState(-1)
 
-  // Edit a specific User Shortcut
+  /** Edits a specific User Shortcut */
   const handleUserKSEdit = (config: Nullable<KeyPressConfig>) => {
-    void setUserShortcut(editingKS, config)
+    void setUserShortcut(editingIndex, config)
     setTableData(old => {
-      old[editingKS].userConfig = config
+      old[editingIndex].userConfig = config
       return old
     })
-    setEditingKS(-1)
+    setEditingIndex(-1)
   }
 
-  // Reset all Keyboard Shortcuts to Default
+  /** Resets all Keyboard Shortcuts to Default */
   const handleUserKSReset = () => {
-    setEditingKS(-1)
+    setEditingIndex(-1)
     void resetUserShortcuts()
     setTableData(old => old.map(v => ({
       ...v,
@@ -167,12 +176,12 @@ export const KeyboardShortcutsTable = memo(() => {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
+      rowSelection
     },
     meta: {
-      editing: editingKS,
-      setEditing: setEditingKS,
-      setValue: handleUserKSEdit
+      editingIndex: editingIndex,
+      setEditingIndex: setEditingIndex,
+      setUserShortcut: handleUserKSEdit
     }
   })
 

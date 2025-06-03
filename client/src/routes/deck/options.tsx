@@ -727,7 +727,16 @@ function DeckSharedWithDialog({
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
+    /**
+     * Changes the Editable Variable for a list of Users
+     * @param users User IDs of the Users for whom the Editable Variable is to be changed
+     * @param editable Whether the User can edit the Deck or not
+     */
     handleEditableChange?: (users: string[], editable: boolean) => void
+    /**
+     * Removes the ability to access/edit the Deck for a list of Users
+     * @param users User IDs of the Users with whom the Sharing has to be removed
+     */
     handleRemoval?: (users: string[]) => void
   }
 }
@@ -776,17 +785,58 @@ const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row, table: { options: { meta } } }) => {
+    header: ({ table }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
+            {(table.getIsAllRowsSelected()
+              || (table.getIsSomeRowsSelected() && "indeterminate")
+             ) && <Button className="h-8 w-8 p-0" title="Actions" variant="ghost">
+              <MoreHorizontal />
+            </Button>}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={
+              () => table.options.meta!.handleEditableChange!(
+                Object.keys(table.getState().rowSelection),
+                false
+              )
+            }>
+              Change to Viewer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={
+              () => table.options.meta!.handleEditableChange!(
+                Object.keys(table.getState().rowSelection),
+                true
+              )
+            }>
+              Change to Editor
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={
+              () => table.options.meta!.handleRemoval!(
+                Object.keys(table.getState().rowSelection)
+              )
+            }>
+              Remove
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+    cell: ({ row, table }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {!(table.getIsAllRowsSelected()
+               || (table.getIsSomeRowsSelected() && "indeterminate")
+             ) && <Button
               className="h-8 w-8 p-0"
               title={"Actions for " + row.original.fullName}
               variant="ghost"
             >
               <MoreHorizontal />
-            </Button>
+            </Button>}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => {
@@ -800,7 +850,7 @@ const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={
-              () => meta!.handleEditableChange!(
+              () => table.options.meta!.handleEditableChange!(
                 [row.original._id],
                 !row.original.isEditable
               )
@@ -808,7 +858,7 @@ const sharedWithColumns: ColumnDef<SharedWithUser>[] = [
               Change to {row.original.isEditable ? "Viewer" : "Editor"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={
-              () => meta!.handleRemoval!([row.original._id])
+              () => table.options.meta!.handleRemoval!([row.original._id])
             }>
               Remove
             </DropdownMenuItem>
@@ -899,27 +949,6 @@ function DeckSharedWithTable({ deckID }: { deckID: string }) {
     }
   })
 
-  const handleEditableChange = (users: string[], isEditable: boolean) => {
-    if (!users || users.length == 0) return;
-    setData(old => old.map(v => {
-      if (users.includes(v._id))
-        return { ...v, isEditable }
-      return v
-    }))
-    deckSharingMutation.mutate({ deckID, values: {
-      users: users.map(u => ({ _id: u, fullName: "", username: "" })),
-      isEditable
-    } })
-  }
-  const handleRemoval = (users: string[]) => {
-    if (!users || users.length == 0) return;
-    setData(old => old.filter(v => !users.includes(v._id)))
-    deckSharingMutation.mutate({ deckID, values: {
-      users: users.map(u => ({ _id: u, fullName: "", username: "" })),
-      unshare: true
-    } })
-  }
-
   const table = useReactTable<SharedWithUser>({
     data,
     columns: sharedWithColumns,
@@ -939,8 +968,26 @@ function DeckSharedWithTable({ deckID }: { deckID: string }) {
       rowSelection
     },
     meta: {
-      handleEditableChange,
-      handleRemoval
+      handleEditableChange(users, isEditable) {
+        if (!users || users.length == 0) return;
+        setData(old => old.map(v => {
+          if (users.includes(v._id))
+            return { ...v, isEditable }
+          return v
+        }))
+        deckSharingMutation.mutate({ deckID, values: {
+          users: users.map(u => ({ _id: u, fullName: "", username: "" })),
+          isEditable
+        } })
+      },
+      handleRemoval(users) {
+        if (!users || users.length == 0) return;
+        setData(old => old.filter(v => !users.includes(v._id)))
+        deckSharingMutation.mutate({ deckID, values: {
+          users: users.map(u => ({ _id: u, fullName: "", username: "" })),
+          unshare: true
+        } })
+      }
     }
   })
 
@@ -960,33 +1007,6 @@ function DeckSharedWithTable({ deckID }: { deckID: string }) {
           variant="ghost"
           size="icon"
         ><PlusCircle/></Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            {(table.getIsAllRowsSelected()
-              || (table.getIsSomeRowsSelected() && "indeterminate")
-             ) && <Button className="h-8 w-8 p-0" title="Actions" variant="ghost">
-              <MoreHorizontal />
-            </Button>}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={
-              () => handleEditableChange(Object.keys(rowSelection), false)
-            }>
-              Change to Viewer
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={
-              () => handleEditableChange(Object.keys(rowSelection), true)
-            }>
-              Change to Editor
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={
-              () => handleRemoval(Object.keys(rowSelection))
-            }>
-              Remove
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
