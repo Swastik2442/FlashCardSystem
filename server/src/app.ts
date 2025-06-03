@@ -22,6 +22,7 @@ app.use(morgan("short", {
     skip: (_req, res) => res.statusCode < 400,
 }));
 
+app.set("trust proxy", true);
 app.use(cors(corsOptions));
 app.use(cookieParser(env.COOKIE_SIGN_SECRET));
 app.use(express.json());

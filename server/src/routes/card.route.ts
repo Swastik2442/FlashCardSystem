@@ -1,9 +1,10 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
+
 import Ratelimiter from "@/middlewares/ratelimit.middleware";
 import Validate from "@/middlewares/validate.middleware";
 import {
-    VerifyJWT,
+    VerifyUser,
     AllowUser,
     AllowUserFor
 } from "@/middlewares/auth.middleware";
@@ -17,7 +18,7 @@ import {
 import { createCardIdChain } from "@/utils/validationChains";
 
 const router = express.Router();
-router.use(VerifyJWT);
+router.use(VerifyUser);
 router.use(AllowUser);
 
 router.post(

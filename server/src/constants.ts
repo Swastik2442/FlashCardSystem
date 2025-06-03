@@ -1,6 +1,6 @@
 import env from "./env";
 
-export const GEMINI_MODEL_NAME = "gemini-1.5-flash";
+export const GEMINI_MODEL_NAME = "gemini-2.0-flash";
 
 const COOKIE_PREFIX = env.NODE_ENV === "production" ? "__Host-" : "";
 

@@ -1,15 +1,14 @@
 import {
     GoogleGenerativeAI,
-    Schema,
-    SchemaType
+    SchemaType,
+    type Schema
 } from "@google/generative-ai";
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
 import Deck from "@/models/deck.model";
-import Card from "@/models/card.model";
-import type { ICard } from "@/models/card.model";
+import Card, { type ICard } from "@/models/card.model";
 import env from "@/env";
 import {
     GEMINI_MODEL_NAME,
@@ -59,14 +58,18 @@ const aiCardModel = genAI.getGenerativeModel({
  */
 export const CreateCard = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
     const { question, answer, hint, deck } = req.body;
+    const loggedInUserID = req.locals!.session!.user!.id!;
+    if (!loggedInUserID)
+        throw new Error("User not found");
+
     let deckById;
     if (!deck) {
         deckById = await Deck.findOne({
-            owner: req.user!._id, name: UNCATEGORISED_DECK_NAME
+            owner: loggedInUserID, name: UNCATEGORISED_DECK_NAME
         }).select("-name -description -dateCreated -dateUpdated -likedBy -__v");
         if (!deckById) {
             deckById = await Deck.create({
-                owner: req.user!._id,
+                owner: loggedInUserID,
                 name: UNCATEGORISED_DECK_NAME,
                 isPrivate: true
             });
@@ -80,14 +83,14 @@ export const CreateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
             res.status(404).json({
                 status: "error",
                 message: "Deck not found",
-                data: null,
+                data: null
             });
             return;
-        } else if (!deckById.isAccessibleBy(req.user!._id).writable) {
+        } else if (!deckById.isAccessibleBy(loggedInUserID).writable) {
             res.status(401).json({
                 status: "error",
                 message: "Unauthorized Operation",
-                data: null,
+                data: null
             });
             return;
         }
@@ -97,7 +100,7 @@ export const CreateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
         question: question,
         answer: answer,
         hint: hint,
-        deck: deckById._id,
+        deck: deckById._id
     });
 
     const cardCheck = await Card.findById(newCard._id);
@@ -112,7 +115,7 @@ export const CreateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     .json({
         status: "success",
         message: "Card created successfully",
-        data: newCard._id,
+        data: newCard._id
     });
 });
 
@@ -128,7 +131,7 @@ export const GetCard = tryCatch(async (req: ExpressRequest, res: ExpressResponse
         res.status(404).json({
             status: "error",
             message: "Card not found",
-            data: null,
+            data: null
         });
         return;
     }
@@ -138,14 +141,14 @@ export const GetCard = tryCatch(async (req: ExpressRequest, res: ExpressResponse
         res.status(404).json({
             status: "error",
             message: "Deck not found",
-            data: null,
+            data: null
         });
         return;
-    } else if (!deck.isAccessibleBy(req.user!._id).readable) {
+    } else if (!deck.isAccessibleBy(req.locals!.session!.user!.id!).readable) {
         res.status(401).json({
             status: "error",
             message: "Unauthorized Operation",
-            data: null,
+            data: null
         });
         return;
     }
@@ -153,7 +156,7 @@ export const GetCard = tryCatch(async (req: ExpressRequest, res: ExpressResponse
     res.status(200).json({
         status: "success",
         message: "Card found",
-        data: card,
+        data: card
     });
 });
 
@@ -169,7 +172,7 @@ export const PopulateCard = tryCatch(async (req: ExpressRequest, res: ExpressRes
         res.status(404).json({
             status: "error",
             message: "Card not found",
-            data: null,
+            data: null
         });
         return;
     }
@@ -177,11 +180,11 @@ export const PopulateCard = tryCatch(async (req: ExpressRequest, res: ExpressRes
     const deck = await Deck.findById(card.deck).select(
         "-owner -dateCreated -dateUpdated -isPrivate -sharedTo -likes -likedBy -__v"
     );
-    if (!deck) {
+    if (!deck || !deck.isAccessibleBy(req.locals!.session!.user!.id!).writable) {
         res.status(404).json({
             status: "error",
             message: "Deck not found",
-            data: null,
+            data: null
         });
         return;
     }
@@ -199,7 +202,7 @@ export const PopulateCard = tryCatch(async (req: ExpressRequest, res: ExpressRes
     res.status(200).json({
         status: "success",
         message: "Card Content Generated",
-        data: asObj,
+        data: asObj
     });
 });
 
@@ -214,7 +217,7 @@ export const DeleteCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     if (!card) {
         res.status(404).json({
             status: "error",
-            message: "Card not found",
+            message: "Card not found"
         });
         return;
     }
@@ -223,13 +226,13 @@ export const DeleteCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     if (!deck) {
         res.status(404).json({
             status: "error",
-            message: "Deck not found",
+            message: "Deck not found"
         });
         return;
-    } else if (!deck.isAccessibleBy(req.user!._id).writable) {
+    } else if (!deck.isAccessibleBy(req.locals!.session!.user!.id!).writable) {
         res.status(401).json({
             status: "error",
-            message: "Unauthorized Operation",
+            message: "Unauthorized Operation"
         });
         return;
     }
@@ -241,7 +244,7 @@ export const DeleteCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     .clearCookie(CSRF_COOKIE_NAME)
     .json({
         status: "success",
-        message: "Card deleted successfully",
+        message: "Card deleted successfully"
     });
 });
 
@@ -253,11 +256,14 @@ export const DeleteCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
 export const UpdateCard = tryCatch(async (req: ExpressRequest, res: ExpressResponse) => {
     const id = req.params.cid;
     const { question, answer, hint, deck } = req.body;
+    const loggedInUserID = req.locals!.session!.user!.id!;
+    if (!loggedInUserID)
+        throw new Error("User not found");
 
     if (!question && !answer && !hint && !deck) {
         res.status(400).json({
             status: "error",
-            message: "No fields to update",
+            message: "No fields to update"
         });
         return;
     }
@@ -266,7 +272,7 @@ export const UpdateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     if (!card) {
         res.status(404).json({
             status: "error",
-            message: "Card not found",
+            message: "Card not found"
         });
         return;
     }
@@ -276,10 +282,10 @@ export const UpdateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     );
     if (!currentDeck)
         throw new Error("Deck not found");
-    else if (!currentDeck.isAccessibleBy(req.user!._id).writable) {
+    else if (!currentDeck.isAccessibleBy(loggedInUserID).writable) {
         res.status(401).json({
             status: "error",
-            message: "Unauthorized Operation",
+            message: "Unauthorized Operation"
         });
         return;
     }
@@ -293,13 +299,13 @@ export const UpdateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
         if (!nextDeck) {
             res.status(404).json({
                 status: "error",
-                message: "Deck not found",
+                message: "Deck not found"
             });
             return;
-        } else if (!nextDeck.isAccessibleBy(req.user!._id).writable) {
+        } else if (!nextDeck.isAccessibleBy(loggedInUserID).writable) {
             res.status(401).json({
                 status: "error",
-                message: "Unauthorized Operation",
+                message: "Unauthorized Operation"
             });
             return;
         }
@@ -317,6 +323,6 @@ export const UpdateCard = tryCatch(async (req: ExpressRequest, res: ExpressRespo
     .clearCookie(CSRF_COOKIE_NAME)
     .json({
         status: "success",
-        message: "Card updated successfully",
+        message: "Card updated successfully"
     });
 });

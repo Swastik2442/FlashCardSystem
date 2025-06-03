@@ -1,15 +1,14 @@
-import {
+import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
-import User from "@/models/user.model";
-import type { UserRole } from "@/models/user.model";
+import User, { type UserRole } from "@/models/user.model";
 import Deck from "@/models/deck.model";
 import {
     CSRF_COOKIE_NAME,
     UNCATEGORISED_DECK_NAME
 } from "@/constants";
-import { UserAccessibleRoles } from "@/featureFlags";
+import { UserAccessibleRoles } from "@/lib/featureFlags";
 import { getUserWith, getUsersWith } from "@/utils/models";
 import { tryCatch } from "@/utils/wrappers";
 
@@ -21,14 +20,18 @@ import { tryCatch } from "@/utils/wrappers";
 export const GetUserPrivate = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
+    const user = await User.findById(req.locals!.session!.user!.id!).select("-roles");
+    if (!user)
+        throw new Error("User not found");
+
     res.status(200).json({
         status: "success",
         message: "User found",
         data: {
-            "fullName": req.user!.fullName,
-            "username": req.user!.username,
-            "email": req.user!.email,
-        },
+            "fullName":user.fullName,
+            "username":user.username,
+            "email":user.email
+        }
     });
 });
 
@@ -131,12 +134,13 @@ export const GetUserDecks = tryCatch(async (
         return;
     }
 
+    const loggedInUserID = req.locals!.session!.user!.id!;
     const decks = await Deck.find({
         owner: user._id,
         $or: [
             { isPrivate: false },
-            { owner: req.user!._id, name: { $ne: UNCATEGORISED_DECK_NAME } },
-            { sharedTo: { $elemMatch: { user: req.user!._id, editable: true } } },
+            { owner: loggedInUserID, name: { $ne: UNCATEGORISED_DECK_NAME } },
+            { sharedTo: { $elemMatch: { user: loggedInUserID, editable: true } } },
         ]
     }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -165,11 +169,12 @@ export const GetLikedDecks = tryCatch(async (
         return;
     }
 
+    const loggedInUserID = req.locals!.session!.user!.id!;
     const likedDecks = await Deck.find({
         likedBy: user._id,
         $or: [
             { isPrivate: false },
-            { sharedTo: { $elemMatch: { user: req.user!._id } } }
+            { sharedTo: { $elemMatch: { user: loggedInUserID } } }
         ]
     }).select("-owner -description -dateCreated -sharedTo -likedBy -__v");
 
@@ -192,13 +197,18 @@ export const UpdateUser = tryCatch(async (
     if (!fullName) {
         res.status(422).json({
             status: "error",
-            message: "No fields to update",
+            message: "No fields to update"
         });
         return;
     }
 
-    req.user!.fullName = fullName ?? req.user!.fullName;
-    await req.user!.save();
+    const loggedInUserID = req.locals!.session!.user!.id!;
+    const user = await User.findById(loggedInUserID).select("fullName");
+    if (!user)
+        throw new Error("User not found");
+
+    user.fullName = fullName ?? user.fullName;
+    await user.save();
 
     res.status(200).clearCookie(CSRF_COOKIE_NAME).json({
         status: "success",
@@ -230,7 +240,7 @@ export const GetUserAccessibleRoles = tryCatch(async (_req, res) => {
 export const GetUserRoles = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
-    if (!req.user)
+    if (!req.locals?.roles)
         throw new Error("User not found");
     res.status(200).set(
         "Cache-Control",
@@ -238,7 +248,7 @@ export const GetUserRoles = tryCatch(async (
     ).json({
         status: "success",
         message: "Successfully get User Roles",
-        data: req.user.roles
+        data: req.locals.roles
     });
 });
 
@@ -251,27 +261,28 @@ export const SetUserRoles = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
     const { roles } = req.body;
-    if (!req.user)
+    const user = await User.findById(req.locals!.session!.user!.id!).select("roles");
+    if (!user)
         throw new Error("User not found");
 
     // Add roles where value is true and not already present
     Object.entries(roles)
         .filter(([, value]) => value === true)
         .forEach(([key]) => {
-            if (!req.user!.roles.includes(key as UserRole))
-                req.user!.roles.push(key as UserRole);
+            if (!user.roles.includes(key as UserRole))
+                user.roles.push(key as UserRole);
         });
 
     // Remove roles where value is false and currently present
     Object.entries(roles)
         .filter(([, value]) => value === false)
         .forEach(([key]) => {
-            req.user!.roles = req.user!.roles.filter((role: string) => role !== key);
+            user.roles = user.roles.filter((role: string) => role !== key);
         });
 
-    await req.user.save();
+    await user.save();
     res.status(200).json({
         status: "success",
-        message: "User Roles set",
+        message: "User Roles set"
     });
 });

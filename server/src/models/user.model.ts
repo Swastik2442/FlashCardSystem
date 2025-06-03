@@ -1,37 +1,23 @@
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import Deck from "./deck.model";
 import { UNCATEGORISED_DECK_NAME } from "@/constants";
-import env from "@/env";
 
 export type UserRole = "user" | "admin" | `tester_${string}`;
 
 export interface IUser {
     fullName: string;
-    email: string;
     username: string;
-    password: string;
-    refreshToken: string;
-    roles: UserRole[];
+    email: string;
+    emailVerified: Date;
+    image: string;
+    roles: UserRole[]; // TODO: Move Roles to somewhere such that db is not always required
 }
 
-export interface IUserMethods {
-    isPasswordCorrect(password: string): Promise<boolean>;
-    generateAccessToken(): string;
-    generateRefreshToken(): string;
-}
+type UserModel = mongoose.Model<IUser>;
 
-type UserModel = mongoose.Model<IUser, unknown, IUserMethods>;
-
-const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
+const userSchema = new mongoose.Schema<IUser, UserModel>({
     fullName: {
         type: String,
-    },
-    email: {
-        type: String,
-        require: true,
-        unique: true
     },
     username: {
         type: String,
@@ -39,13 +25,18 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>({
         index: true,
         unique: true
     },
-    password: {
+    email: {
         type: String,
-        require: true
+        require: true,
+        unique: true
     },
-    refreshToken: {
+    emailVerified: {
+        type: Date,
+        default: null
+    },
+    image: {
         type: String,
-        default: undefined
+        default: null
     },
     roles: {
         type: [String],
@@ -62,9 +53,6 @@ userSchema.pre("save", async function (next) {
         });
         await userDeck.save();
     }
-    if (this.isModified("password"))
-        this.password = await bcrypt.hash(this.password, 10);
-
     next();
 });
 
@@ -72,35 +60,5 @@ userSchema.pre("deleteOne", { document: true, query: false }, async function (ne
     await Deck.deleteMany({ owner: this._id });
     next();
 });
-
-userSchema.methods.isPasswordCorrect = async function(password: string) {
-    return await bcrypt.compare(password, this.password);
-};
-
-userSchema.methods.generateAccessToken = function() {
-    return jwt.sign(
-        {
-            _id: this._id,
-            email: this.email,
-            username: this.username,
-        },
-        env.ACCESS_TOKEN_SECRET,
-        {
-            expiresIn: env.ACCESS_TOKEN_EXPIRY
-        }
-    )
-};
-
-userSchema.methods.generateRefreshToken = function() {
-    return jwt.sign(
-        {
-            _id: this._id,
-        },
-        env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: env.REFRESH_TOKEN_EXPIRY
-        }
-    )
-};
 
 export default mongoose.model("user", userSchema);

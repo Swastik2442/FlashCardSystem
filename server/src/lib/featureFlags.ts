@@ -1,8 +1,7 @@
-import mongoose from "mongoose";
-import type { IUser, UserRole } from "./models/user.model"
-import { murmurHash } from "./utils/murmurHash"
+import type { IUser, UserRole } from "@/models/user.model"
+import { murmurHash } from "@/utils/murmurHash"
 
-type UserWithID = Pick<IUser, "roles"> & { _id: mongoose.Types.ObjectId };
+type UserWithID = Pick<IUser, "roles"> & { id: string };
 
 export type FeatureFlagName = keyof typeof FEATURE_FLAGS;
 
@@ -36,7 +35,7 @@ function checkRule(
 ) {
     return (
         userHasValidRole(userRoles, user.roles) &&
-        userIsWithinPercentage(featureName, percentageOfUsers, user._id.toString())
+        userIsWithinPercentage(featureName, percentageOfUsers, user.id)
     );
 }
 

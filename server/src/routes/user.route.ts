@@ -1,7 +1,11 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
+
 import Validate from "@/middlewares/validate.middleware";
-import { AllowUser, VerifyJWT } from "@/middlewares/auth.middleware";
+import {
+    AllowUser,
+    VerifyUser
+} from "@/middlewares/auth.middleware";
 import {
     GetUserPrivate,
     GetUser,
@@ -14,11 +18,11 @@ import {
     SetUserRoles,
     GetUsers
 } from "@/controllers/user.controller";
-import { UserAccessibleRoles } from "@/featureFlags";
+import { UserAccessibleRoles } from "@/lib/featureFlags";
 import { createUsernameChain } from "@/utils/validationChains";
 
 const router = express.Router();
-router.use(VerifyJWT);
+router.use(VerifyUser);
 
 router.get("/", GetUserPrivate);
 

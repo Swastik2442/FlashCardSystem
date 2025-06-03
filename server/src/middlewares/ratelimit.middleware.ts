@@ -16,7 +16,17 @@ const ratelimit = new Ratelimit({
 });
 
 async function Ratelimiter(req: ExpressRequest, res: ExpressResponse, next: NextFunction) {
-    const { success, reset } = await ratelimit.limit(req.user?.id ?? req.ip);
+    const id = req.locals?.session?.user?.id ?? req.ip;
+    if (!id) {
+        res.status(403).json({
+            status: "error",
+            message: "User Identifier not found",
+            data: null
+        });
+        return;
+    }
+
+    const { success, reset } = await ratelimit.limit(id);
     if (success)
         next();
     else {

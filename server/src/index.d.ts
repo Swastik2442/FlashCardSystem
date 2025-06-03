@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import type { IUser, IUserMethods } from "./models/user.model";
+import type { IUser } from "@/models/user.model";
+import type { Session } from "@auth/express";
 
 type IRequestUser = Omit<IUser, "password" | "refreshToken">;
 interface ICustomResponse<T> {
@@ -10,10 +10,10 @@ interface ICustomResponse<T> {
 
 declare module "express" {
   interface Request {
-    user?: mongoose.Document<unknown, unknown, IRequestUser> &
-      Omit<IRequestUser & {
-        _id: mongoose.Types.ObjectId;
-      }, keyof IUserMethods>;
+    locals?: {
+      session: Session | null;
+      roles: IUser["roles"] | null;
+    }
   }
   interface Response {
     json<T = unknown>(body: ICustomResponse<T>): this;
