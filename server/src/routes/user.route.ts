@@ -1,7 +1,8 @@
 import express from "express";
 import { check, oneOf } from "express-validator";
-import Validate from "@/middlewares/validate.middleware.js";
-import { AllowUser, VerifyJWT } from "@/middlewares/auth.middleware.js";
+
+import Validate from "../middlewares/validate.middleware.js";
+import { AllowUser, VerifyJWT } from "../middlewares/auth.middleware.js";
 import {
     GetUserPrivate,
     GetUser,
@@ -13,9 +14,9 @@ import {
     GetUserRoles,
     SetUserRoles,
     GetUsers
-} from "@/controllers/user.controller.js";
-import { UserAccessibleRoles } from "@/lib/featureFlags.js";
-import { createUsernameChain } from "@/utils/validationChains.js";
+} from "../controllers/user.controller.js";
+import { UserAccessibleRoles } from "../lib/featureFlags.js";
+import { createUsernameChain } from "../utils/validationChains.js";
 
 const router = express.Router();
 router.use(VerifyJWT);

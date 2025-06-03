@@ -6,14 +6,14 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import ms, { type StringValue } from "ms";
 
-import User from "@/models/user.model.js";
-import env from "@/env.js";
+import User from "../models/user.model.js";
+import env from "../env.js";
 import {
     ACCESS_TOKEN_COOKIE_NAME,
     REFRESH_TOKEN_COOKIE_NAME,
     CSRF_COOKIE_NAME
-} from "@/constants.js";
-import { tryCatch } from "@/utils/wrappers.js";
+} from "../constants.js";
+import { tryCatch } from "../utils/wrappers.js";
 
 const cookieOptions = {
     httpOnly: true,

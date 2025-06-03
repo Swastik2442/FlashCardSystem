@@ -1,12 +1,13 @@
 import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import request from "supertest";
 import mongoose from "mongoose";
-import app from "@/app.js";
-import env from "@/env.js";
-import User from "@/models/user.model.js";
-import Deck from "@/models/deck.model.js";
-import Card from "@/models/card.model.js";
-import { UserAccessibleRoles } from "@/lib/featureFlags.js";
+
+import app from "../src/app.js";
+import env from "../src/env.js";
+import User from "../src/models/user.model.js";
+import Deck from "../src/models/deck.model.js";
+import Card from "../src/models/card.model.js";
+import { UserAccessibleRoles } from "../src/lib/featureFlags.js";
 import { sampleUser1, sampleUser2, sampleDeck, sampleCard, getCookie, getCSRFToken } from "./utils.js";
 
 const authTokens1 = { access_token: "", refresh_token: "" };

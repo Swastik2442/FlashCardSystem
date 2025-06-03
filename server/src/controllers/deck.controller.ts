@@ -8,17 +8,17 @@ import type {
     Response as ExpressResponse
 } from "express";
 
-import Deck from "@/models/deck.model.js";
-import Card from "@/models/card.model.js";
-import type { ICard } from "@/models/card.model.js";
-import env from "@/env.js";
+import Deck from "../models/deck.model.js";
+import Card from "../models/card.model.js";
+import type { ICard } from "../models/card.model.js";
+import env from "../env.js";
 import {
     GEMINI_MODEL_NAME,
     CSRF_COOKIE_NAME,
     UNCATEGORISED_DECK_NAME
-} from "@/constants.js";
-import { getUserWith, getUsersWith } from "@/utils/models.js";
-import { tryCatch } from "@/utils/wrappers.js";
+} from "../constants.js";
+import { getUserWith, getUsersWith } from "../utils/models.js";
+import { tryCatch } from "../utils/wrappers.js";
 
 type CardSchema = Omit<ICard, "deck">;
 

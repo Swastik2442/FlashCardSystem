@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+
 import Deck from "./deck.model.js";
-import { UNCATEGORISED_DECK_NAME } from "@/constants.js";
-import env from "@/env.js";
+import { UNCATEGORISED_DECK_NAME } from "../constants.js";
+import env from "../env.js";
 
 export type UserRole = "user" | "admin" | `tester_${string}`;
 

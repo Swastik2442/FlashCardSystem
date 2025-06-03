@@ -1,8 +1,9 @@
 import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import request from "supertest";
 import mongoose from "mongoose";
-import app from "@/app.js";
-import env from "@/env.js";
+
+import app from "../src/app.js";
+import env from "../src/env.js";
 
 beforeAll(async () => {
     await mongoose.connect(

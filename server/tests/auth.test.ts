@@ -2,10 +2,11 @@ import { beforeAll, afterAll, describe, expect, it } from "@jest/globals";
 import { Response as superagentResponse } from "superagent";
 import request from "supertest";
 import mongoose from "mongoose";
-import app from "@/app.js";
-import User from "@/models/user.model.js";
-import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "@/constants.js";
-import env from "@/env.js";
+
+import app from "../src/app.js";
+import User from "../src/models/user.model.js";
+import { ACCESS_TOKEN_COOKIE_NAME, REFRESH_TOKEN_COOKIE_NAME } from "../src/constants.js";
+import env from "../src/env.js";
 import { sampleUser1 as sampleUser, getCookie, getCSRFToken } from "./utils.js";
 
 const authTokens = { access_token: "", refresh_token: "" };

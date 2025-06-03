@@ -2,16 +2,17 @@ import type {
     Request as ExpressRequest,
     Response as ExpressResponse
 } from "express";
-import User from "@/models/user.model.js";
-import type { UserRole } from "@/models/user.model.js";
-import Deck from "@/models/deck.model.js";
+
+import User from "../models/user.model.js";
+import type { UserRole } from "../models/user.model.js";
+import Deck from "../models/deck.model.js";
 import {
     CSRF_COOKIE_NAME,
     UNCATEGORISED_DECK_NAME
-} from "@/constants.js";
-import { UserAccessibleRoles } from "@/lib/featureFlags.js";
-import { getUserWith, getUsersWith } from "@/utils/models.js";
-import { tryCatch } from "@/utils/wrappers.js";
+} from "../constants.js";
+import { UserAccessibleRoles } from "../lib/featureFlags.js";
+import { getUserWith, getUsersWith } from "../utils/models.js";
+import { tryCatch } from "../utils/wrappers.js";
 
 /**
  * @route GET user/
