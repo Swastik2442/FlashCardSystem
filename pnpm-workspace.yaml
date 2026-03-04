@@ -4,3 +4,6 @@ packages:
 onlyBuiltDependencies:
   - bcrypt
   - esbuild
+syncInjectedDepsAfterScripts:
+  - build
+injectWorkspacePackages: true
