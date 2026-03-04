@@ -69,7 +69,7 @@ export default function ErrorBoundary() {
             <p>{err.message}</p>
           </>}
           <p>Please try again later</p>
-          <Button onClick={() => navigate(-1)} type="button" title="Go Back" className="dark mt-4">Go Back</Button>
+          <Button onClick={() => void navigate(-1)} type="button" title="Go Back" className="dark mt-4">Go Back</Button>
         </motion.div>
       </div>
     </div>
