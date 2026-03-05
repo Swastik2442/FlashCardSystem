@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Schema for the User Login Form
 export const loginFormSchema = z.object({
-  email: z.string().email("Invalid email address."),
+  email: z.email("Invalid email address."),
   password: z.string()
     .min(8, { message: "Password must be at least 8 characters." })
     .max(64, { message: "Password cannot be more than 64 characters." }),
@@ -14,7 +14,7 @@ export const registerFormSchema = z.object({
   fullName: z.string()
     .min(3, { message: "Name must be at least 3 characters." })
     .max(64, { message: "Name cannot be more than 64 characters." }),
-  email: z.string().email("Invalid email address."),
+  email: z.email("Invalid email address."),
   username: z.string().toLowerCase()
     .regex(/^[a-z0-9_]+$/, { message: "Username can only contain lowercase letters, numbers, and underscores." })
     .min(2, { message: "Username must be at least 2 characters." })

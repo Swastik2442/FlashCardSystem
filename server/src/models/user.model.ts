@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import Deck from "./deck.model";
 import { UNCATEGORISED_DECK_NAME } from "../constants";
 import env from "../env";
+import ms from "ms";
 
 export type UserRole = "user" | "admin" | `tester_${string}`;
 
@@ -85,7 +86,7 @@ userSchema.methods.generateAccessToken = function() {
         },
         env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: env.ACCESS_TOKEN_EXPIRY
+            expiresIn: env.ACCESS_TOKEN_EXPIRY as ms.StringValue
         }
     )
 };
@@ -97,7 +98,7 @@ userSchema.methods.generateRefreshToken = function() {
         },
         env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: env.REFRESH_TOKEN_EXPIRY
+            expiresIn: env.REFRESH_TOKEN_EXPIRY as ms.StringValue
         }
     )
 };

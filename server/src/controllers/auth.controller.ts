@@ -113,8 +113,8 @@ export const Login = tryCatch(async (req: ExpressRequest, res: ExpressResponse) 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
 
     res.status(200)
-    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY as ms.StringValue) })
+    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY as ms.StringValue) })
     .clearCookie(CSRF_COOKIE_NAME)
     .json({
         status: "success",
@@ -184,8 +184,8 @@ export const RefreshAccessToken = tryCatch(async (req: ExpressRequest, res: Expr
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     res.status(200)
-    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY as ms.StringValue) })
+    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY as ms.StringValue) })
     .json({
         status: "success",
         message: "Access Token refreshed",
@@ -293,8 +293,8 @@ export const ChangePassword = tryCatch(async (req: ExpressRequest, res: ExpressR
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
     res.status(200)
-    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY) })
-    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY) })
+    .cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {...cookieOptions, maxAge: ms(env.ACCESS_TOKEN_EXPIRY as ms.StringValue) })
+    .cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {...cookieOptions, maxAge: ms(env.REFRESH_TOKEN_EXPIRY as ms.StringValue) })
     .clearCookie(CSRF_COOKIE_NAME)
     .json({
         status: "success",

@@ -51,7 +51,7 @@ router.post(
         check("email")
             .isEmail()
             .normalizeEmail(),
-    ], "Either username or email is required"),
+    ], { message: "Either username or email is required" }),
     check("password")
         .notEmpty()
         .withMessage("Password is required"),
