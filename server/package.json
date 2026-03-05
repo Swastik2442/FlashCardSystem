@@ -1,19 +1,11 @@
 {
   "name": "server",
-  "version": "1.1.2",
   "private": true,
   "scripts": {
     "start": "ts-node --files api/index.ts",
-    "db:start": "docker-compose up -d db",
-    "db:stop": "docker-compose down db",
     "dev": "nodemon --files api/index.ts",
-    "dev:with-db": "pnpm db:start && pnpm run dev",
     "test": "cross-env NODE_ENV=testing jest --testTimeout=15000",
-    "test:with-db": "pnpm db:start && pnpm test && pnpm db:stop",
-    "lint": "eslint .",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "lint": "eslint ."
   },
   "author": "Swastik Kulshreshtha, Sourabh Yadav and Saurabh Saini",
   "license": "MIT",
