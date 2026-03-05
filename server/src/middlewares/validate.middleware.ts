@@ -8,8 +8,9 @@ function Validate(req: ExpressRequest, res: ExpressResponse, next: NextFunction)
     else {
         let errorCount = 0;
         const error: Record<string, unknown> = {};
-        errors.array().map((err: ValidationError) => {
-            error[err.param] = err.msg;
+        errors.array().forEach((err: ValidationError) => {
+            if (err.type !== "field") return;
+            error[err.path] = err.msg;
             errorCount++;
         });
         res.status(422).json({

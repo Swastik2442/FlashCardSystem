@@ -99,7 +99,7 @@ router.patch(
             .notEmpty()
             .trim()
             .escape(),
-    ], "At least one field is required"),
+    ], { message: "At least one field is required" }),
     Validate,
     UpdateCard
 );

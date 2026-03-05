@@ -1,3 +1,5 @@
+name: fcs
+
 services:
   db:
     image: mongo:latest
@@ -12,17 +14,32 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+  serverless-redis-http:
+    ports:
+      - "8079:80"
+    image: hiett/serverless-redis-http:latest
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: srh_token
+      SRH_CONNECTION_STRING: "redis://redis:6379"
+
   server:
     build:
       context: .
       dockerfile: Dockerfile
+      target: server
     container_name: server
     restart: unless-stopped
     environment:
       - MONGODB_CONNECTION_URI=mongodb://root:password@db:27017/
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - KV_REST_API_TOKEN=${KV_REST_API_TOKEN}
-      - KV_REST_API_URL=${KV_REST_API_URL}
+      - KV_REST_API_TOKEN=srh_token
+      - KV_REST_API_URL=http://localhost:8079
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - ACCESS_TOKEN_EXPIRY=${ACCESS_TOKEN_EXPIRY}
@@ -35,9 +52,23 @@ services:
       - "2442:2442"
     depends_on:
       - db
-    volumes:
-      - ./:/app
-      - /app/node_modules
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: client
+    container_name: client
+    restart: unless-stopped
+    environment:
+      - VITE_APP_TITLE="Flash Card System"
+      - VITE_CLIENT_HOST="http://localhost:5173"
+      - VITE_SERVER_HOST="http://localhost:2442"
+      - NODE_ENV=${NODE_ENV}
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
 
 volumes:
   mongodb_data:

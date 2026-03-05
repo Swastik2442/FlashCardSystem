@@ -85,7 +85,7 @@ router.patch(
             .escape(),
         check("isPrivate")
             .isBoolean(),
-    ], "At least one field is required"),
+    ], { message: "At least one field is required" }),
     Validate,
     UpdateDeck
 );

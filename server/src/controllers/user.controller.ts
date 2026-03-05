@@ -51,7 +51,7 @@ export const GetUser = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
     const username = req.params.username;
-    const user = await getUserWith(username);
+    const user = await getUserWith(username as string);
     if (!user) {
         res.status(404).json({
             status: "error",
@@ -108,7 +108,7 @@ export const GetUserDecks = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
     const username = req.params.username;
-    const user = await getUserWith(username);
+    const user = await getUserWith(username as string);
     if (!user) {
         res.status(404).json({
             status: "error",
@@ -143,7 +143,7 @@ export const GetLikedDecks = tryCatch(async (
     req: ExpressRequest, res: ExpressResponse
 ) => {
     const username = req.params.username;
-    const user = await getUserWith(username);
+    const user = await getUserWith(username as string);
     if (!user) {
         res.status(404).json({
             status: "error",

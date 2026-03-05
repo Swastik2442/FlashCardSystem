@@ -20,7 +20,7 @@ router.patch(
             .trim()
             .isLength({ min: 3, max: 64 })
             .escape(),
-    ], "At least one field is required"),
+    ], { message: "At least one field is required" }),
     Validate,
     UpdateUser
 );

@@ -1,6 +1,13 @@
 packages:
   - client
   - server
+
+injectWorkspacePackages: true
+
 onlyBuiltDependencies:
   - bcrypt
   - esbuild
+  - unrs-resolver
+
+syncInjectedDepsAfterScripts:
+  - build

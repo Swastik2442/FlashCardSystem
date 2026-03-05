@@ -47,7 +47,7 @@ app.use((_req, res, next) => {
     next();
 });
 
-app.options('*', cors(corsOptions));
+app.options('*any', cors(corsOptions));
 app.get("/", (_req, res) => {
     res.json({
         status: "success",
